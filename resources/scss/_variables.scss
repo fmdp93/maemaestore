@@ -1,0 +1,19 @@
+$custom-colors: (
+  "button": #b3a8a8,
+  "button-shadow": #b3a8a87a,
+  "primary": #f0fff0,
+  "secondary": #FFF0FF,
+  "text": #5a4d61,
+  "link": #594761,
+  "danger": #bd5b5b,
+  "light": #d1e3f4,
+  "white": #fff,
+  "black": #000,
+  "msg-success": #69c217,
+  "low": #fab389,
+  "half": #ebd592
+);
+
+$theme-colors: map-merge($theme-colors, $custom-colors);
+
+$fa-font-path: "../webfonts";

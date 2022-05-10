@@ -1,0 +1,155 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Product;
+use App\Models\Category;
+use App\Models\ProductLog;
+use App\Rules\IntNoNegative;
+use Illuminate\Http\Request;
+use App\Rules\FloatNoNegative;
+use App\Http\Traits\ProductsTrait;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Validator;
+
+class ProductsController extends Controller
+{
+    use ProductsTrait;
+    public static $page_path = '/products';
+    public static $product_search_url = '/product/search';
+
+    public function index(Request $request)
+    {
+        $data['heading'] = 'Products';
+        $data['categories'] = Category::all();
+        $data['search'] = $request->input('q');
+        $data['category_id'] = $request->input('category_id');
+        $ProductModel = new Product();
+        $data['products'] = $ProductModel->getProducts($data['search'], $data['category_id'], self::$page_path);
+        $data['form_id'] = "update_product_form";
+        $data['d_none'] = empty(count($data['products'])) ?: 'd-none';
+        $data['action'] = action([ProductsController::class, 'delete']);
+        $data['action_print_barcode'] = action([ProductsController::class, 'printBarcode']);
+
+        return view('pages.admin.products', $data);
+    }
+
+    public function addProduct()
+    {
+        $data['heading'] = 'Add Products';
+        $data['categories'] = Category::all();        
+        return view('pages.admin.add-product', $data);
+    }
+
+    public function getNewItemCode(Request $request){
+        $response['new_item_code'] = $this->getNewBarcode();
+        return Response()->json(json_encode($response));
+    }
+
+    private function getNewBarcode()
+    {
+        do {
+            $num1 = rand(100000, 999999);
+            $num2 = rand(100000, 999999);
+            $barcode = "$num1$num2";
+            $products = Product::where('item_code', $barcode);
+            if (count($products->get()) == 0) {
+                return $barcode;
+            }
+        } while (1);
+    }
+
+    public function updateProduct(Request $request)
+    {
+        $query_string = "?q=" . $request->input('search');
+        $query_string .= "&page=" . $request->input('page');
+        $query_string .= "&category_id=" . $request->input('category_id');
+
+        // dd($query_string);
+        $input = $request->input();
+        $rules = [
+            'product_id' => 'required',
+            'expiration_date' => 'required|date',
+        ];
+
+        $messages = [
+            'product_id.required' => 'Please pick a product first'
+        ];
+
+        $validator = Validator::make($input, $rules, $messages);
+        if ($validator->fails()) {
+            return redirect('/products')
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        Product::where('id', $request->input('product_id'))
+            ->update(
+                ['expiration_date' => $request->input('expiration_date')]
+            );
+
+        ProductLog::log($request->input('product_id'), 6); // 6 for product edited;
+
+        $request->session()->flash('msg_success', 'Product updated successfully!');
+
+
+        return redirect('/products' . $query_string)
+            ->withInput();
+    }
+
+    public function store(Request $request)
+    {
+        $input = $request->input();
+        $rules = [
+            'item_code' => 'required',
+            'name' => 'required',
+            'description' => 'required',
+            'category_id' => 'required|integer',
+            'price' => ['required', 'numeric', 'min:0'],
+            'unit' => 'required',
+            'stock' => ['required', 'integer', 'min:1'],
+            'expiration_date' => 'required|date',
+        ];
+        $messages = [
+            'item_code.integer' => 'Item code must be a valid barcode number',
+        ];
+
+        $validator = Validator::make($input, $rules, $messages);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)
+                ->withInput();
+        }
+
+        $Product = new Product();
+        $Product->item_code = $request->input('item_code');
+        $Product->name = $request->input('name');
+        $Product->description = $request->input('description');
+        $Product->category_id = $request->input('category_id');
+        $Product->price = $request->input('price');
+        $Product->unit = $request->input('unit');
+        $Product->stock = $request->input('stock');
+        $Product->expiration_date = $request->input('expiration_date');
+
+        $Product->save();
+        ProductLog::log($Product->id, 5); // 5 for product added;
+        $request->session()->flash('msg_success', 'Product added');
+        return redirect()->action([ProductsController::class, 'addProduct']);
+    }
+
+    public function delete(Request $request)
+    {
+        $product_id = $request->input('product_id');
+        Product::where('id', $product_id)
+            ->update(
+                ['deleted_at' => date('Y-m-d H:i:s')]
+            );
+
+        ProductLog::log($product_id, 7); // 7 for product deleted;
+        $request->session()->flash('msg_success', 'Product deleted successfully!');
+
+        return redirect('/products');
+    }
+}

@@ -1,0 +1,142 @@
+// Create your own map
+// $custom-colors: (
+//   "francis": #F8F0FF,
+// );
+
+// Merge the maps
+// $theme-colors: map-merge($theme-colors, $custom-colors);
+
+@import "vendor/twbs/bootstrap/scss/functions";
+@import "vendor/twbs/bootstrap/scss/variables";
+@import "vendor/twbs/bootstrap/scss/mixins";
+
+// Above imports are require before _variables. Followed by bootstrap
+
+@import "variables";
+
+@import "vendor/twbs/bootstrap/scss/bootstrap";
+
+// Fontsawesome
+@import "@fortawesome/fontawesome-free/scss/fontawesome.scss";
+@import "@fortawesome/fontawesome-free/scss/solid.scss";
+@import "@fortawesome/fontawesome-free/scss/brands.scss";
+
+@import "~jquery-ui/themes/base/all.css";
+
+body {
+  background-color: map-get($theme-colors, "primary");
+}
+
+#wrapper {
+  a:link,
+  a:visited {
+    color: darken(map-get($map: $theme-colors, $key: "link"), 10);
+    text-decoration: none;
+  }
+
+  a:hover,
+  a:active {
+    color: map-get($map: $theme-colors, $key: "link");
+  }
+
+  input[type="submit"],
+  #search + span {
+    background: map-get($theme-colors, "button");
+    color: map-get($theme-colors, "primary");
+
+    &:hover {
+      background: lighten(map-get($theme-colors, "button"), 10);
+    }
+  }
+
+  input {
+    box-shadow: none;
+  }
+
+  div,
+  span,
+  p,
+  h1,
+  h2,
+  h3 {
+    color: map-get($theme-colors, "text");
+  }
+
+  .page-link:focus,
+  .page-item:focus {
+    box-shadow: 0 0 0 0.25rem map-get($theme-colors, "button-shadow");
+  }
+
+  .page-link:link,
+  .page-link:visited {
+    color: map-get($theme-colors, "link");
+  }
+
+  .page-item.active .page-link {
+    background-color: map-get($theme-colors, "button");
+    border-color: map-get($theme-colors, "button");
+    color: map-get($theme-colors, "primary");
+    z-index: 1;
+  }
+
+  #reader > video {
+    @extend .rounded-2;
+  }
+
+  #search + span {
+    cursor: pointer;
+    transition: 0.4s;
+  }
+
+  .side-nav, #log-manager {
+    $icon-container-height: 72px;
+    a.active,
+    a:hover {
+      background: map-get($theme-colors, "link");
+      .icon-container {
+        background: bisque;
+      }
+
+      span {
+        color: bisque;
+      }
+
+      i {
+        color: map-get($theme-colors, "link");
+      }
+    }
+    .icon-container {
+      width: 72px;
+      height: $icon-container-height;
+      line-height: normal;
+      background: map-get($theme-colors, "link");
+      transition: 0.4s;
+    }
+    i {
+      color: bisque;
+      line-height: $icon-container-height - 5px;
+      font-size: 40px;
+      transition: 0.4s;
+    }
+
+    span {
+      transition: 0.4s;
+    }
+  }
+  i.fa-xmark {
+    cursor: pointer;
+  }
+
+  #pay-cash i {
+    height: 72px;
+    width: 72px;
+    line-height: 62px;
+    text-align: center;
+    font-size: 40px;
+    color: #fff;
+  }
+
+  #log-manager {    
+  }
+}
+//

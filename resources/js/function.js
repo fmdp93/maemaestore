@@ -7,3 +7,11 @@ export function toggletableEmpty($tbody, $table_empty) {
         $table_empty.addClass('d-none');
     }    
 }
+
+export function preventPlusMinus(event) {
+    let key = event.keyCode;
+    let prevented_keys = [109, 107, 189, 187];
+    if ($.inArray(key, prevented_keys) > -1) {
+        return false;
+    }
+}

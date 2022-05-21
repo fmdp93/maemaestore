@@ -19,25 +19,41 @@ use App\Http\Requests\StorePurchaseOrderRequest;
 class InventoryController extends Controller
 {
     private $tbody_content;
+    public static $page_path = '/inventory';
 
     public function index(Request $request)
     {
         $data['heading'] = 'Inventory';
+        // Get parameters
         $data['categories'] = Category::all();
         $data['search'] = $request->input('q');
         $stock_filter = $request->input('stock_filter');
         $data['category_id'] = $request->input('category_id');
+        $data['expiry'] = $request->input('expiry');
+        $data['archive_action'] = route('inventory_archive');
+        // EOQ
         $Inventory = new Inventory();
         $data['half_stock_products'] = $Inventory->getHalfStock();
 
-        $data['products'] = $Inventory->getProducts($data['search'], $data['category_id'], $stock_filter);
+        // Inventory        
+        $expiry = getExpiryOrderBy($request->input('expiry'));
+        $data['products'] = $Inventory->getProducts($data['search'], $data['category_id'], $expiry, self::$page_path, $stock_filter);
         $data['d_none'] = count($data['products']) ? 'd-none' : '';
         $data['form'] = 'purchase-order';
+        $data['product_search_url'] = "/inventory/search";
+        $data['show_action'] = true;
+        $data['content'] = 'admin_content';
+        $data['components_content'] = 'components.admin.content';
 
         return view('pages.admin.inventory', $data);
     }
-
-    public function archive(Request $request){
+    /**
+     * Archive a product in the inventory
+     * 
+     * @return redirect
+     */
+    public function archive(Request $request)
+    {
         $inventory_id = $request->input('inventory_id');
         // sets url params
         $url_params = $request->input('url_params');
@@ -47,6 +63,72 @@ class InventoryController extends Controller
             ->update(['status_id' => 16]); // 16 is archived
         $request->session()->flash('msg_success', 'Product archived succesfully!');
         $back = action([InventoryController::class, 'index']) . $url_params;
+        return redirect($back);
+    }
+    /**
+     * List of archived products from inventory
+     */
+    public function archives(Request $request)
+    {
+        $search = $request->input('q');
+
+        $data['heading'] = "Inventory Archive";
+        $data['title'] = "Inventory Archive";
+        $data['search'] = $search;
+        $data['unarchive_inv_item_action'] = route('inventory_unarchive');
+
+        $Inventory = new Inventory();
+        $data['archive_inv_items'] = $Inventory->getArchivedInvItems($search, '/inventory/archives');
+        $data['d_none'] = count($data['archive_inv_items']) ? 'd-none' : '';
+
+        return view('pages.admin.archives', $data);
+    }
+
+    /**
+     * 
+     */
+    public function archiveSearch(Request $request)
+    {
+        $search = $request->input('q');
+
+        $Inventory = new Inventory();
+
+        DB::enableQueryLog();
+        $data['archive_inv_items'] = $Inventory->getArchivedInvItems($search, '/inventory/archives');
+        $data['unarchive_inv_item_action'] = $request->input('unarchive_inv_item_action');
+        $data['search'] = "$search";
+        $rows = (string) view("components.admin.archive_inv_item-list", $data);
+
+        $data['d_none'] = count($data['archive_inv_items']) ? 'd-none' : '';
+        $table_empty = (string) view("layouts.empty-table", $data);
+        $links = (string) $data['archive_inv_items']->links();
+        $row_count = count($data['archive_inv_items']);
+        $response = [
+            'rows_html' => $rows,
+            'links_html' => $links,
+            'table_empty' => $table_empty,
+            'row_count' => $row_count,
+            'last_query' => DB::getQueryLog(),
+        ];
+        $response = json_encode($response);
+        return Response()->json($response);
+    }
+
+    public function unarchive(Request $request)
+    {
+        Inventory::where('id', $request->input('archive_inv_item_id'))
+            ->update([
+                'status_id' => null,
+            ]);
+
+        $params = [
+            'q' => $request->input('search'),
+            'page' => $request->input('page'),
+        ];
+
+        $request->session()->flash('msg_success', 'Unarchive succesful!');
+        $back = route('inventory_archives', $params);
+        // dd($back);
         return redirect($back);
     }
 
@@ -136,14 +218,14 @@ class InventoryController extends Controller
         $InventoryOrder = InventoryOrder::find($io_id);
         $InventoryOrder->date_delivered = date('Y-m-d');
         $InventoryOrder->save();
-        
+
         // insert and log
-        $Product = new Product();        
+        $Product = new Product();
         foreach ($ordered_products as $product) {
             $previous_quantity = Inventory::getStock($product->io2p_product_id);
 
             // insert/prodct products to inventory
-            $inventory_id = $Product->addStock($product);            
+            $inventory_id = $Product->addStock($product);
             $updated_quantity = Inventory::find($inventory_id)->stock;
 
             // Log
@@ -155,10 +237,25 @@ class InventoryController extends Controller
             );
         }
 
-        $request->session()->flash('success_message', 'Order received successfully!');
+        $request->session()->flash('msg_success', 'Order received successfully!');
         return redirect()->action([InventoryController::class, 'orders']);
     }
 
+    public function orderCancel(Request $request)
+    {
+        $inventory_order_id = $request->input('io_id');
+        InventoryOrder::where('id', $inventory_order_id)
+            ->delete();
+        InventoryOrder2Product::where('transaction_id', $inventory_order_id)
+            ->delete();
+        $request->session()->flash('msg_success', 'Order canceled successfully!');
+        return back();
+    }
+    /**
+     * Order products for inventory
+     * 
+     * @return redirect
+     */
     public function store(StorePurchaseOrderRequest $request)
     {
         $request->validated();
@@ -191,11 +288,20 @@ class InventoryController extends Controller
         $search = $request->input('q');
         $category_id = $request->input('category_id');
         $stock_filter = $request->input('stock_filter');
-        $data['url_params'] = "q=$search&category_id=$category_id&stock_filter=$stock_filter";
+        $expiry_filter = $request->input('expiry');
+        $data['archive_action'] = $request->input('archive_action');
+        $expiry = getExpiryOrderBy($request->input('expiry'));
+
         $Inventory = new Inventory();
+
         DB::enableQueryLog();
-        $data['products'] = $Inventory->getProducts($search, $category_id, $stock_filter);
+        $data['products'] = $Inventory->getProducts($search, $category_id, $expiry, self::$page_path, $stock_filter);
+        $data['show_action'] = true;
+
+        // this variable is use for redirection after an action like delete
+        $data['url_params'] = "q=$search&category_id=$category_id&stock_filter=$stock_filter&expiry=$expiry_filter";
         $rows = (string) view("components.inventory-list", $data);
+
         $data['d_none'] = count($data['products']) ? 'd-none' : '';
         $table_empty = (string) view("layouts.empty-table", $data);
         $links = (string) $data['products']->links();
@@ -206,7 +312,7 @@ class InventoryController extends Controller
             'table_empty' => $table_empty,
             'row_count' => $row_count,
             'table_color' => $request->input('table_color'),
-            'last_query' => DB::getQueryLog(),            
+            'last_query' => DB::getQueryLog(),
         ];
         $response = json_encode($response);
         return Response()->json($response);

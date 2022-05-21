@@ -25,10 +25,21 @@ class SalesReportController extends Controller
 
         $data['total_items'] = $total_items->total_items;
         $data['total_sales'] = $total_items->total_sales;
+        $data['total_price'] = $total_items->total_price;
+        $data['profit'] = $total_items->total_sales - $total_items->total_price;
         $data['from'] = $from ? date("F j, Y", strtotime($from)) : 'start';
         $data['to'] = $to ? date("F j, Y", strtotime($to)) : 'end';
 
         return view('pages.admin.sales-report', $data);
+    }    
+
+    public function posTransaction2Product(Request $request){
+        $id = $request->input('id');
+        $model = new POSTransaction2ProductModel();
+        $data['heading'] = 'Sales Report Details';
+        $data['pos_transaction2products'] = $model->getSalesReportFor($id);
+
+        return view('pages.admin.sales-report-details', $data);
     }
 
     private function dateFilterSetFrom(&$from)

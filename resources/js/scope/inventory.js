@@ -2,17 +2,23 @@ import { toggletableEmpty } from "/js/function.js";
 
 class Inventory {
     constructor() {
+        // Search variables
+        this.ObjectSearch = new Search(product_search_url);
+        this.$search = $("#search");
         this.$table = $("#inventory_list");
         this.$tbody = $("#inventory_list tbody");
         this.$table_empty = $(".table-empty");
         this.$pages = $("#pages");
-        this.$search = $("#search");
+
+        // inputs
         this.$category = $("#category_id");
+        this.$expiry = $("#expiry");
         this.$stock_filter = $("input[name='stock_filter']");
         this.$normal_stock = $("#normal-stock");
         this.$half_stock = $("#half-stock");
         this.$low_stock = $("#low-stock");
-        this.ObjectSearch = new Search("/inventory/search");
+
+        
 
         this.triggerEvents();
     }
@@ -22,7 +28,9 @@ class Inventory {
             _this.onLoad();
         });
         this.search();
-        this.searchCategory();
+        this.$category.on("change", this.requestProduct);
+        this.$expiry.on("change", this.requestProduct);
+
         this.$normal_stock.on(
             "click",
             "",
@@ -65,11 +73,7 @@ class Inventory {
         };
         _this.ObjectSearch.appendParam(objSearchParam);
 
-        _this.makeRequest(event);
-    }
-
-    searchCategory() {
-        this.$category.on("change", this.makeRequest);
+        _this.requestProduct(event);
     }
 
     search() {
@@ -82,7 +86,7 @@ class Inventory {
         };
         this.ObjectSearch.appendParam(objSearchParam);
 
-        this.$search.on("keyup", this.makeRequest);
+        this.$search.on("keyup", this.requestProduct);
     }
 
     setTableColor(stock_filter) {
@@ -94,12 +98,14 @@ class Inventory {
         }
     }
 
-    makeRequest(event) {
+    requestProduct(event) {
         let category_id = _this.$category.val();
+        let expiry = _this.$expiry.val();
 
         let objSearchParam = {
             q: _this.$search.val(),
             category_id: category_id,
+            expiry: expiry,
         };
 
         _this.ObjectSearch.appendParam(objSearchParam);
@@ -108,12 +114,12 @@ class Inventory {
             _this.ObjectSearch.url,
             _this.ObjectSearch.param,
             function (response) {
-                _this.requestProduct(response);
+                _this.requestProductResponse(response);
             }
         );
     }
 
-    requestProduct(response) {
+    requestProductResponse(response) {
         response = JSON.parse(response);
         console.log(response);
         this.$tbody.html(response.rows_html);
@@ -127,5 +133,5 @@ class Inventory {
     }
 }
 
-let objInventory = new Inventory();
+export let objInventory = new Inventory();
 const _this = objInventory;

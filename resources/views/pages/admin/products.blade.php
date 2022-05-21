@@ -45,7 +45,7 @@ use App\Http\Controllers\ProductsController;
                     aria-label="name" value="{{ old('item_name') }}" readonly>
                 <label for="price">Price</label>
                 <input name="price" id="price" class="form-control form-control-xl mb-xl-3" type="text" aria-label="price"
-                    value="{{ old('price') }}" readonly>
+                    value="{{ old('price') }}">
                 <label for="name">Expiration</label>
                 <input name="expiration_date" id="expiration_date" class="form-control form-control-xl mb-xl-3" type="text"
                     placeholder="2030-12-30" aria-label="expiration_date" autocomplete="off"

@@ -1,7 +1,11 @@
 import {objBarcodeReader} from "/js/scope/barcode_reader.js";
+import {preventPlusMinus} from "/js/function.js";
 
 class AddProduct {
     constructor() {
+        this.$price = $("#price");
+        this.$stock = $("#stock");
+        this.$inv_stock = $("#inv_stock");
         // BarcodeReader vars
         this.$item_code = $("#item_code");
         this.objBarcodeReader = objBarcodeReader;
@@ -16,6 +20,9 @@ class AddProduct {
 
     triggerEvents() {
         this.$new_item_code.on("click", this.setCode);
+        this.$price.on("keydown", preventPlusMinus);
+        this.$stock.on("keydown", preventPlusMinus);
+        this.$inv_stock.on("keydown", preventPlusMinus);
     }    
 
     setCode(event){

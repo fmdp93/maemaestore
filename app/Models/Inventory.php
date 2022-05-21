@@ -16,7 +16,7 @@ class Inventory extends Model
 
     public $timestamps = false;
 
-    public function getProducts($search, $category_id, $stock_filter = '')
+    public function getProducts($search, $category_id, $expiry, $page_path, $stock_filter = '')
     {
         $Products = Inventory::select(
             DB::raw('p.id p_id, p.item_code, p.name p_name,
@@ -37,11 +37,12 @@ class Inventory extends Model
             })
             ->when($stock_filter, function ($query) use ($stock_filter) {
                 $this->filter_stock($query, $stock_filter);
-            })
-            ->orderBy('p.id', 'desc')
+            })                 
+            ->orderBy('p.expiration_date', $expiry)       
+            ->orderBy('p.name', 'asc')
 
             ->paginate(Config::get('constant.per_page'))
-            ->withPath('/inventory')
+            ->withPath($page_path)
             ->appends(
                 [
                     'q' => $search,
@@ -64,6 +65,7 @@ class Inventory extends Model
             ->leftJoin('product as p', 'i.product_id', '=', 'p.id')
             ->leftJoin('product_category as c', 'c.id', '=', 'p.category_id')
             ->whereRaw('i.stock <= .5 * p.stock')
+            ->whereNull('status_id')
             ->orderBy('p.id', 'desc')
             ->get();
 
@@ -99,5 +101,32 @@ class Inventory extends Model
             ->first();
 
         return $Inventory !== null ? $Inventory->stock : 0;
+    }
+
+    public function getArchivedInvItems($search, $page_path){
+        $Archives = Inventory::select(
+            DB::raw('p.id p_id, p.item_code, p.name p_name,
+        p.description, p.price, p.unit, p.expiration_date, p.stock p_stock,
+        i.id i_id, i.stock i_stock,
+        c.name c_name')
+        )
+            ->from('inventory as i')
+            ->leftJoin('product as p', 'i.product_id', '=', 'p.id')
+            ->leftJoin('product_category as c', 'c.id', '=', 'p.category_id')
+            ->orWhere(function ($query) use ($search) {
+                $query->where('p.item_code', 'LIKE', "%$search%")
+                    ->orWhere('p.name', 'LIKE', "%$search%");
+            })
+            ->where('status_id', 16) // Archived = 16
+            ->orderBy('i.id', 'desc')            
+            ->paginate(Config::get('constant.per_page'))
+            ->withPath($page_path)
+            ->appends(
+                [
+                    'q' => $search,
+                ]
+            );
+
+        return $Archives;
     }
 }

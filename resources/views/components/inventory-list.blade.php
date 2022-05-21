@@ -42,19 +42,22 @@
         <td>
             {{ $product->expiration_date }}
         </td>
-        <td>
-            <div class="d-flex">
-                <form action="{{ action([InventoryController::class, 'archive']) }}" method="POST" class="d-inline-block">
-                    @csrf                    
-                    <input type="hidden" value="{{ $product->i_id }}" name="inventory_id">
-                    @isset($url_params)
-                        <input type="hidden" name="url_params" value="{{ $url_params }}">
-                    @endisset
-                    <button type="submit" class="border-0 bg-transparent">
-                        <i class="fa-solid fa-box-archive text-danger fa-2x" title="Archive Product"></i>
-                    </button>
-                </form>
-            </div>
-        </td>
+        @if($show_action)
+            <td>
+                <div class="d-flex">
+                    <form action="{{ $archive_action }}" method="POST" class="d-inline-block">
+                        @csrf                    
+                        <input type="hidden" value="{{ $product->i_id }}" name="inventory_id">
+                        {{-- Need to pass url_params to set GET params after redirection from an action like delete--}}
+                        @isset($url_params)
+                            <input type="hidden" name="url_params" value="{{ $url_params }}">
+                        @endisset
+                        <button type="submit" class="border-0 bg-transparent">
+                            <i class="fa-solid fa-box-archive text-danger fa-2x" title="Archive Product"></i>
+                        </button>
+                    </form>
+                </div>
+            </td>
+        @endif
     </tr>
 @endforeach

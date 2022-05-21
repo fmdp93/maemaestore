@@ -37,15 +37,28 @@
                             <td class="text-end">
                                 {{ sprintf('%.2f', $io->io2p_total_price + $io->shipping_fee + $io->tax) }}</td>
                             <td>{{ $io->eta }}</td>
-                            <td>
-                                <form action="{{ url('/inventory/order-received') }}" method="POST"
-                                    class="d-inline">
-                                    @csrf
-                                    <input type="hidden" name="io_id" value="{{ $io->io_id }}">
-                                    <button type="submit" class="order-received btn btn-success">Order Received</button>
-                                </form>
-                                <button class="view-details btn btn-success" data-io-id={{ $io->io_id }}
-                                    data-bs-toggle="modal" data-bs-target="#exampleModal">View Products</button>
+                            <td class="text-nowrap">
+                                <div class="d-flex justify-content-around">
+                                    <form action="{{ url('/inventory/order-received') }}" method="POST"
+                                        class="px-1">
+                                        @csrf
+                                        <input type="hidden" name="io_id" value="{{ $io->io_id }}">
+                                        <button type="submit" class="order-received btn btn-success">Order Received</button>
+                                    </form>
+                                    <button class="view-details btn btn-success px-1" data-io-id={{ $io->io_id }}
+                                        data-bs-toggle="modal" data-bs-target="#exampleModal">View Details</button>
+                                    <form action="{{ route('purchase_order_cancel') }}" method="POST"
+                                        class="px-1">
+                                        @csrf
+                                        <input type="hidden" value="{{ $io->io_id }}" name="io_id">
+                                        {{-- Need to pass url_params to set GET params after redirection from an action like delete --}}
+
+                                        <button type="submit" class="btn btn-danger text-primary">
+                                            Cancel
+                                        </button>
+                                    </form>
+                                </div>
+
                             </td>
                         </tr>
                     @endforeach

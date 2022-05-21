@@ -71,7 +71,15 @@ class SettingsController extends Controller
         $restore_command = "$mysql_path -u$user $pw_param $database < $path";
         exec($restore_command, $output);
         // dump($restore_command);
+
+        // migrate
+        $artisan_path = base_path('artisan');
+        exec("php $artisan_path migrate", $output);
+        exec("php $artisan_path db:seed POSTransaction2ProductColumnBasePriceSeeder", $output);        
         unlink($path);
+        
+        // var_dump($output);
+        // die();
 
         $request->session()->flash('msg_success', 'Database restoration completed!');
         return redirect(route('settings'));

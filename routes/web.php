@@ -23,7 +23,9 @@ use App\Http\Controllers\Test\LoginController;
 use App\Http\Controllers\SalesReportController;
 use App\Http\Controllers\CashierAccountsController;
 use App\Http\Controllers\CashierProductsController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\PageUnauthorized;
+use App\Http\Controllers\SuppliersController;
 use App\Http\Middleware\PinMiddleware;
 use App\Http\Middleware\RoleMiddleware;
 
@@ -64,16 +66,47 @@ Route::group(['middleware' => 'auth'], function () {
 
     Route::get('/inventory', [InventoryController::class, 'index'])
       ->middleware(InventoryMiddleware::class);
-    Route::post('/inventory/archive', [InventoryController::class, 'archive']);
+    Route::post('/inventory/archive', [InventoryController::class, 'archive'])
+      ->name('inventory_archive');
+    Route::get('/inventory/archives', [InventoryController::class, 'archives'])
+      ->name('inventory_archives');
+    Route::post('/inventory/unarchive', [InventoryController::class, 'unarchive'])
+      ->name('inventory_unarchive');
+
+    // Async
+    Route::get('/inventory/archive-search', [InventoryController::class, 'archiveSearch'])
+      ->name('inventory_archive_search');
+
     Route::get('/inventory/orders', [InventoryController::class, 'orders']);
     Route::get('/inventory/purchase-order', [InventoryController::class, 'purchaseOrder']);
+    Route::get('/inventory/suppliers', [SuppliersController::class, 'index'])
+      ->name('suppliers');
+    Route::get('/inventory/suppliers/search', [SuppliersController::class, 'searchSupplier'])
+      ->name('search_supplier');
+
+    Route::get('/inventory/add-supplier', [SuppliersController::class, 'add_supplier'])
+      ->name('add_supplier');
+    Route::post('/inventory/add-supplier/submit', [SuppliersController::class, 'add_supplier_submit'])
+      ->name('add_supplier_submit');
+    Route::get('/inventory/edit-supplier', [SuppliersController::class, 'edit_supplier'])
+      ->name('edit_supplier');
+    Route::post('/inventory/edit-supplier/submit', [SuppliersController::class, 'edit_supplier_submit'])
+      ->name('edit_supplier_submit');
+    Route::delete('/inventory/delete-supplier', [SuppliersController::class, 'delete_supplier'])
+      ->name('delete_supplier');
+
     Route::post('/inventory/order-received', [InventoryController::class, 'orderReceived']);
+    Route::post('/inventory/purchase-order-cancel', [InventoryController::class, 'orderCancel'])
+      ->name('purchase_order_cancel');
     Route::get('/inventory/order-products', [InventoryController::class, 'orderProducts']);
     Route::post('/inventory/add', [InventoryController::class, 'store']);
     Route::get('/purchase-order/search', [InventoryController::class, 'purchaseOrderSearch']);
     Route::get('/inventory/search', [InventoryController::class, 'inventorySearch']);
+    Route::get('/vendor/search', [SuppliersController::class, 'searchVendor']);
 
     Route::get('/sales-report', [SalesReportController::class, 'index']);
+    Route::get('/sales-report/transaction', [SalesReportController::class, 'posTransaction2Product'])
+      ->name('pos_transaction2product');
 
     Route::get('/accounts', [AccountsController::class, 'index']);
     Route::get('/accounts/add-cashier', [AccountsController::class, 'addCashier']);
@@ -134,6 +167,24 @@ Route::group(['middleware' => 'auth'], function () {
 
     Route::get('/cashier-settings', [CashierAccountsController::class, 'editAccount']);
     Route::post('/cashier-settings/update', [CashierAccountsController::class, 'editAccountSave']);
+
+    Route::get('/customer', [CustomerController::class, 'index'])
+      ->name('customer');
+    Route::get('/customer/add', [CustomerController::class, 'add_customer'])
+    ->name('add_customer');
+    Route::post('/customer/add_submit', [CustomerController::class, 'add_customer_submit'])
+      ->name('add_customer_submit');
+    Route::get('/customer/edit', [CustomerController::class, 'edit_customer'])
+      ->name('edit_customer');
+    Route::post('/customer/edit_submit', [CustomerController::class, 'edit_customer_submit'])
+      ->name('edit_customer_submit');
+    Route::delete('/customer/delete', [CustomerController::class, 'delete_customer'])
+      ->name('delete_customer');
+    // Asnyc
+    Route::get('/customer/search-for-table', [CustomerController::class, 'searchForTable'])
+      ->name('customer_search_for_table');
+    Route::get('/customer/search-for-pos', [CustomerController::class, 'searchForPos'])
+      ->name('customer_search_for_pos');
   });
 
   Route::get('/pin/validate-pin', [PINController::class, 'validatePin']);

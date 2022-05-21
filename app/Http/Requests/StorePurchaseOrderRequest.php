@@ -26,7 +26,7 @@ class StorePurchaseOrderRequest extends FormRequest
      * @return array
      */
     public function rules()
-    {        
+    {                
         return [
             'vendor' => 'required',
             'contact' => 'required',

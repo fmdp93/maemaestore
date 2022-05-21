@@ -65,7 +65,7 @@ class BarcodeReader {
                 },
                 (decodedText, decodedResult) => {
                     // do something when code is read
-                    console.log("scan successful: " + decodedText);
+                    // console.log("scan successful: " + decodedText);
                     let defer = $.Deferred(),
                         filtered = defer
                         .then(function () {

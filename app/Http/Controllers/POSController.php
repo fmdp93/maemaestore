@@ -6,7 +6,10 @@ use PDF as PDF2;
 use Dompdf\Dompdf;
 // use Dompdf\Dompdf;
 use Dompdf\Options;
+use App\Models\Product;
+use App\Models\Customer;
 use App\Models\Inventory;
+use App\Models\ConfigModel;
 use App\Models\InventoryLog;
 use Illuminate\Http\Request;
 use App\Http\Requests\RRRequest;
@@ -28,6 +31,7 @@ class POSController extends Controller
         $data['heading'] = 'Point Of Sale';
         $data['title'] = 'POS';
         $data['form'] = 'pos';
+        $data['senior_discount'] = ConfigModel::find(3)->value; // 3 for senior discount
 
         $this->setLastTableContent($request, $data['form']);
 
@@ -63,6 +67,10 @@ class POSController extends Controller
         $POSTransaction->amount_paid = $request->input('amount_paid');
         $POSTransaction->created_at = date("Y-m-d h:i");
         $POSTransaction->status_id = 4; // Completed
+        $POSTransaction->customer_id = $request->input('customer_id');
+        $POSTransaction->customer_name = (string) $request->input('customer_name');
+        $POSTransaction->customer_address = (string) $request->input('customer_address');
+        $POSTransaction->customer_contact_detail = (string) $request->input('customer_contact_detail');
         $POSTransaction->save();
 
         // insert products
@@ -71,7 +79,13 @@ class POSController extends Controller
             $POSTransaction2Product->pos_transaction_id = $POSTransaction->id;
             $POSTransaction2Product->product_id = $product_id;
             $POSTransaction2Product->quantity = $validated['quantity'][$key];
-            $POSTransaction2Product->price = $validated['price'][$key];
+
+            $senior_discount = $request->input("senior_discounted") == "true" ? (float) ConfigModel::find(3)->value : 0;            
+            $POSTransaction2Product->price = $validated['price'][$key] * (1 - $senior_discount);
+            $base_price = Product::find($product_id)->price;
+            $POSTransaction2Product->base_price = $base_price;
+            $POSTransaction2Product->senior_discount = $senior_discount;
+
             $POSTransaction2Product->save();
 
             $previous_quantity = Inventory::getStock($product_id);
@@ -95,14 +109,14 @@ class POSController extends Controller
             );
         }
 
-        return redirect(action([POSController::class, 'finish'], ['transacion_id' => $POSTransaction->id]));
+        return redirect(action([POSController::class, 'finish'], ['transaction_id' => $POSTransaction->id]));
     }
 
     public function finish(Request $request)
     {
         $data['title'] = 'Transaction Completed';
         $data['heading'] = 'Transaction Completed';
-        $data['transaction_id'] = $request->input('transacion_id');
+        $data['transaction_id'] = $request->input('transaction_id');
         return view('pages.cashier.pos-finish', $data);
     }
 
@@ -112,7 +126,10 @@ class POSController extends Controller
         $data['title'] = 'Maemae\'s Store';
         $data['heading'] = 'Transaction Completed';
         $data['cashier_name'] = Auth::user()->first_name . ' ' . Auth::user()->last_name;
-        $data['items'] = POSTransactionModel::select(DB::raw('pt.created_at, pt.amount_paid,
+        $data['customer'] = POSTransactionModel::find($request->input('transaction_id'));        
+        $data['items'] = POSTransactionModel::select(DB::raw('
+            pt.created_at, pt.amount_paid, 
+            pt.customer_name, pt.customer_address, pt.customer_contact_detail,
             pt2p.id pt2p_id, pt2p.quantity, pt2p.price,
             p.name p_name'))
             ->from('pos_transaction as pt')
@@ -122,10 +139,11 @@ class POSController extends Controller
             ->get();
 
         $view = (string) view('pages.cashier.pos-receipt', $data);
-        // return $view;
-        $base_receipt_height = 264;
+        // return $view;        
+        $static_rows_count = 23;
         $row_height = 16;
-        $paper_height = $base_receipt_height + $row_height * count($data['items']);
+        $base_receipt_height = $static_rows_count * $row_height;
+        $paper_height = $base_receipt_height + $row_height * $this->getItemRows($data['items']);
         $customPaper = array(0, 0, 264, $paper_height);
 
         $options = new Options();
@@ -142,6 +160,17 @@ class POSController extends Controller
         $dompdf->loadHTML($view);
         $dompdf->render();
         $dompdf->stream($request->input('transaction_id'));
+    }
+
+    private function getItemRows($items){
+        $row_count = 0;
+        $item_label_one_line_character_count = 25;
+        foreach($items as $item){
+            $item_label = "{$item->p_name} x {$item->quantity}";
+            $item_label_character_count = strlen($item_label);
+            $row_count += ceil($item_label_character_count / $item_label_one_line_character_count);
+        }
+        return $row_count;
     }
 
     public function inventorySearch(Request $request)

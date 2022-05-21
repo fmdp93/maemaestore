@@ -22,6 +22,8 @@ mix.autoload({
     .copy("resources/js/function.js", "public/js/function.js")
     .copy("resources/js/scope/", "public/js/scope/")
     .copy("resources/js/class/", "public/js/class/")
+    .copy("resources/js/lib/", "public/js/lib/")
+    .copy("resources/js/decorator/", "public/js/decorator/")
     // node_modules
     .copy(
         "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js",

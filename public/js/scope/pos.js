@@ -1,6 +1,7 @@
 import { objBarcodeReader } from "/js/scope/barcode_reader.js";
 import { toggletableEmpty } from "/js/function.js";
 import { Pin } from "/js/class/pin.js";
+import { CustomerSearchAutocomplete } from "/js/decorator/CustomerSearchAutocomplete.js";
 
 var tooltipTriggerList = [].slice.call(
     document.querySelectorAll('[data-bs-toggle="tooltip"]')
@@ -29,6 +30,8 @@ class POS {
         this.$submit_pos = $("#submit_pos");
         this.$amount_paid = $("#amount_paid");
         this.$change = $("#change");
+        this.$senior_discounted = $("#senior_discounted");
+        this.$senior_discount = $("#senior_discount");
 
         // Barcode               
         this.objBarcodeReader = objBarcodeReader;
@@ -44,6 +47,14 @@ class POS {
         
         this.$delete_item_form = $("#delete-item-form");
         this.Pin = new Pin(this);
+
+        // autocomplete
+        this.$customer_search = $("#customer_search");           
+        this.$customer_id = $("#customer_id");
+        this.$customer_name = $("#customer_name");
+        this.$customer_address = $("#customer_address");
+        this.$customer_contact_detail = $("#customer_contact_detail");
+        this.objCustomerSearchAutocomplete = new CustomerSearchAutocomplete(this);                 
 
         this.triggerEvents();
     }
@@ -92,6 +103,7 @@ class POS {
         this.Pin.shown();
 
         this.$delete_item_form.on('submit', this.deleteItem)
+        this.$senior_discounted.on('change', this.applySeniorDiscount)
     }
 
     preventPlusMinus(event) {
@@ -109,7 +121,9 @@ class POS {
         // if not enough funds to pay
         if (amount_paid <= 0) {
             //error
-            _this.showPosError("Not enough funds");
+            if(amount_paid != ""){
+                _this.showPosError("Not enough funds");
+            }            
             return "invalid";
         }
 
@@ -308,7 +322,7 @@ class POS {
             let result = parsed_response.result;
             _this.$item_code.val(result.item_code);
             $("#description").val(result.description);
-            $("#s_price").val(result.price);
+            $("#s_price").val(sprintf("%.2f", result.price));
             $("#s_stock").val(result.i_stock);
         } else {
             _this.$item_code.val("");
@@ -319,7 +333,6 @@ class POS {
     }
 
     requestProductByIdResponse(response) {
-        console.log(1);
         let parsed_response = JSON.parse(response);
 
         _this.$quantity.val("");
@@ -348,10 +361,23 @@ class POS {
             total += price * quantity;
         });
 
+        //senior discount
+        if(_this.$senior_discounted.is(':checked')){
+            total = total * (1 - parseFloat(_this.$senior_discount.val()));
+        }
+
         _this.$input_total.val(sprintf("%.2f", total));
         _this.$total.find("span").html(sprintf("%.2f", total));
+    }
+
+    applySeniorDiscount(){
+        let defer = $.Deferred();
+        let filtered = defer.then(_this.updateTotal);
+        defer.resolve();
+        filtered.done(_this.isAmountValid);
     }
 }
 
 let objPOS = new POS();
 const _this = objPOS;
+

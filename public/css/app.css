@@ -1559,6 +1559,7 @@ a.ui-button:active,
   --bs-msg-success: #69c217;
   --bs-low: #fab389;
   --bs-half: #ebd592;
+  --bs-transparent: transparent;
   --bs-font-sans-serif: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --bs-font-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --bs-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0));
@@ -5478,6 +5479,51 @@ fieldset:disabled .btn {
   border-color: #ebd592;
 }
 
+.btn-transparent {
+  color: #fff;
+  background-color: transparent;
+  border-color: transparent;
+}
+
+.btn-transparent:hover {
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.15);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+.btn-check:focus + .btn-transparent,
+.btn-transparent:focus {
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.15);
+  border-color: rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.5);
+}
+
+.btn-check:checked + .btn-transparent,
+.btn-check:active + .btn-transparent,
+.btn-transparent:active,
+.btn-transparent.active,
+.show > .btn-transparent.dropdown-toggle {
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-color: rgba(0, 0, 0, 0.25);
+}
+
+.btn-check:checked + .btn-transparent:focus,
+.btn-check:active + .btn-transparent:focus,
+.btn-transparent:active:focus,
+.btn-transparent.active:focus,
+.show > .btn-transparent.dropdown-toggle:focus {
+  box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.5);
+}
+
+.btn-transparent:disabled,
+.btn-transparent.disabled {
+  color: #fff;
+  background-color: transparent;
+  border-color: transparent;
+}
+
 .btn-outline-primary {
   color: #f0fff0;
   border-color: #f0fff0;
@@ -6155,6 +6201,46 @@ fieldset:disabled .btn {
 .btn-outline-half:disabled,
 .btn-outline-half.disabled {
   color: #ebd592;
+  background-color: transparent;
+}
+
+.btn-outline-transparent {
+  color: transparent;
+  border-color: transparent;
+}
+
+.btn-outline-transparent:hover {
+  color: #fff;
+  background-color: transparent;
+  border-color: transparent;
+}
+
+.btn-check:focus + .btn-outline-transparent,
+.btn-outline-transparent:focus {
+  box-shadow: 0 0 0 0.25rem rgba(0, 0, 0, 0.5);
+}
+
+.btn-check:checked + .btn-outline-transparent,
+.btn-check:active + .btn-outline-transparent,
+.btn-outline-transparent:active,
+.btn-outline-transparent.active,
+.btn-outline-transparent.dropdown-toggle.show {
+  color: #fff;
+  background-color: transparent;
+  border-color: transparent;
+}
+
+.btn-check:checked + .btn-outline-transparent:focus,
+.btn-check:active + .btn-outline-transparent:focus,
+.btn-outline-transparent:active:focus,
+.btn-outline-transparent.active:focus,
+.btn-outline-transparent.dropdown-toggle.show:focus {
+  box-shadow: 0 0 0 0.25rem rgba(0, 0, 0, 0.5);
+}
+
+.btn-outline-transparent:disabled,
+.btn-outline-transparent.disabled {
+  color: transparent;
   background-color: transparent;
 }
 
@@ -7822,6 +7908,16 @@ fieldset:disabled .btn {
   color: #4b442e;
 }
 
+.alert-transparent {
+  color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
+.alert-transparent .alert-link {
+  color: rgba(0, 0, 0, 0.68);
+}
+
 @-webkit-keyframes progress-bar-stripes {
   0% {
     background-position-x: 1rem;
@@ -8435,6 +8531,23 @@ fieldset:disabled .btn {
   color: #fff;
   background-color: #5e553a;
   border-color: #5e553a;
+}
+
+.list-group-item-transparent {
+  color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+.list-group-item-transparent.list-group-item-action:hover,
+.list-group-item-transparent.list-group-item-action:focus {
+  color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(219, 219, 219, 0.82);
+}
+
+.list-group-item-transparent.list-group-item-action.active {
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.6);
+  border-color: rgba(0, 0, 0, 0.6);
 }
 
 .btn-close {
@@ -9675,6 +9788,15 @@ fieldset:disabled .btn {
   color: #efdda8;
 }
 
+.link-transparent {
+  color: transparent;
+}
+
+.link-transparent:hover,
+.link-transparent:focus {
+  color: rgba(0, 0, 0, 0.2);
+}
+
 .ratio {
   position: relative;
   width: 100%;
@@ -10102,6 +10224,10 @@ fieldset:disabled .btn {
 
 .border-half {
   border-color: #ebd592 !important;
+}
+
+.border-transparent {
+  border-color: transparent !important;
 }
 
 .border-1 {
@@ -10967,6 +11093,10 @@ fieldset:disabled .btn {
   color: #ebd592 !important;
 }
 
+.text-transparent {
+  color: transparent !important;
+}
+
 .text-body {
   color: #212529 !important;
 }
@@ -11055,12 +11185,12 @@ fieldset:disabled .btn {
   background-color: #ebd592 !important;
 }
 
-.bg-body {
-  background-color: #fff !important;
-}
-
 .bg-transparent {
   background-color: transparent !important;
+}
+
+.bg-body {
+  background-color: #fff !important;
 }
 
 .bg-gradient {
@@ -23806,5 +23936,9 @@ body {
   text-align: center;
   font-size: 40px;
   color: #fff;
+}
+
+.higher-than-modal {
+  z-index: 1070 !important;
 }
 

@@ -18,6 +18,8 @@ use App\Http\Controllers\InventoryController;
         <div class="col-xl-3">
             <a href="{{ url('/inventory/orders') }}" class="btn btn-success py-xl-2 px-xl-3 mb-xl-3 text-primary"><i
                     class="fa fa-list"></i> View Orders</a>
+            <a href="{{ route('suppliers') }}" class="btn btn-success py-xl-2 px-xl-3 mb-xl-3 text-primary"><i
+                    class="fa-solid fa-building"></i> Suppliers</a>
 
             <form id="{{ $form = 'purchase-order' }}" action="{{ action([InventoryController::class, 'store']) }}"
                 method="POST">
@@ -102,12 +104,18 @@ use App\Http\Controllers\InventoryController;
             @include('layouts.empty-table')
             <div class="row mt-3">
                 <div class="col-xl-4 ms-auto">
+                    <label for="supplier_search">Search Supplier</label>
+                    <input type="text" name="supplier_search" id="supplier_search" value="{{ old('supplier_search') }}"
+                        class="form-control mb-3" form="purchase-order" autocomplete="off">
+                    <input type="hidden" id="supplier_search_id">                    
+
                     @error('vendor')
                         @include('components.error-message')
                     @enderror
                     <label for="vendor">Vendor</label>
                     <input type="text" name="vendor" id="vendor" value="{{ old('vendor') }}" class="form-control mb-3"
                         form="purchase-order" autocomplete="off">
+
                     @error('company')
                         @include('components.error-message')
                     @enderror

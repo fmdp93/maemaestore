@@ -88,7 +88,8 @@ body {
     transition: 0.4s;
   }
 
-  .side-nav, #log-manager {
+  .side-nav,
+  #log-manager {
     $icon-container-height: 72px;
     a.active,
     a:hover {
@@ -134,9 +135,10 @@ body {
     text-align: center;
     font-size: 40px;
     color: #fff;
-  }
+  }  
+}
 
-  #log-manager {    
-  }
+.higher-than-modal{
+  z-index: 1070 !important;
 }
 //

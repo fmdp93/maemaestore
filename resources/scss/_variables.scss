@@ -11,7 +11,8 @@ $custom-colors: (
   "black": #000,
   "msg-success": #69c217,
   "low": #fab389,
-  "half": #ebd592
+  "half": #ebd592,
+  "transparent": transparent,
 );
 
 $theme-colors: map-merge($theme-colors, $custom-colors);

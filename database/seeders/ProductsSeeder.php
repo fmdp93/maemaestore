@@ -15,13 +15,13 @@ class ProductsSeeder extends Seeder
     public function run()
     {
         Product::insert([
-                'item_code' => '4800092113482',
+                'item_code' => '9555657301075',
                 'category_id' => '1',
                 'stock' => '100',
-                'price' => '6',
-                'name' => 'Hansel Cracker',
+                'price' => '200',
+                'name' => 'Coffe Bean Tea Leaf Hazelnut',
                 'unit' => 'piece',
-                'description' => '12 pcs crackers',
+                'description' => '12 sachets',
                 'expiration_date' => '2023-10-10',
         ]);
         Product::factory()->count(500)->create();

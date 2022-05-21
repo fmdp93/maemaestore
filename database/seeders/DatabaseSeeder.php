@@ -31,6 +31,9 @@ class DatabaseSeeder extends Seeder
             $seeders[] = LoginLogSeeder::class;
             $seeders[] = POSTransactionSeeder::class;
             $seeders[] = POSTransaction2ProductSeeder::class;
+            $seeders[] = POSTransaction2ProductColumnBasePriceSeeder::class;
+            $seeders[] = SupplierSeeder::class;
+            $seeders[] = CustomerSeeder::class;
         } else if (env('APP_ENV') == "production") {
             $seeders[] = UserSeeder::class;
             $seeders[] = RoleSeeder::class;

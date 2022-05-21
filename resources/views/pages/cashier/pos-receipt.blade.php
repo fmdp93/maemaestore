@@ -58,6 +58,10 @@
         <small class="p-0 m-0 pt-3 d-block">Transaction ID: {{ $transaction_id }}</small>
         <small class="p-0 m-0 d-block">Date: {{ date('Y-m-d H:i', strtotime($items[0]->created_at)) }}</small>
         <small class="p-0 m-0 d-block">Cashier: {{ $cashier_name }}</small>
+        <br>
+        <small class="p-0 m-0 d-block">Customer: {{ $customer->customer_name }}</small>
+        <small class="p-0 m-0 d-block">Address: {{ $customer->customer_address }}</small>
+        <small class="p-0 m-0 d-block">Contact Detail: {{ $customer->customer_contact_detail }}</small>
         <div class="py-3 my-0">
             <hr class="my-0 py-0 pb-1">
         </div>

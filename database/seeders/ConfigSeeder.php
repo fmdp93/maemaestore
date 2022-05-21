@@ -14,14 +14,22 @@ class ConfigSeeder extends Seeder
      */
     public function run()
     {
+        ConfigModel::truncate();
         ConfigModel::insert([
             [
+                'id' => 1,
                 'name' => 'pin',
                 'value' => '123123'
             ],
             [
+                'id' => 2,
                 'name' => 'mark up price',
                 'value' => '.12'
+            ],
+            [
+                'id' => 3,
+                'name' => 'senior discount',
+                'value' => '.2'
             ],
         ]);
     }

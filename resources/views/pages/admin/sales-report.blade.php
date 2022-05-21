@@ -10,9 +10,9 @@ use App\Http\Controllers\SalesReportController;
 
 @section('admin_content')
     <div class="row">
-        <div class="col-xl-10 px-xl-5">
+        <div class="col-xl-12 px-xl-5">
             <div class="row">
-                @include('layouts.heading')                
+                @include('layouts.heading')
                 <div class="col-12 mt-3"></div>
                 <div class="col-xl-5">
                     <div class="d-flex">
@@ -54,7 +54,7 @@ use App\Http\Controllers\SalesReportController;
                     </form>
                 </div>
                 <div class="col-xl-12">
-                    <table id="products_list" class="table table-striped">
+                    <table id="products_list" class="table table-striped text-nowrap">
                         <thead>
                             <tr>
                                 <th scope="col">Trans. #</th>
@@ -63,7 +63,9 @@ use App\Http\Controllers\SalesReportController;
                                 <th scope="col">Description</th>
                                 <th scope="col">Quantity</th>
                                 <th scope="col">Price</th>
-                                <th scope="col">Total</th>
+                                <th scope="col">Amount Paid</th>
+                                <th scope="col">Change</th>
+                                <th scope="col">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -77,9 +79,9 @@ use App\Http\Controllers\SalesReportController;
                         @include('layouts.empty-table')
                     @endempty
                 </div>
-            </div>            
-            <div class="row">
-                <div class="col-xl-4">
+            </div>
+            <div class="row pb-5 pt-5">
+                <div class="col-xl-8">
                     @switch(request()->input('date_filter'))
                         @case('daily')
                             <p class="fs-5">List for: {{ $from }}</p>
@@ -88,7 +90,6 @@ use App\Http\Controllers\SalesReportController;
                         {{-- @case('weekly')
                             <p class="fs-5">List for: this week</p>
                         @break --}}
-
                         @case('monthly')
                             <p class="fs-5">List for: {{ date('F', strtotime($from)) }}
                                 {{ date('Y', strtotime($to)) }}</p>
@@ -102,11 +103,28 @@ use App\Http\Controllers\SalesReportController;
                             <p class="fs-5">List from: {{ $from }} to {{ $to }}</p>
                     @endswitch
                 </div>
-                <div class="col-xl-auto ms-auto">
-                    <p class="fs-5">Total Items: {{ $total_items }}</p>
-                </div>
-                <div class="col-xl-auto">
-                    <p class="fs-5">Total Sales: {{ number_format($total_sales, 2) }}</p>
+                <div class="col-xl-4">
+                    <table class="table border">
+                        <tbody>
+                            <tr>
+                                <td class="fs-5">Total Items</td>
+                                <td class="fs-5 text-end"> {{ $total_items }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fs-5">Total Sales:</td>
+                                <td class="fs-5 text-end"> {{ number_format($total_sales, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fs-5">Total Price:</td>
+                                <td class="fs-5 text-end"> {{ number_format($total_price, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fs-5">Profit:</td>
+                                <td class="fs-5 text-end"> {{ number_format($profit, 2) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
                 </div>
             </div>
         </div>

@@ -16,23 +16,30 @@ class POSTransaction2ProductModel extends Model
 
     public $timestamps = false;
 
+    /**
+     * SalesReport are grouped pos_transaction2product sales
+     */
     public function getSalesReport($from = "", $to = "", $paginated = true)
     {
         $time_start = "00:00:00";
         $time_end = "23:59:59";
+
+        DB::enableQueryLog();
         $model = POSTransaction2ProductModel::select(DB::raw("
-            pt2p.pos_transaction_id t_id, 
-            (pt2p.quantity - pt2p.refunded_quantity) pt2p_quantity,
-            pt2p.price pt2p_price,
-            pt.created_at t_date,
+            pt2p.pos_transaction_id t_id,             
+            pt2p.quantity pt2p_quantity, 
+            SUM(pt2p.quantity - pt2p.refunded_quantity) pt2p_quantities,
+            SUM(pt2p.price * pt2p.quantity) pt2p_price_total,
+            pt.created_at t_date, pt.amount_paid,
             p.name p_name, p.description
         "))
             ->from("pos_transaction2product as pt2p")
             ->join("pos_transaction as pt", "pt.id", "=", "pt2p.pos_transaction_id")
             ->join("product as p", "p.id", "=", "pt2p.product_id")
             ->where("status_id", 4) //completed
+            ->groupBy("pt.id")
             ->having("pt2p_quantity", ">", 0);
-
+        
         if ($from && $to) {
             $model = $model->where("pt.created_at", ">=", $from . " $time_start")
                 ->where("pt.created_at", "<=", $to . " $time_end");
@@ -55,12 +62,31 @@ class POSTransaction2ProductModel extends Model
         return $model;
     }
 
+    public function getSalesReportFor($id)
+    {
+        $model = POSTransaction2ProductModel::select(DB::raw("
+            pt2p.pos_transaction_id t_id, 
+            (pt2p.quantity - pt2p.refunded_quantity) pt2p_quantity,
+            pt2p.price pt2p_price,
+            pt.created_at t_date, pt.amount_paid,
+            p.item_code, p.name p_name, p.description
+        "))
+            ->from("pos_transaction2product as pt2p")
+            ->join("pos_transaction as pt", "pt.id", "=", "pt2p.pos_transaction_id")
+            ->join("product as p", "p.id", "=", "pt2p.product_id")
+            ->where("status_id", 4) //completed
+            ->where("pt.id", $id)
+            ->having("pt2p_quantity", ">", 0);
+        return $model;
+    }
+
     public function getSalesReportTotals($from = "", $to = "")
     {
         $time_start = "00:00:00";
         $time_end = "23:59:59";
         $model = POSTransaction2ProductModel::select(DB::raw("
             SUM(pt2p.quantity - pt2p.refunded_quantity) total_items, 
+            SUM(pt2p.base_price * (pt2p.quantity - pt2p.refunded_quantity)) total_price,
             SUM((pt2p.quantity - pt2p.refunded_quantity) * pt2p.price) total_sales
         "))
             ->from("pos_transaction2product as pt2p")

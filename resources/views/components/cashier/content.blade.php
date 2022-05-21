@@ -40,6 +40,13 @@
                 <span>PRODUCTS</span>
             </a>
 
+            <a class="p-3 d-block {{ navActive('customer') }}" href="{{ route('customer') }}"  title="[F2]">
+                <div class="icon-container rounded-circle mx-auto text-center">
+                    <i class="fa-solid fa-face-smile align-middle"></i>
+                </div>
+                <span>CUSTOMERS</span>
+            </a>
+
             <a class="p-3 d-block {{ navActive('cashier-settings') }}" href="{{ url('/cashier-settings') }}"  title="[F3]">
                 <div class="icon-container rounded-circle mx-auto text-center">
                     <i class="fa-solid fa-tags align-middle"></i>

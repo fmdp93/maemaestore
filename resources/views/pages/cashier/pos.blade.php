@@ -17,7 +17,8 @@ use App\Http\Controllers\POSController;
     <div class="row px-xl-5 mb-xl-3">
         @include('layouts.heading')
         <div class="col-xl-12">
-            <a href="{{ action([RRController::class, 'index']) }}" id="btn-return-refund" class="btn btn-danger mb-xl-3" title="[Alt] + [R]">
+            <a href="{{ action([RRController::class, 'index']) }}" id="btn-return-refund" class="btn btn-danger mb-xl-3"
+                title="[Alt] + [R]">
                 <i class="fa-solid fa-receipt"></i> Return/Refund
             </a>
         </div>
@@ -139,13 +140,44 @@ use App\Http\Controllers\POSController;
                             <div id="pos-error" class="d-none rounded-1 bg-danger p-xl-3 text-primary mb-xl-2">
 
                             </div>
+                            
+                            <div class="form-check mb-3">
+                                <input type="checkbox" name="senior_discounted" id="senior_discounted" value="true"
+                                    class="form-check-input" form="pos">
+                                <input type="hidden" name="senior_discount" id="senior_discount" value="{{ $senior_discount }}"
+                                    form="pos">
+                                <label for="senior_discounted">Senior ({{ $senior_discount * 100 }}% off)</label>
+                            </div>
+
                             <label for="amount_paid">Amount Paid</label>
                             <input name="amount_paid" id="amount_paid" class="form-control form-control-xl mb-xl-3"
                                 type="number" min="1" aria-label="amount_paid" value="{{ old('amount_paid') }}"
                                 form="pos">
+                            
                             <label for="change">Change</label>
                             <input name="change" id="change" class="form-control form-control-xl mb-xl-3" type="number"
                                 min="1" aria-label="change" value="{{ old('change') }}" readonly form="pos">
+
+                            <label for="customer_search">Search Customer</label>
+                            <input type="text" name="customer_search" id="customer_search"
+                                value="{{ old('customer_search') }}" class="form-control mb-3" form="pos"
+                                autocomplete="off">
+                            <input type="hidden" id="customer_id">
+
+                            <label for="customer_name">Customer's Name</label>
+                            <input type="text" name="customer_name" id="customer_name" value="{{ old('customer_name') }}"
+                                class="form-control mb-3" form="pos" autocomplete="off">
+
+                            <label for="customer_address">Customer's Address</label>
+                            <input type="text" name="customer_address" id="customer_address"
+                                value="{{ old('customer_address') }}" class="form-control mb-3" form="pos"
+                                autocomplete="off">
+
+                            <label for="customer_contact_detail">Customer's Contact #</label>
+                            <input type="text" name="customer_contact_detail" id="customer_contact_detail"
+                                value="{{ old('customer_contact_detail') }}" class="form-control mb-3" form="pos"
+                                autocomplete="off">
+
                             <button id="submit_pos" class="form-control btn btn-button text-primary py-xl-2 px-xl-5"
                                 type="submit" form="pos">Finish</button>
                         </div>

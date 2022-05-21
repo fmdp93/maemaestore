@@ -11,6 +11,7 @@ use App\Rules\FloatNoNegative;
 use App\Http\Traits\ProductsTrait;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Inventory;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Validator;
 
@@ -39,11 +40,12 @@ class ProductsController extends Controller
     public function addProduct()
     {
         $data['heading'] = 'Add Products';
-        $data['categories'] = Category::all();        
+        $data['categories'] = Category::all();
         return view('pages.admin.add-product', $data);
     }
 
-    public function getNewItemCode(Request $request){
+    public function getNewItemCode(Request $request)
+    {
         $response['new_item_code'] = $this->getNewBarcode();
         return Response()->json(json_encode($response));
     }
@@ -72,6 +74,7 @@ class ProductsController extends Controller
         $rules = [
             'product_id' => 'required',
             'expiration_date' => 'required|date',
+            'price' => ['required', 'numeric', 'min:0'],
         ];
 
         $messages = [
@@ -87,7 +90,10 @@ class ProductsController extends Controller
 
         Product::where('id', $request->input('product_id'))
             ->update(
-                ['expiration_date' => $request->input('expiration_date')]
+                [
+                    'expiration_date' => $request->input('expiration_date'),
+                    'price' => $request->input('price')
+                ],
             );
 
         ProductLog::log($request->input('product_id'), 6); // 6 for product edited;
@@ -98,6 +104,12 @@ class ProductsController extends Controller
         return redirect('/products' . $query_string)
             ->withInput();
     }
+    /**
+     * Adds a product to the database.
+     * (Optional) adds product to the inventory.
+     * 
+     * @return redirect
+     */
 
     public function store(Request $request)
     {
@@ -107,10 +119,11 @@ class ProductsController extends Controller
             'name' => 'required',
             'description' => 'required',
             'category_id' => 'required|integer',
-            'price' => ['required', 'numeric', 'min:0'],
+            'price' => ['required', 'numeric', 'min:0'],            
             'unit' => 'required',
             'stock' => ['required', 'integer', 'min:1'],
             'expiration_date' => 'required|date',
+            'inv_stock' => 'nullable|numeric|min:0',
         ];
         $messages = [
             'item_code.integer' => 'Item code must be a valid barcode number',
@@ -135,7 +148,17 @@ class ProductsController extends Controller
 
         $Product->save();
         ProductLog::log($Product->id, 5); // 5 for product added;
-        $request->session()->flash('msg_success', 'Product added');
+
+        // Add to inventory if inventory stock is present
+        if ($request->input('inv_stock') >= 0 && $request->input('inv_stock') !== null) {
+            $product_id = $Product->id;
+            $Inventory = new Inventory();
+            $Inventory->product_id = $product_id;
+            $Inventory->stock = $request->input('inv_stock');                        
+            $Inventory->save();
+        }
+
+        $request->session()->flash('msg_success', 'Product added successfully!');
         return redirect()->action([ProductsController::class, 'addProduct']);
     }
 

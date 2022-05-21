@@ -14,6 +14,6 @@ class POSTransaction2ProductSeeder extends Seeder
      */
     public function run()
     {
-        POSTransaction2ProductModel::factory()->count(200)->create();
+        POSTransaction2ProductModel::factory()->count(5)->create();
     }
 }

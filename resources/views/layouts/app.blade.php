@@ -13,6 +13,8 @@
   <script src="{{ asset('js/jquery.min.js') }}"></script>
   <script src="{{ asset('js/bootstrap.bundle.min.js') }}" defer></script>
   <script src="{{ asset('js/html5-qrcode/html5-qrcode.min.js') }}" defer></script>
+  <link rel="stylesheet" href="{{ asset('js/lib/jquery-ui/jquery-ui.css') }}">
+  <script src="{{ asset('js/lib/jquery-ui/jquery-ui.js') }}"></script>
   @yield('content_scripts')
   @yield('header_scripts')  
   @yield('infile_style')

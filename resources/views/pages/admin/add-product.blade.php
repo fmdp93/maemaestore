@@ -20,14 +20,14 @@ use App\Http\Controllers\CategoryController;
                 @error('item_code')
                     @include('components.error-message')
                 @enderror
-                <div class="row align-items-end mb-3">                    
+                <div class="row align-items-end mb-3">
                     <div class="col-xl-5 pe-1">
                         <label for="item_code">Item Code</label>
                         <input name="item_code" id="item_code" class="form-control form-control-xl" type="text"
                             aria-label="item_code" value="{{ old('item_code') }}">
                     </div>
                     <div class="col-xl-1 px-0">
-                        <button id="new_item_code" class="btn btn-success"><i class="fa-solid fa-circle-plus"></i></button>                        
+                        <button id="new_item_code" class="btn btn-success"><i class="fa-solid fa-circle-plus"></i></button>
                     </div>
                     <div class="col-xl-5 pe-1">
                         <label for="item_code">Scan Using Camera</label>
@@ -76,7 +76,7 @@ use App\Http\Controllers\CategoryController;
                     @include('components.error-message')
                 @enderror
                 <label for="price">Unit Price</label>
-                <input name="price" id="price" class="form-control form-control-xl mb-xl-3" type="text" aria-label="price"
+                <input name="price" id="price" class="form-control form-control-xl mb-xl-3" type="number" aria-label="price"
                     value="{{ old('price') }}" placeholder="e.g. 100.50">
 
                 @error('unit')
@@ -92,8 +92,8 @@ use App\Http\Controllers\CategoryController;
                 @error('stock')
                     @include('components.error-message')
                 @enderror
-                <label for="stock">Stocks</label>
-                <input name="stock" id="stock" class="form-control form-control-xl mb-xl-3" type="text"
+                <label for="stock">Max Stocks</label>
+                <input name="stock" id="stock" class="form-control form-control-xl mb-xl-3" type="number"
                     placeholder="e.g. 100" aria-label="stock" value="{{ old('stock') }}">
 
                 @error('expiration_date')
@@ -103,6 +103,14 @@ use App\Http\Controllers\CategoryController;
                 <input name="expiration_date" id="expiration_date" class="form-control form-control-xl mb-xl-3" type="text"
                     placeholder="2030-12-30" aria-label="expiration_date" value="{{ old('expiration_date') }}"
                     autocomplete="off">
+
+                @error('inv_stock')
+                    @include('components.error-message')
+                @enderror
+                <label for="inv_stock">Inventory Stocks (Optional)</label>
+                <input name="inv_stock" id="inv_stock" class="form-control form-control-xl mb-xl-3" type="number"
+                    placeholder="e.g. 100" aria-label="inv_stock" value="{{ old('inv_stock') }}">
+
                 <button class="float-end btn btn-button text-primary py-xl-2 px-xl-5" type="submit"
                     @if (count($categories) === 0) disabled @endif>Add Item</button>
             </form>

@@ -1,0 +1,1 @@
+<div class="p-2" role="button" data-supplier-id="{{ $value }}">{{ $label }}</div>

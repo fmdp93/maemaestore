@@ -1,11 +1,21 @@
 import { objBarcodeReader } from "/js/scope/barcode_reader.js";
 import { toggletableEmpty } from "/js/function.js";
+import { SupplierSearchAutocomplete } from "/js/decorator/SupplierSearchAutocomplete.js";
 
 class Products {
     constructor() {
         // Table Empty vars
+        this.$products_list = $("#products_list");
         this.$tbody = $("#products_list tbody");
         this.$table_empty = $(".table-empty");
+
+        // update form vars
+        this.deleteClicked = false;
+        this.$product_id = $("#product_id");
+        this.$item_code = $("#item_code");
+        this.$item_name = $("#item_name");
+        this.$price = $("#price");
+        this.$expiration_date = $("#expiration_date");
 
         // Class vars
         this.$pages = $("#pages");
@@ -19,15 +29,60 @@ class Products {
         this.$item_code = $("#item_code");
         this.objBarcodeReader = objBarcodeReader;
         this.objBarcodeReader.$search = this.$search;
-        this.objBarcodeReader.then_callback = this.objBarcodeReader.changeSearch;
+        this.objBarcodeReader.then_callback =
+            this.objBarcodeReader.changeSearch;
         this.objBarcodeReader.done_callback = this.requestProduct;
 
+        this.$vendor = $("#vendor");
+        this.$company = $("#company");
+        this.$contact = $("#contact");
+        this.$address = $("#address");
+        this.$supplier_search_id = $("#supplier_search_id");
+
+        // autocomplete
+        this.$supplier_search = $("#supplier_search");
+        this.objSupplierSearchAutocomplete = new SupplierSearchAutocomplete(
+            this
+        );
+
         this.triggerEvents();
-    }   
+    }
 
     triggerEvents() {
         this.search();
         this.searchCategory();
+        this.$products_list.on("click", "tbody tr", this.fillUpdateForm);
+        $(".delete-cell button").on("click", function () {
+            _this.deleteClicked = true;
+        });
+    }
+
+    fillUpdateForm(event) {
+        if (_this.deleteClicked) {
+            _this.deleteClicked = false;
+            return;
+        }
+        let product_id = $(this).find("input[name='product_id']").val();
+
+        _this.$product_id.val(product_id);
+        _this.$item_code.val($(this).find("input[name='item_code']").val());
+        _this.$item_name.val($(this).find("input[name='p_name']").val());
+        _this.$price.val($(this).find("input[name='price']").val());
+        _this.$expiration_date.val(
+            $(this).find("input[name='expiration_date']").val()
+        );
+
+        $.get(`/product/${product_id}/`, {}, function (response) {
+            let parsed_response = JSON.parse(response);
+            _this.$supplier_search.val("");
+            _this.$supplier_search_id.val(parsed_response.supplier.supplier_id);
+            _this.$vendor.val(parsed_response.supplier.vendor);
+            _this.$company.val(parsed_response.supplier.company_name);
+            _this.$contact.val(parsed_response.supplier.contact_detail);
+            _this.$address.val(parsed_response.supplier.address);
+
+            console.log(parsed_response.supplier);
+        });
     }
 
     searchCategory() {
@@ -38,7 +93,7 @@ class Products {
         this.$search.on("keyup", "", { this: this }, this.requestProduct);
     }
 
-    requestProduct(event) {        
+    requestProduct(event) {
         let category_id = _this.$category.val();
 
         let objSearchParam = {
@@ -67,26 +122,3 @@ class Products {
 
 let objProducts = new Products();
 const _this = objProducts;
-
-$(function () {
-    let deleteClicked = false;
-
-    $(".delete-cell button").on("click", function () {
-        deleteClicked = true;
-    });
-
-    $("#products_list").on("click", "tbody tr", function (event) {
-        if (deleteClicked) {
-            deleteClicked = false;
-            return;
-        }
-
-        $("#product_id").val($(this).find("input[name='product_id']").val());
-        $("#item_code").val($(this).find("input[name='item_code']").val());
-        $("#item_name").val($(this).find("input[name='p_name']").val());
-        $("#price").val($(this).find("input[name='price']").val());
-        $("#expiration_date").val(
-            $(this).find("input[name='expiration_date']").val()
-        );
-    });
-});

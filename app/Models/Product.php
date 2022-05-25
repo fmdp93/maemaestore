@@ -39,7 +39,7 @@ class Product extends Model
             $Inventory = new Inventory();
             $Inventory = $Inventory->where('product_id', $product->p_id);
             $inventory_id = $Inventory->first()->id;
-            
+
             $Inventory->update([
                 'stock' => DB::raw('stock + ' . $product->io2p_quantity)
             ]); // returns 1 after updating
@@ -81,5 +81,17 @@ class Product extends Model
             )
             ->withQueryString();
         return $Products;
+    }
+
+    public static function getProduct($id)
+    {
+        // $product = new Product();
+        // var_dump($id);
+
+        return Product::select(DB::raw("p.id p_id,
+            s.id s_id, s.vendor, s.company_name, s.contact_detail, s.address"))
+            ->from("product as p")
+            ->leftJoin("supplier as s", "s.id", "=", "p.supplier_id")
+            ->where("p.id", $id);
     }
 }

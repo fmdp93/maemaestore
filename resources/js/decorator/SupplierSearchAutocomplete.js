@@ -31,7 +31,7 @@ export class SupplierSearchAutocomplete {
                 this.DecoratedClass.$company.val(ui.item.company_name);
                 this.DecoratedClass.$contact.val(ui.item.contact_detail);
                 this.DecoratedClass.$address.val(ui.item.address);
-
+                this.DecoratedClass.$supplier_search_id.val(ui.item.id);
                 return false;
             }.bind(this),
         };

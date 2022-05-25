@@ -25,6 +25,7 @@ class PurchaseOrder {
         this.$company = $("#company");
         this.$contact = $("#contact");
         this.$address = $("#address");
+        this.$supplier_search_id = $("#supplier_search_id");
 
         // autocomplete
         this.$supplier_search = $("#supplier_search");           

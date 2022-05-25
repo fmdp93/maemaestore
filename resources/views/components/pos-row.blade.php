@@ -14,11 +14,11 @@
         <input type="number" name="quantity[]" value="{{ $quantity }}" form="{{ $form }}" min="1" required>
     </td>
     <td class="price">
-        <input type="hidden" name="price[]" value="{{ $price }}" form="{{ $form }}">
+        <input type="hidden" name="price[]" value="{{ sprintf("%.2f", $price) }}" form="{{ $form }}">
         {{ sprintf("%.2f", $price) }}
     </td>
     <td class="subtotal">
-        <input type="hidden" name="t_subtotal[]" value="{{ $price }}" form="{{ $form }}">
+        <input type="hidden" name="t_subtotal[]" value="{{ sprintf("%.2f", $subtotal) }}" form="{{ $form }}">
         {{ sprintf("%.2f", $subtotal) }}</td>
     <td>
         <i class="fa-solid fa-xmark text-danger fa-2x delete-item" title="Void Item" data-bs-toggle="modal" data-bs-target="#pin-modal"></i>

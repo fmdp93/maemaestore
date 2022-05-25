@@ -50,6 +50,32 @@ use App\Http\Controllers\ProductsController;
                 <input name="expiration_date" id="expiration_date" class="form-control form-control-xl mb-xl-3" type="text"
                     placeholder="2030-12-30" aria-label="expiration_date" autocomplete="off"
                     value="{{ old('expiration_date') }}">
+                @error('supplier_search_id')
+                    @include('components.error-message')
+                @enderror
+                <br>
+                <label for="supplier_search">Search Supplier <a href="{{ route('add_supplier') }}"
+                        class="text-decoration-underline" target="_blank">(New Supplier? Click here)</a></label>
+                <input type="text" name="supplier_search" id="supplier_search" value="{{ old('supplier_search') }}"
+                    class="form-control mb-3" autocomplete="off">
+                <input type="hidden" name="supplier_search_id" id="supplier_search_id"  value="{{ old('supplier_search_id') }}">
+
+                <label for="vendor">Vendor</label>
+                <input type="text" name="vendor" id="vendor" value="{{ old('vendor') }}" class="form-control mb-3"
+                    autocomplete="off" readonly>
+
+                <label for="company">Company</label>
+                <input type="text" name="company" id="company" value="{{ old('company') }}" class="form-control mb-3"
+                    autocomplete="off" readonly>
+
+                <label for="contact">Contact Details</label>
+                <input type="text" name="contact" id="contact" value="{{ old('contact') }}" class="form-control mb-3"
+                    autocomplete="off" readonly>
+
+                <label for="address">Address</label>
+                <input type="text" name="address" id="address" value="{{ old('address') }}" class="form-control mb-3"
+                    autocomplete="off" readonly>
+
                 <input type="submit" value="Update Item" class="btn btn-primary">
             </form>
         </div>

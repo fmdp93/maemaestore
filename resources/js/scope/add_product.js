@@ -1,5 +1,6 @@
 import {objBarcodeReader} from "/js/scope/barcode_reader.js";
 import {preventPlusMinus} from "/js/function.js";
+import { SupplierSearchAutocomplete } from "/js/decorator/SupplierSearchAutocomplete.js";
 
 class AddProduct {
     constructor() {
@@ -14,6 +15,14 @@ class AddProduct {
         this.objBarcodeReader.done_callback = function(){};
 
         this.$new_item_code = $("#new_item_code");
+
+        this.$vendor = $("#vendor");
+        this.$company = $("#company");
+        this.$contact = $("#contact");
+        this.$address = $("#address");
+        this.$supplier_search_id = $("#supplier_search_id");
+        this.$supplier_search = $("#supplier_search");           
+        this.objSupplierSearchAutocomplete = new SupplierSearchAutocomplete(this);
     
         this.triggerEvents();        
     }

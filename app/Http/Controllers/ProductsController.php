@@ -75,10 +75,12 @@ class ProductsController extends Controller
             'product_id' => 'required',
             'expiration_date' => 'required|date',
             'price' => ['required', 'numeric', 'min:0'],
+            'supplier_search_id' => 'required|numeric|min:1',
         ];
 
         $messages = [
-            'product_id.required' => 'Please pick a product first'
+            'product_id.required' => 'Please pick a product first',
+            'supplier_search_id.required' => 'Supplier is required',
         ];
 
         $validator = Validator::make($input, $rules, $messages);
@@ -92,7 +94,8 @@ class ProductsController extends Controller
             ->update(
                 [
                     'expiration_date' => $request->input('expiration_date'),
-                    'price' => $request->input('price')
+                    'price' => $request->input('price'),
+                    'supplier_id' => $request->input('supplier_search_id'),
                 ],
             );
 
@@ -124,9 +127,11 @@ class ProductsController extends Controller
             'stock' => ['required', 'integer', 'min:1'],
             'expiration_date' => 'required|date',
             'inv_stock' => 'nullable|numeric|min:0',
+            'supplier_search_id' => 'required|numeric|min:1',
         ];
         $messages = [
             'item_code.integer' => 'Item code must be a valid barcode number',
+            'supplier_search_id.required' => 'Supplier is required',
         ];
 
         $validator = Validator::make($input, $rules, $messages);
@@ -144,6 +149,7 @@ class ProductsController extends Controller
         $Product->price = $request->input('price');
         $Product->unit = $request->input('unit');
         $Product->stock = $request->input('stock');
+        $Product->supplier_id = $request->input('supplier_search_id');
         $Product->expiration_date = $request->input('expiration_date');
 
         $Product->save();
@@ -174,5 +180,19 @@ class ProductsController extends Controller
         $request->session()->flash('msg_success', 'Product deleted successfully!');
 
         return redirect('/products');
+    }
+
+    public function getProduct($id){
+        DB::enableQueryLog();
+        $product =  Product::getProduct($id);
+        $product = $product->first();
+        $q = DB::getQueryLog();
+        $response = [
+            'q' => $q,
+            'supplier' => $product,
+        ];
+        $response = json_encode($response);
+        // $response = json_encode($product->getProduct($id));
+        return Response()->json($response);
     }
 }

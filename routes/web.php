@@ -51,6 +51,8 @@ Route::group(['middleware' => 'auth'], function () {
   // Route::group(['middleware' => 'can:do_admin,' . User::class], function () {
   Route::group(['middleware' => RoleMiddleware::class . ':admin'], function () {
     Route::get('/products', [ProductsController::class, 'index']);
+    Route::get('/product/{id}', [ProductsController::class, 'getProduct'])
+      ->where('id', '[0-9]+');
     Route::get('/products/print-barcode/', [ProductsController::class, 'printBarcode']);
     Route::get('/products/add-product', [ProductsController::class, 'addProduct']);
     Route::get('/product/get-item-code', [ProductsController::class, 'getNewItemCode']);

@@ -43,9 +43,54 @@ use App\Http\Controllers\ProductsController;
                 <label for="item_name">Item Name</label>
                 <input name="item_name" id="item_name" class="form-control form-control-xl mb-xl-3" type="text"
                     aria-label="name" value="{{ old('item_name') }}" readonly>
-                <label for="price">Price</label>
-                <input name="price" id="price" class="form-control form-control-xl mb-xl-3" type="text" aria-label="price"
-                    value="{{ old('price') }}">
+
+                @error('base_price')
+                    @include('components.error-message')
+                @enderror
+
+                @error('tax')
+                    @include('components.error-message')
+                @enderror
+
+                @error('markup')
+                    @include('components.error-message')
+                @enderror
+
+                @error('selling_price')
+                    @include('components.error-message')
+                @enderror
+
+                <div class="row">
+                    <div class="col-xl-6">
+                        <label for="base_price">Base Price</label>
+                        <input name="base_price" id="base_price" class="form-control form-control-xl mb-xl-3" type="number"
+                            min="0" step=".01" aria-label="base_price" value="{{ old('base_price') }}"
+                            {{ getInputFloatPattern() }}>
+                    </div>
+                    <div class="col-xl-6">
+                        <label for="tax">Tax</label>
+                        <div class="input-group mb-xl-3">
+                            <input name="tax" id="tax" class="form-control form-control-xl" type="number" min="0" step=".01"
+                                aria-label="tax" aria-describedby="tax-addon" value="{{ old('tax') }}"
+                                {{ getInputFloatPattern() }}>
+                            <span class="input-group-text" id="tax-addon">%</span>
+                        </div>
+                    </div>
+                    <div class="col-xl-6">
+                        <label for="markup">Markup Price</label>
+                        <div class="input-group mb-xl-3">
+                            <input name="markup" id="markup" class="form-control form-control-xl" type="number" min="0"
+                                step=".01" aria-label="markup" aria-describedby="markup-addon"
+                                value="{{ old('markup') }}" {{ getInputFloatPattern() }}>
+                            <span class="input-group-text" id="markup-addon">%</span>
+                        </div>
+                    </div>
+                    <div class="col-xl-6">
+                        <label for="selling_price">Selling Price</label>
+                        <input name="selling_price" id="selling_price" class="form-control form-control-xl mb-xl-3"
+                            type="number" step=".01" aria-label="selling_price" value="{{ old('selling_price') }}">
+                    </div>
+                </div>
                 <label for="name">Expiration</label>
                 <input name="expiration_date" id="expiration_date" class="form-control form-control-xl mb-xl-3" type="text"
                     placeholder="2030-12-30" aria-label="expiration_date" autocomplete="off"
@@ -58,7 +103,8 @@ use App\Http\Controllers\ProductsController;
                         class="text-decoration-underline" target="_blank">(New Supplier? Click here)</a></label>
                 <input type="text" name="supplier_search" id="supplier_search" value="{{ old('supplier_search') }}"
                     class="form-control mb-3" autocomplete="off">
-                <input type="hidden" name="supplier_search_id" id="supplier_search_id"  value="{{ old('supplier_search_id') }}">
+                <input type="hidden" name="supplier_search_id" id="supplier_search_id"
+                    value="{{ old('supplier_search_id') }}">
 
                 <label for="vendor">Vendor</label>
                 <input type="text" name="vendor" id="vendor" value="{{ old('vendor') }}" class="form-control mb-3"
@@ -113,7 +159,10 @@ use App\Http\Controllers\ProductsController;
                         <th scope="col">Name</th>
                         <th scope="col">Description</th>
                         <th scope="col">Category</th>
-                        <th scope="col">Price</th>
+                        <th scope="col">Base Price</th>
+                        <th scope="col">Tax</th>
+                        <th scope="col">Markup</th>
+                        <th scope="col">Selling Price</th>
                         <th scope="col">Stock</th>
                         <th scope="col">Unit</th>
                         <th scope="col">Expiration</th>

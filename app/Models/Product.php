@@ -22,26 +22,32 @@ class Product extends Model
         return ProductFactory::new();
     }
 
-    public function addStock($product)
+    /**
+     * Add stock to new inventory item or just update the existing inventory
+     * 
+     * @return $inventory_id
+     */
+
+    public static function addStock($product_id, $quantity)
     {
-        $Inventory = Inventory::where('product_id', $product->io2p_product_id)
+        $Inventory = Inventory::where('product_id', $product_id)
             ->get();
 
         if (count($Inventory) === 0) {
             // insert              
             $Inventory = new Inventory();
-            $Inventory->product_id = $product->p_id;
-            $Inventory->stock = $product->io2p_quantity;
+            $Inventory->product_id = $product_id;
+            $Inventory->stock = $quantity;
             $Inventory->save();
             $inventory_id = $Inventory->id;
         } else {
             // update
             $Inventory = new Inventory();
-            $Inventory = $Inventory->where('product_id', $product->p_id);
+            $Inventory = $Inventory->where('product_id', $product_id);
             $inventory_id = $Inventory->first()->id;
 
             $Inventory->update([
-                'stock' => DB::raw('stock + ' . $product->io2p_quantity)
+                'stock' => DB::raw('stock + ' . $quantity)
             ]); // returns 1 after updating
         }
 
@@ -52,7 +58,8 @@ class Product extends Model
     {
         $Products = Product::select(
             DB::raw('p.id p_id, p.item_code, p.name p_name,
-        p.description, c.name c_name, p.price, p.stock, p.unit, p.expiration_date')
+                p.description, c.name c_name, 
+                p.price, p.tax, p.markup, p.base_price, p.stock, p.unit, p.expiration_date')
         )
             ->from('product as p')
             ->leftJoin('product_category as c', 'p.category_id', '=', 'c.id')
@@ -64,12 +71,6 @@ class Product extends Model
                 $query->where('c.id', $category_id);
             })
             ->where('p.deleted_at', null)
-            ->whereIn('p.id', function ($query) {
-                $query->select(DB::raw('max(id)'))
-                    ->from('product')
-                    ->whereNull('deleted_at')
-                    ->groupBy('item_code');
-            })
             ->orderBy('p.id', 'desc')
             ->paginate(Config::get('constant.per_page'))
             ->withPath($page_path)

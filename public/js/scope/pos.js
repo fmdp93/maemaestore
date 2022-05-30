@@ -261,7 +261,7 @@ class POS {
         $.get(
             "/pos/get-table-row",
             {
-                item_name: _this.$s_item_name.val(),
+                item_code: _this.$item_code.val(),
                 quantity: _this.$quantity.val(),
                 form: _this.$form_pos.attr('id'),
             },

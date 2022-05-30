@@ -37,7 +37,7 @@ class POSController extends Controller
 
         $data['tbody_content'] = $this->tbody_content;
         $data['d_none'] = !empty($data['tbody_content']) ? 'd-none' : '';
-        
+
         return view('pages.cashier.pos', $data);
     }
 
@@ -80,36 +80,74 @@ class POSController extends Controller
             $POSTransaction2Product->product_id = $product_id;
             $POSTransaction2Product->quantity = $validated['quantity'][$key];
 
-            $senior_discount = $request->input("senior_discounted") == "true" ? (float) ConfigModel::find(3)->value : 0;            
+            $senior_discount = $request->input("senior_discounted") == "true" ? (float) ConfigModel::find(3)->value : 0;
             $POSTransaction2Product->price = $validated['price'][$key] * (1 - $senior_discount);
-            $base_price = Product::find($product_id)->price;
+            $base_price = Product::find($product_id)->base_price;
             $POSTransaction2Product->base_price = $base_price;
             $POSTransaction2Product->senior_discount = $senior_discount;
 
             $POSTransaction2Product->save();
-
-            $previous_quantity = Inventory::getStock($product_id);
-
+            
             // reduce stocks in inventory
-            $Inventory = Inventory::where('product_id', $product_id);
-            $inventory_id = $Inventory->first()->id;
+            //find inventory items with similar item_code of product_id
+            $item_code = Product::find($product_id)->item_code;
+            $deducting_quantity = $validated['quantity'][$key];
+            $inventory_items = Inventory::select(DB::raw('i.id as i_id, i.stock, p.id as p_id'))
+                ->from('inventory as i')
+                ->join('product as p', 'p.id', '=', 'i.product_id')
+                ->where('p.item_code', $item_code)
+                ->orderBy('p.expiration_date', 'asc');
 
-            $Inventory->update([
-                'stock' => DB::raw('stock - ' . $validated['quantity'][$key])
-            ]);
+            // dd($inventory_items->get());
 
-            $updated_quantity = Inventory::find($inventory_id)->stock;
+            foreach ($inventory_items->get() as $key => $inventory_item) {                
+                $previous_quantity = Inventory::getStock($inventory_item->p_id);
+                DB::enableQueryLog();
+                $DeductInv = new Inventory();
+                $DeductInv = $DeductInv->where('id', $inventory_item->i_id);
+                // deduct all inventory stock
+                if ($deducting_quantity > $inventory_item->stock) {
+                    $DeductInv->update(
+                        [
+                            'stock' => 0,
+                        ]
+                    );
+                    $updated_quantity = Inventory::find($inventory_item->i_id)->stock;
+                    $deducting_quantity -= $inventory_item->stock;
 
-            // Log
-            InventoryLog::log(
-                $inventory_id,
-                $previous_quantity,
-                $updated_quantity,
-                9 // 9 = stock deducted
-            );
+                    $this->logInventoryDeduction($inventory_item->i_id, $previous_quantity, $updated_quantity);
+                    continue;
+                }
+
+                // deduct remaining
+                $DeductInv->update(
+                    [
+                        'stock' => DB::raw("stock - $deducting_quantity"),
+                    ]
+                );                
+                $updated_quantity = Inventory::find($inventory_item->i_id)->stock;
+                $deducting_quantity -= $inventory_item->stock;
+
+                $this->logInventoryDeduction($inventory_item->i_id, $previous_quantity, $updated_quantity);                
+                break;
+            }                        
         }
 
         return redirect(action([POSController::class, 'finish'], ['transaction_id' => $POSTransaction->id]));
+    }
+
+    private function logInventoryDeduction($inventory_id, $previous_quantity, $updated_quantity){
+        // Log
+        if($previous_quantity == 0 && $updated_quantity == 0){
+            return;
+        }
+        
+        InventoryLog::log(
+            $inventory_id,
+            $previous_quantity,
+            $updated_quantity,
+            9 // 9 = stock deducted
+        );
     }
 
     public function finish(Request $request)
@@ -126,7 +164,7 @@ class POSController extends Controller
         $data['title'] = 'Maemae\'s Store';
         $data['heading'] = 'Transaction Completed';
         $data['cashier_name'] = Auth::user()->first_name . ' ' . Auth::user()->last_name;
-        $data['customer'] = POSTransactionModel::find($request->input('transaction_id'));        
+        $data['customer'] = POSTransactionModel::find($request->input('transaction_id'));
         $data['items'] = POSTransactionModel::select(DB::raw('
             pt.created_at, pt.amount_paid, 
             pt.customer_name, pt.customer_address, pt.customer_contact_detail,
@@ -162,10 +200,11 @@ class POSController extends Controller
         $dompdf->stream($request->input('transaction_id'));
     }
 
-    private function getItemRows($items){
+    private function getItemRows($items)
+    {
         $row_count = 0;
         $item_label_one_line_character_count = 25;
-        foreach($items as $item){
+        foreach ($items as $item) {
             $item_label = "{$item->p_name} x {$item->quantity}";
             $item_label_character_count = strlen($item_label);
             $row_count += ceil($item_label_character_count / $item_label_one_line_character_count);
@@ -215,12 +254,16 @@ class POSController extends Controller
 
     private function getProductFromRequest($request)
     {
-        DB::enableQueryLog();
-        $markup_price = Config::get('app.markup_price');
+        DB::enableQueryLog();        
         $inventory = Inventory::select(
-            DB::raw("i.stock i_stock,
-            p.id p_id, p.item_code, p.name p_name,
-        p.description, (p.price + p.price * $markup_price) price, p.unit, p.expiration_date, p.stock p_stock,
+            DB::raw("SUM(i.stock) i_stock,
+            (SELECT MIN(product_id) 
+                FROM inventory i2
+                INNER JOIN product p2
+                ON p2.id = i2.product_id
+                WHERE p2.item_code = p.item_code
+                GROUP BY p2.item_code) p_id, p.item_code, p.name p_name,
+        p.description, p.price, p.unit, p.expiration_date, p.stock p_stock,
         c.name c_name")
         )
             ->from('inventory as i')
@@ -240,6 +283,8 @@ class POSController extends Controller
         if ($request->input('item_name') == "" && $request->input('item_code') == "") {
             $inventory = $inventory->whereRaw('NULL');
         }
+
+        $inventory->groupBy('p.item_code');
 
         return $inventory->first();
     }

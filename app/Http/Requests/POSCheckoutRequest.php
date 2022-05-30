@@ -55,9 +55,7 @@ class POSCheckoutRequest extends FormRequest
                 $table_item_quantity += $quantity[$pid_key];
             }
             
-            $inventory_stock = Inventory::where('product_id', $product_id)
-                ->first()
-                ->stock;
+            $inventory_stock = Inventory::getStockOf($item_codes[$key]);
             if($table_item_quantity > $inventory_stock){
                 $fail("Not enough stock for product " . $item_codes[$key]);
             }

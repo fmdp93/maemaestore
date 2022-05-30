@@ -18,3 +18,11 @@ function getExpiryOrderBy($expiry){
     }    
     return $order_by;
 }
+
+function increaseNumByPercent($number, $percent){
+    return $number * ($percent / 100 + 1);
+}
+
+function getInputFloatPattern(){
+    return 'pattern="^\d*(\.\d{0,2})?$"';
+}

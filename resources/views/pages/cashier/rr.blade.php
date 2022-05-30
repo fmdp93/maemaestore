@@ -13,15 +13,15 @@ use App\Http\Controllers\RRController;
     <script>
         // if(last_location != 'this_location')){
         //     window.location.href = "/pos/return-refund";
-        // }   
+        // }
     </script>
 @endsection
 
 @section('cashier_content')
     <div class="row px-xl-5 mb-xl-3">
-        @include('layouts.heading')        
-        <div class="col-xl-3">         
-            {{-- {{ session('pin2') }}    --}}
+        @include('layouts.heading')
+        <div class="col-xl-3">
+            {{-- {{ session('pin2') }} --}}
             <form id="{{ $form }}" action="{{ action([RRController::class, 'store']) }}" method="POST">
                 @csrf
                 <input type="text" value="0" class="d-none" id="initial_load" name="initial_load">
@@ -65,6 +65,7 @@ use App\Http\Controllers\RRController;
             </div>
             @if ($errors->any())
                 @php
+                    var_dump($errors->all());
                     $message = 'Please Fix the errors below';
                 @endphp
                 @include('components.error-message')
@@ -120,6 +121,15 @@ use App\Http\Controllers\RRController;
                         {{ old('type') == 'refund' ? 'checked' : '' }} class="ms-4"
                         form="{{ $form }}">
                     <label for="refund">Refund</label>
+
+                    <div class="mt-3">
+                        <label for="remark">Remark</label>
+                        <select name="remark" id="remark" class="form-select" form="{{ $form }}">
+                            <option value="Spoilage" {{ old('remark') == 'Spoilage' ? 'selected' : '' }}>Spoilage
+                            </option>
+                            <option value="Damaged" {{ old('remark') == 'Damaged' ? 'selected' : '' }}>Damaged</option>
+                        </select>
+                    </div>
                     <button type="submit" class="form-control mt-3 btn btn-danger" form="{{ $form }}">Submit
                         Return/Refund</button>
                 </div>

@@ -80,6 +80,9 @@ Route::group(['middleware' => 'auth'], function () {
       ->name('inventory_archive_search');
 
     Route::get('/inventory/orders', [InventoryController::class, 'orders']);
+    // Route::get('/inventory/orders/{id}', [InventoryController::class, 'order_details'])
+    //   ->name('order_details')
+    //   ->where('id', '[0-9]+');
     Route::get('/inventory/purchase-order', [InventoryController::class, 'purchaseOrder']);
     Route::get('/inventory/suppliers', [SuppliersController::class, 'index'])
       ->name('suppliers');
@@ -100,9 +103,9 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/inventory/order-received', [InventoryController::class, 'orderReceived']);
     Route::post('/inventory/purchase-order-cancel', [InventoryController::class, 'orderCancel'])
       ->name('purchase_order_cancel');
+    Route::get('/inventory/get-inventory-order-processing', [InventoryController::class, 'getInventoryOrderProcessing']);
     Route::get('/inventory/order-products', [InventoryController::class, 'orderProducts']);
     Route::post('/inventory/add', [InventoryController::class, 'store']);
-    Route::get('/purchase-order/search', [InventoryController::class, 'purchaseOrderSearch']);
     Route::get('/inventory/search', [InventoryController::class, 'inventorySearch']);
     Route::get('/vendor/search', [SuppliersController::class, 'searchVendor']);
 
@@ -151,14 +154,23 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/pos/receipt-url', [POSController::class, 'receiptUrl']);
 
     // Return Refunds routes
+    defined('RR_INDEX') || define('RR_INDEX', '/pos/return-refund');
+    Route::get(RR_INDEX, [RRController::class, 'index'])
+        ->name('rr_index');
+    Route::get('search_rr_pt_id', [RRController::class, 'searchRR'])
+        ->name('search_rr_pt_id');
+    Route::get('/pos/return-refund/{pt_id?}', [RRController::class, 'rr_transaction_details'])
+        ->name('rr_transaction_details')
+        ->where('pt_id', '[0-9]');
 
     $pin_mw = PinMiddleware::class;
     $action = action([PINController::class, 'setPinFlashCashier']);
-    Route::group(['middleware' => "$pin_mw:$action"], function () {
-      Route::get('/pos/return-refund', [RRController::class, 'index']);
+    Route::group(['middleware' => "$pin_mw:$action"], function () {      
+      Route::get('/pos/return-refund/form', [RRController::class, 'rrform'])
+        ->name('rr_form');
       Route::post('/pos/return-refund-submit', [RRController::class, 'store']);
     });
-
+    
     Route::get('/rr/inventory-search', [RRController::class, 'inventorySearch']);
     Route::get('/rr/get-table-row', [RRController::class, 'getTableRow']);
 

@@ -11,7 +11,6 @@ use App\Models\InventoryLog;
 use Illuminate\Http\Request;
 use App\Http\Requests\RRRequest;
 use Illuminate\Support\Facades\DB;
-use App\Models\POSTransactionModel;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
@@ -19,6 +18,7 @@ use Illuminate\Support\Facades\Config;
 use \Barryvdh\DomPDF\Facade\Pdf as PDF;
 use App\Http\Requests\POSCheckoutRequest;
 use App\Models\POSTransaction2ProductModel;
+use PosTransaction2Product;
 
 class RRController extends Controller
 {
@@ -29,17 +29,52 @@ class RRController extends Controller
         session()->reflash();
     }
 
-    public function index(Request $request){
-        // var_dump(session('pin'));
-        // var_dump($request->session()->all());
-        // die();
-        // if(!session('pin')){
-        //     $request->session()->flash('initial_message', 'Enter PIN first');
-        //     $referrer = urlencode(url()->full());
-        //     return redirect(action([PINController::class, 'setPinFlashCashier']) . '?referrer=' . $referrer);
-        // }
+    public function index(Request $request)
+    {
+        $search = $request->input('q');
 
-        // session()->reflash(); 
+        $data['heading'] = "Return/Refund";
+        $data['title'] = "Return/Refund";
+        $data['search'] = $search;     
+
+        $PosTransaction2Product = new POSTransaction2ProductModel();        
+        $data['return_refunds'] = $PosTransaction2Product->getPosTransaction($search, RR_INDEX);
+        $data['d_none'] = count($data['return_refunds']) ? 'd-none' : '';
+
+        return view('pages.cashier.rr-index', $data);
+    }
+
+    public function searchRR(Request $request)
+    {
+        $search = $request->input('q');
+
+        $PosTransaction2Product = new POSTransaction2ProductModel();
+
+        DB::enableQueryLog();
+        $data['return_refunds'] = $PosTransaction2Product->getPosTransaction($search, RR_INDEX);             
+        $data['search'] = "$search";
+        $rows = (string) view("components.cashier.rr-list", $data);
+
+        $data['d_none'] = count($data['return_refunds']) ? 'd-none' : '';
+        $table_empty = (string) view("layouts.empty-table", $data);
+        $links = (string) $data['return_refunds']->links();
+        $row_count = count($data['return_refunds']);
+        $response = [
+            'rows_html' => $rows,
+            'links_html' => $links,
+            'table_empty' => $table_empty,
+            'row_count' => $row_count,
+            'last_query' => DB::getQueryLog(),
+        ];
+        $response = json_encode($response);
+        return Response()->json($response);
+    }
+
+    public function rr_transaction_details($pt_id){
+        
+    }
+
+    public function rrform(Request $request){
         $data['heading'] = 'Return/Refund';
         $data['title'] = 'Return/Refund';        
         $data['form'] = 'rr';
@@ -76,6 +111,7 @@ class RRController extends Controller
         session()->forget([
             'name',
             'item_code',
+            'errors'
         ]);
         $request->session()->flash('msg_success', "Product {$validated['type']} successful!");
         return redirect(action([POSController::class, 'index']));
@@ -83,16 +119,17 @@ class RRController extends Controller
 
     private function setRefundDetails($validated){        
         $refunded_qty = 0;
+        $remark = $validated['remark'];
 
         foreach($validated['product_id'] as $key => $product_id){
             // get same products to iterate from a finished transaction
             $products = POSTransaction2ProductModel::where('product_id', $product_id)
                 ->where('pos_transaction_id', $validated['transaction_id'])
                 ->get();
-                $refund_quantity = $validated['quantity'][$key];
+                $refund_quantity = $validated['quantity'][$key];                
             foreach($products as $product){ 
                 $a_product = new POSTransaction2ProductModel();                
-                $refunded_qty = $a_product->refundPosTransaction2Product($product, $refund_quantity);
+                $refunded_qty = $a_product->refundPosTransaction2Product($product, $refund_quantity, $remark);
                 
                 if($validated['type'] == 'return'){                        
                     $previous_quantity = Inventory::getStock($product_id);
@@ -165,12 +202,11 @@ class RRController extends Controller
 
     private function getProductFromRequest($request)
     {
-        DB::enableQueryLog();
-        $markup_price = Config::get('app.markup_price');
+        DB::enableQueryLog();        
         $inventory = Inventory::select(
             DB::raw("i.stock i_stock,
             p.id p_id, p.item_code, p.name p_name,
-        p.description, (p.price + p.price * $markup_price) price, p.unit, p.expiration_date, p.stock p_stock,
+        p.description, p.price, p.unit, p.expiration_date, p.stock p_stock,
         c.name c_name")
         )
             ->from('inventory as i')

@@ -21832,7 +21832,7 @@ var sprintf = __webpack_require__(/*! sprintf-js */ "./node_modules/sprintf-js/s
 
 
 $(function () {
-  $("#expiration_date, #eta").datepicker({
+  $("#expiration_date, #eta, .expiration_date").datepicker({
     changeMonth: true,
     changeYear: true,
     dateFormat: "yy-mm-dd"

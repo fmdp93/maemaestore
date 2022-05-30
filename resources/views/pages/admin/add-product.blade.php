@@ -17,6 +17,9 @@ use App\Http\Controllers\CategoryController;
                 Category</a>
             <form action="{{ url('/product/add') }}" method="POST">
                 @csrf
+                @if ($errors->any())
+                    {{ print_r($errors->all()) }}
+                @endif
                 @error('item_code')
                     @include('components.error-message')
                 @enderror
@@ -72,12 +75,54 @@ use App\Http\Controllers\CategoryController;
                     </select>
                 @endif
 
-                @error('price')
+                @error('base_price')
                     @include('components.error-message')
                 @enderror
-                <label for="price">Unit Price</label>
-                <input name="price" id="price" class="form-control form-control-xl mb-xl-3" type="number" aria-label="price"
-                    value="{{ old('price') }}" placeholder="e.g. 100.50">
+
+                @error('tax')
+                    @include('components.error-message')
+                @enderror
+
+                @error('markup')
+                    @include('components.error-message')
+                @enderror
+
+                @error('selling_price')
+                    @include('components.error-message')
+                @enderror
+
+                <div class="row">
+                    <div class="col-xl-3">
+                        <label for="base_price">Base Price</label>
+                        <input name="base_price" id="base_price" class="form-control form-control-xl mb-xl-3" type="number"
+                            min="0" step=".01" aria-label="base_price" value="{{ old('base_price') }}"
+                            {{ getInputFloatPattern() }}>
+                    </div>
+                    <div class="col-xl-3">
+                        <label for="tax">Tax</label>
+                        <div class="input-group mb-xl-3">
+                            <input name="tax" id="tax" class="form-control form-control-xl" type="number" min="0" step=".01" 
+                                aria-label="tax" aria-describedby="tax-addon" value="{{ $tax }}"
+                                {{ getInputFloatPattern() }}>
+                            <span class="input-group-text" id="tax-addon">%</span>
+                        </div>
+                    </div>
+                    <div class="col-xl-3">
+                        <label for="markup">Markup Price</label>
+                        <div class="input-group mb-xl-3">
+                            <input name="markup" id="markup" class="form-control form-control-xl" type="number" min="0" step=".01" 
+                                aria-label="markup" aria-describedby="markup-addon" value="{{ old('markup') }}"
+                                {{ getInputFloatPattern() }}>
+                            <span class="input-group-text" id="markup-addon">%</span>
+                        </div>
+                    </div>
+                    <div class="col-xl-3">
+                        <label for="selling_price">Selling Price</label>
+                        <input name="selling_price" id="selling_price" class="form-control form-control-xl mb-xl-3"
+                            type="number" step=".01" aria-label="selling_price" value="{{ old('selling_price') }}"
+                            >
+                    </div>
+                </div>
 
                 @error('unit')
                     @include('components.error-message')
@@ -93,7 +138,7 @@ use App\Http\Controllers\CategoryController;
                     @include('components.error-message')
                 @enderror
                 <label for="stock">Max Stocks</label>
-                <input name="stock" id="stock" class="form-control form-control-xl mb-xl-3" type="number"
+                <input name="stock" id="stock" class="form-control form-control-xl mb-xl-3" type="number" min="0"
                     placeholder="e.g. 100" aria-label="stock" value="{{ old('stock') }}">
 
                 @error('expiration_date')
@@ -111,7 +156,8 @@ use App\Http\Controllers\CategoryController;
                         class="text-decoration-underline" target="_blank">(New Supplier? Click here)</a></label>
                 <input type="text" name="supplier_search" id="supplier_search" value="{{ old('supplier_search') }}"
                     class="form-control mb-3" autocomplete="off">
-                <input type="hidden" name="supplier_search_id" id="supplier_search_id" value="{{ old('supplier_search_id') }}">
+                <input type="hidden" name="supplier_search_id" id="supplier_search_id"
+                    value="{{ old('supplier_search_id') }}">
 
                 <label for="vendor">Vendor</label>
                 <input type="text" name="vendor" id="vendor" value="{{ old('vendor') }}" class="form-control mb-3"
@@ -133,7 +179,7 @@ use App\Http\Controllers\CategoryController;
                     @include('components.error-message')
                 @enderror
                 <label for="inv_stock">Inventory Stocks (Optional)</label>
-                <input name="inv_stock" id="inv_stock" class="form-control form-control-xl mb-xl-3" type="number"
+                <input name="inv_stock" id="inv_stock" class="form-control form-control-xl mb-xl-3" type="number" min="0"
                     placeholder="e.g. 100" aria-label="inv_stock" value="{{ old('inv_stock') }}">
 
                 <button class="float-end btn btn-button text-primary py-xl-2 px-xl-5" type="submit"

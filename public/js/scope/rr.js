@@ -244,8 +244,7 @@ class RR {
 let objRR = new RR();
 const _this = objRR;
 
-$(function () {});
-
+// Prevent back button reload
 $(document).ready(function () {
     setTimeout(function () {        
         if($("#initial_load").val() == 1){

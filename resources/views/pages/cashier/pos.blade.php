@@ -17,7 +17,7 @@ use App\Http\Controllers\POSController;
     <div class="row px-xl-5 mb-xl-3">
         @include('layouts.heading')
         <div class="col-xl-12">
-            <a href="{{ action([RRController::class, 'index']) }}" id="btn-return-refund" class="btn btn-danger mb-xl-3"
+            <a href="{{ route('rr_index') }}" id="btn-return-refund" class="btn btn-danger mb-xl-3"
                 title="[Alt] + [R]">
                 <i class="fa-solid fa-receipt"></i> Return/Refund
             </a>
@@ -44,7 +44,8 @@ use App\Http\Controllers\POSController;
                         <button id="scanner" class="btn btn-success"><i class="fa-solid fa-barcode"></i></button>
                     </div>
                 </div>
-                <button id="add-item" class="float-end btn btn-button text-primary py-xl-2 px-xl-5" type="submit">Add
+                <button id="add-item" class="float-end btn btn-button text-primary py-xl-2 px-xl-5" type="submit"
+                    title="[Alt] + [A]">Add
                     Item</button>
             </form>
         </div>
@@ -86,7 +87,7 @@ use App\Http\Controllers\POSController;
                     <input type="hidden" name="total" value="{{ old('total') ?? '0.00' }}" form="pos">
                     <span>{{ old('total') ?? '0.00' }}</span>
                 </b>
-                <button id="clear-table" class="btn btn-danger px-4 py-3 ms-auto">
+                <button id="clear-table" class="btn btn-danger px-4 py-3 ms-auto" title="[Alt] + [C]">
                     <i class="fa-solid fa-circle-xmark"></i>
                     Clear Table</button>
 
@@ -140,12 +141,12 @@ use App\Http\Controllers\POSController;
                             <div id="pos-error" class="d-none rounded-1 bg-danger p-xl-3 text-primary mb-xl-2">
 
                             </div>
-                            
+
                             <div class="form-check mb-3">
                                 <input type="checkbox" name="senior_discounted" id="senior_discounted" value="true"
                                     class="form-check-input" form="pos">
-                                <input type="hidden" name="senior_discount" id="senior_discount" value="{{ $senior_discount }}"
-                                    form="pos">
+                                <input type="hidden" name="senior_discount" id="senior_discount"
+                                    value="{{ $senior_discount }}" form="pos">
                                 <label for="senior_discounted">Senior ({{ $senior_discount * 100 }}% off)</label>
                             </div>
 
@@ -153,7 +154,7 @@ use App\Http\Controllers\POSController;
                             <input name="amount_paid" id="amount_paid" class="form-control form-control-xl mb-xl-3"
                                 type="number" min="1" aria-label="amount_paid" value="{{ old('amount_paid') }}"
                                 form="pos">
-                            
+
                             <label for="change">Change</label>
                             <input name="change" id="change" class="form-control form-control-xl mb-xl-3" type="number"
                                 min="1" aria-label="change" value="{{ old('change') }}" readonly form="pos">

@@ -3,6 +3,8 @@
         <tr>
             <th scope="col">Code</th>
             <th scope="col">Name</th>
+            <th scope="col">Vendor</th>
+            <th scope="col">Company</th>
             <th scope="col">Description</th>
             <th scope="col">Category</th>
             <th scope="col" class="text-end">Price</th>

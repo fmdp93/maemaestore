@@ -28,6 +28,7 @@ class StorePurchaseOrderRequest extends FormRequest
     public function rules()
     {                
         return [
+            'supplier_search_id' => 'required|numeric|min:1',
             'vendor' => 'required',
             'contact' => 'required',
             'company' => 'required',
@@ -35,48 +36,6 @@ class StorePurchaseOrderRequest extends FormRequest
             'eta' => 'required|date',
             'shipping_fee' => 'required|integer',
             'tax' => 'required|integer',
-            'product_id' => ['required', function($attribute, $values, $fail){
-                $this->arrayOfInt($attribute, $values, $fail);
-            }],
-            'quantity' => ['required', 'min:1', function($attribute, $values, $fail){
-                $this->quantityRequiredNotNegative($attribute, $values, $fail);
-            }, function($attribute, $values, $fail){
-                $this->arrayOfInt($attribute, $values, $fail);
-            }],
         ];
-    }
-    /**
-     * Get the error messages for the defined validation rules.
-     *
-     * @return array
-     */
-    public function messages()
-    {
-        return [
-            'product_id.required' => 'Product is required',            
-        ];
-    }
-  
-
-    /**
-     * Prepare the data for validation.
-     *
-     * @return void
-     */
-    protected function prepareForValidation()
-    {
-        // cast string to int of products_id
-        // $products = [];
-        // if(!empty($this->product_id)){
-        //     foreach($this->product_id as $product_id){
-        //         $products[] = (int) $product_id;
-        //     }
-        // }  
-
-        // $this->merge([
-        //     'product_id' => $products,
-        // ]);
-
-        // dd($this->product_id);
     }
 }

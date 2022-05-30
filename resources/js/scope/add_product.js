@@ -1,18 +1,19 @@
-import {objBarcodeReader} from "/js/scope/barcode_reader.js";
-import {preventPlusMinus} from "/js/function.js";
+import { objBarcodeReader } from "/js/scope/barcode_reader.js";
+import * as func from "/js/function.js";
 import { SupplierSearchAutocomplete } from "/js/decorator/SupplierSearchAutocomplete.js";
+import { ProductPrice } from "/js/class/ProductPrice.js";
 
 class AddProduct {
-    constructor() {
-        this.$price = $("#price");
+    constructor() {        
         this.$stock = $("#stock");
         this.$inv_stock = $("#inv_stock");
         // BarcodeReader vars
         this.$item_code = $("#item_code");
         this.objBarcodeReader = objBarcodeReader;
         this.objBarcodeReader.$item_code = this.$item_code;
-        this.objBarcodeReader.then_callback = this.objBarcodeReader.changeItemCode;
-        this.objBarcodeReader.done_callback = function(){};
+        this.objBarcodeReader.then_callback =
+            this.objBarcodeReader.changeItemCode;
+        this.objBarcodeReader.done_callback = function () {};
 
         this.$new_item_code = $("#new_item_code");
 
@@ -21,22 +22,25 @@ class AddProduct {
         this.$contact = $("#contact");
         this.$address = $("#address");
         this.$supplier_search_id = $("#supplier_search_id");
-        this.$supplier_search = $("#supplier_search");           
-        this.objSupplierSearchAutocomplete = new SupplierSearchAutocomplete(this);
-    
-        this.triggerEvents();        
+        this.$supplier_search = $("#supplier_search");
+        this.objSupplierSearchAutocomplete = new SupplierSearchAutocomplete(
+            this
+        );
+
+        this.ProductPrice = new ProductPrice();
+        this.triggerEvents();
     }
 
     triggerEvents() {
-        this.$new_item_code.on("click", this.setCode);
-        this.$price.on("keydown", preventPlusMinus);
-        this.$stock.on("keydown", preventPlusMinus);
-        this.$inv_stock.on("keydown", preventPlusMinus);
+        this.$new_item_code.on("click", this.setCode);           
+
+        this.$stock.on("keydown", func.preventPlusMinus);
+        this.$inv_stock.on("keydown", func.preventPlusMinus);
     }    
 
-    setCode(event){
+    setCode(event) {
         event.preventDefault();
-        $.get('/product/get-item-code', {}, function(response){
+        $.get("/product/get-item-code", {}, function (response) {
             let parsed = JSON.parse(response);
             _this.$item_code.val(parsed.new_item_code);
         });

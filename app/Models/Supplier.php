@@ -19,7 +19,7 @@ class Supplier extends Model
         $supplier = Supplier::orWhere(function ($query) use ($search) {
             $query->where('id', $search)
                 ->orWhere('vendor', 'LIKE', "%$search%")
-                ->orWhere('company_name');
+                ->orWhere('company_name', 'LIKE', "%$search%");
         })
             ->whereNull('deleted_at')
             ->orderBy('id', 'desc')

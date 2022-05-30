@@ -138,7 +138,13 @@ body {
   }  
 }
 
-.higher-than-modal{
+.table td.fit, 
+.table th.fit {
+    white-space: nowrap;
+    width: 13%;
+}
+
+#ui-datepicker-div, .higher-than-modal{
   z-index: 1070 !important;
 }
 //

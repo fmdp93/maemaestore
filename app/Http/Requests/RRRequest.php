@@ -18,13 +18,6 @@ class RRRequest extends FormRequest
      * @return bool
      */
 
-     public function __construct()
-     {         
-        // echo session('initial_load');
-        // die();
-        // session()->reflash();
-     }
-
     public function authorize()
     {
         return true;
@@ -53,7 +46,7 @@ class RRRequest extends FormRequest
                 $this->hasEnoughStock($attribute, $values, $fail);
                 $this->arrayOfInt($attribute, $values, $fail);
             }],
-
+            'remark' => ['required'],
         ];
     }
 

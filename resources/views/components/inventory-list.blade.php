@@ -3,7 +3,7 @@
 @endphp
 @foreach ($products as $product)
 @php
-    $percentage = ($product->i_stock / $product->p_stock) * 100;
+    $percentage = ($product->sum_i_stock / $product->p_stock) * 100;
     $tr_bg = '';
     if($percentage > 50){
         $tr_bg = '';
@@ -19,6 +19,12 @@
         </td>
         <td>
             {{ $product->p_name }}
+        </td>
+        <td>
+            {{ $product->vendor }}
+        </td>
+        <td>
+            {{ $product->company_name }}
         </td>
         <td>
             {{ $product->description }}

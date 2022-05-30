@@ -22,8 +22,20 @@
             <input type="hidden" name="c_name" value="{{ $product->c_name }}">
         </td>
         <td>
+            {{ $product->base_price }}
+            <input type="hidden" name="base_price" value="{{ $product->base_price }}">
+        </td>
+        <td>
+            {{ $product->tax }}
+            <input type="hidden" name="tax" value="{{ $product->tax }}">
+        </td>
+        <td>
+            {{ $product->markup }}
+            <input type="hidden" name="markup" value="{{ $product->markup }}">
+        </td>
+        <td>
             {{ $product->price }}
-            <input type="hidden" name="price" value="{{ $product->price }}">
+            <input type="hidden" name="selling_price" value="{{ $product->price }}">
         </td>
         <td>
             {{ $product->stock }}

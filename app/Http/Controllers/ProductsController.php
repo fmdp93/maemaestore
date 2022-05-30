@@ -32,7 +32,7 @@ class ProductsController extends Controller
         $data['form_id'] = "update_product_form";
         $data['d_none'] = empty(count($data['products'])) ?: 'd-none';
         $data['action'] = action([ProductsController::class, 'delete']);
-        $data['action_print_barcode'] = action([ProductsController::class, 'printBarcode']);
+        $data['action_print_barcode'] = action([ProductsController::class, 'printBarcode']);        
 
         return view('pages.admin.products', $data);
     }
@@ -41,6 +41,8 @@ class ProductsController extends Controller
     {
         $data['heading'] = 'Add Products';
         $data['categories'] = Category::all();
+        $data['tax'] = empty(old('tax')) ? Config::get('app.markup_price') : old('tax');                
+
         return view('pages.admin.add-product', $data);
     }
 
@@ -74,7 +76,10 @@ class ProductsController extends Controller
         $rules = [
             'product_id' => 'required',
             'expiration_date' => 'required|date',
-            'price' => ['required', 'numeric', 'min:0'],
+            'base_price' => ['required', 'numeric', 'min:0'],            
+            'tax' => ['required', 'numeric', 'min:0'],            
+            'markup' => ['required', 'numeric', 'min:0'],            
+            'selling_price' => ['required', 'numeric', 'min:0'], 
             'supplier_search_id' => 'required|numeric|min:1',
         ];
 
@@ -94,7 +99,10 @@ class ProductsController extends Controller
             ->update(
                 [
                     'expiration_date' => $request->input('expiration_date'),
-                    'price' => $request->input('price'),
+                    'base_price' => $request->input('base_price'),
+                    'tax' => $request->input('tax'),
+                    'markup' => $request->input('markup'),
+                    'price' => $request->input('selling_price'),
                     'supplier_id' => $request->input('supplier_search_id'),
                 ],
             );
@@ -122,7 +130,10 @@ class ProductsController extends Controller
             'name' => 'required',
             'description' => 'required',
             'category_id' => 'required|integer',
-            'price' => ['required', 'numeric', 'min:0'],            
+            'base_price' => ['required', 'numeric', 'min:0'],            
+            'tax' => ['required', 'numeric', 'min:0'],            
+            'markup' => ['required', 'numeric', 'min:0'],            
+            'selling_price' => ['required', 'numeric', 'min:0'],            
             'unit' => 'required',
             'stock' => ['required', 'integer', 'min:1'],
             'expiration_date' => 'required|date',
@@ -146,7 +157,10 @@ class ProductsController extends Controller
         $Product->name = $request->input('name');
         $Product->description = $request->input('description');
         $Product->category_id = $request->input('category_id');
-        $Product->price = $request->input('price');
+        $Product->base_price = $request->input('base_price');
+        $Product->tax = $request->input('tax');
+        $Product->markup = $request->input('markup');
+        $Product->price = $request->input('selling_price');
         $Product->unit = $request->input('unit');
         $Product->stock = $request->input('stock');
         $Product->supplier_id = $request->input('supplier_search_id');

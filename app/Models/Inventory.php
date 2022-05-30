@@ -18,15 +18,25 @@ class Inventory extends Model
 
     public function getProducts($search, $category_id, $expiry, $page_path, $stock_filter = '')
     {
+        DB::enableQueryLog();
         $Products = Inventory::select(
             DB::raw('p.id p_id, p.item_code, p.name p_name,
         p.description, p.price, p.unit, p.expiration_date, p.stock p_stock,
+        s.vendor, s.company_name,
         i.id i_id, i.stock i_stock,
+            (SELECT SUM(i2.stock) sum_i_stock
+                FROM inventory i2
+                INNER JOIN product p2
+                ON p2.id = i2.product_id
+                WHERE p2.item_code = p.item_code
+                GROUP BY p2.item_code
+                LIMIT 1) sum_i_stock,
         c.name c_name')
         )
             ->from('inventory as i')
             ->leftJoin('product as p', 'i.product_id', '=', 'p.id')
             ->leftJoin('product_category as c', 'c.id', '=', 'p.category_id')
+            ->leftJoin('supplier as s', 's.id', '=', 'p.supplier_id')
             ->orWhere(function ($query) use ($search) {
                 $query->where('p.item_code', 'LIKE', "%$search%")
                     ->orWhere('p.name', 'LIKE', "%$search%");
@@ -37,10 +47,9 @@ class Inventory extends Model
             })
             ->when($stock_filter, function ($query) use ($stock_filter) {
                 $this->filter_stock($query, $stock_filter);
-            })                 
-            ->orderBy('p.expiration_date', $expiry)       
+            })
+            ->orderBy('p.expiration_date', $expiry)
             ->orderBy('p.name', 'asc')
-
             ->paginate(Config::get('constant.per_page'))
             ->withPath($page_path)
             ->appends(
@@ -50,6 +59,11 @@ class Inventory extends Model
                 ]
             )
             ->withQueryString();
+        // $Products->get();
+        // echo '<pre>';
+        // print_r(DB::getQueryLog());
+        // echo '</pre>';
+        // die();
         return $Products;
     }
 
@@ -58,15 +72,16 @@ class Inventory extends Model
         $Inventory = Inventory::select(
             DB::raw('p.id p_id, p.item_code, p.name p_name,
         p.description, p.price, p.unit, p.expiration_date, p.stock p_stock,
-        i.stock i_stock,
+        SUM(i.stock) i_stock,
         c.name c_name')
         )
             ->from('inventory as i')
             ->leftJoin('product as p', 'i.product_id', '=', 'p.id')
             ->leftJoin('product_category as c', 'c.id', '=', 'p.category_id')
-            ->whereRaw('i.stock <= .5 * p.stock')
             ->whereNull('status_id')
+            ->groupBy('p.item_code')
             ->orderBy('p.id', 'desc')
+            ->havingRaw('i_stock <= (.5 * p.stock)')
             ->get();
 
         return $Inventory;
@@ -75,14 +90,11 @@ class Inventory extends Model
     private function filter_stock($query, $stock_filter)
     {
         if ($stock_filter == 'normal') {
-            $query->whereRaw('i.stock > .5 * p.stock');
+            $query->havingRaw('sum_i_stock > (.5 * p.stock)');
         } else if ($stock_filter == 'half') {
-            $query->where(function ($query) {
-                $query->whereRaw('i.stock <= .5 * p.stock')
-                    ->whereRaw('i.stock > .3 * p.stock');
-            });
+            $query->havingRaw('(sum_i_stock > (.3 * p.stock)) and (sum_i_stock <= (.5 * p.stock))');
         } else if ($stock_filter == 'low') {
-            $query->whereRaw('i.stock <= .3 * p.stock');
+            $query->havingRaw('sum_i_stock <= (.3 * p.stock)');
         }
         return $query;
     }
@@ -103,7 +115,21 @@ class Inventory extends Model
         return $Inventory !== null ? $Inventory->stock : 0;
     }
 
-    public function getArchivedInvItems($search, $page_path){
+    public static function getStockOf($item_code){
+        $stock = Inventory::select(DB::raw('SUM(i.stock) max_stock'))
+            ->from("inventory as i")
+            ->join("product as p", 'p.id', '=', 'i.product_id')
+            ->where('p.item_code', $item_code)
+            ->whereNull('deleted_at')
+            ->groupBy('p.item_code')
+            ->first()
+            ;
+        
+        return $stock !== null ? $stock->max_stock : 0;
+    }
+
+    public function getArchivedInvItems($search, $page_path)
+    {
         $Archives = Inventory::select(
             DB::raw('p.id p_id, p.item_code, p.name p_name,
         p.description, p.price, p.unit, p.expiration_date, p.stock p_stock,
@@ -118,7 +144,7 @@ class Inventory extends Model
                     ->orWhere('p.name', 'LIKE', "%$search%");
             })
             ->where('status_id', 16) // Archived = 16
-            ->orderBy('i.id', 'desc')            
+            ->orderBy('i.id', 'desc')
             ->paginate(Config::get('constant.per_page'))
             ->withPath($page_path)
             ->appends(
@@ -128,5 +154,9 @@ class Inventory extends Model
             );
 
         return $Archives;
+    }
+
+    public static function reduceInventoryStock(){
+        
     }
 }

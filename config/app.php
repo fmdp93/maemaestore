@@ -1,7 +1,5 @@
 <?php
 
-use App\Models\ConfigModel;
-
 return [
 
     /*
@@ -232,5 +230,5 @@ return [
         // 'PDF' => Barryvdh\DomPDF\Facade::class,
 
     ],
-    'markup_price' => '.12',
+    'markup_price' => '12',
 ];

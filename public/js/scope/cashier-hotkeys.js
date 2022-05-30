@@ -26,4 +26,11 @@ hotkeys("*", function (event, handler) {
     if (hotkeys.isPressed(18) && hotkeys.isPressed("r")) {
         $("#btn-return-refund")[0].click();
     }
+    
+    if (hotkeys.isPressed(18) && hotkeys.isPressed("a")) {
+        $("#add-item")[0].click();
+    }
+    if (hotkeys.isPressed(18) && hotkeys.isPressed("c")) {
+        $("#clear-table")[0].click();
+    }
 });

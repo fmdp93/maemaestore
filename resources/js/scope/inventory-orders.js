@@ -1,13 +1,125 @@
-$(function(){
-    let $view_details = $("#inventory_orders .view-details");
-    let $modal_body = $("#details-modal tbody");
-    $view_details.on("click", loadModal)
+class InventoryOrders {
+    constructor() {
+        this.order_received = [];
+        this.$view_details = $("#inventory_orders .view-details");
+        this.$io_tbody = $("#inventory_order_list tbody");
+        this.$modal = $("#details-modal");
+        this.$modal_tbody = $("#details-modal tbody");
+        this.$body = $("body");
 
-    function loadModal(event){
-        let io_id = $(this).data('io-id');
-        $.get('/inventory/order-products', {io_id: io_id}, function(response){
-            let parsed = JSON.parse(response);
-            $modal_body.html(parsed.modal_content);
+        this.triggerEvents();
+    }
+
+    triggerEvents() {
+        this.$modal.on("shown.bs.modal", this.loadModal);
+        this.$body.on("focusin", ".expiration_date", this.loadDatepicker);
+        this.$body.on(
+            "keydown change",
+            "input[name='quantity']",
+            this.updateSubtotal
+        );
+        this.$body.on("click", ".order-received", this.orderReceivedSubmit);
+        this.$modal.on("hidden.bs.modal", function (event) {
+            _this.$modal_tbody.html("");
+            _this.loadInventoryOrdersList(event);
         });
     }
-});
+
+    loadInventoryOrdersList(event) {
+        $.get(
+            "/inventory/get-inventory-order-processing",
+            {},
+            function (response) {
+                let parsed_response = JSON.parse(response);
+                _this.$io_tbody.html(parsed_response.inventory_orders_list);
+            }
+        );
+    }
+
+    orderReceivedSubmit(event) {
+        let tr_parent = $(this).parents("tr");
+        let io2p_id = tr_parent.find(".io2p_id").val();
+        let $expiration_date = tr_parent.find(".expiration_date");
+        let expiration_date = $expiration_date.val();
+        let $quantity = tr_parent.find(".quantity");
+        let quantity = $quantity.val();
+        let $item_code = tr_parent.find(".item_code");
+        let item_code = $item_code.val();
+        let $transaction_id = tr_parent.find(".transaction_id");
+        let transaction_id = $transaction_id.val();
+        let $product_id = tr_parent.find(".product_id");
+        let product_id = $product_id.val();
+        let token = tr_parent.find("input[name='_token']").val();
+        let $order_received = $(this);
+
+        if (_this.order_received[io2p_id]) {
+            return;
+        }
+
+        let params = {
+            _token: token,
+            io2p_id: io2p_id,
+            expiration_date: expiration_date,
+            quantity: quantity,
+            item_code: item_code,
+            transaction_id: transaction_id,
+            product_id: product_id,
+        };
+        $.post("/inventory/order-received", params, function (response) {
+            let parsed_response = JSON.parse(response);
+            let min_width = $order_received.width();
+            $order_received.css("min-width", min_width);
+            $order_received.html('<i class="fa-solid fa-circle-check"></i>');
+            $expiration_date.prop("disabled", true);
+            $quantity.prop("disabled", true);
+            _this.order_received[io2p_id] = true;
+        });
+    }
+
+    updateSubtotal(event) {
+        let price = $(this).parents("tr").find("input[name='price']").val();
+        price = price ? price : 0;
+        let $subtotal = $(this).parents("tr").find(".subtotal");
+        let subtotal = $subtotal.val();
+        subtotal = subtotal ? subtotal : 0;
+
+        let defer = $.Deferred();
+        let filtered = defer.then(
+            function () {
+                let qty = $(this).val();
+                qty = qty ? qty : 0;
+                subtotal = parseFloat(price) * parseFloat(qty);
+            }.bind(this)
+        );
+
+        defer.resolve();
+        filtered.done(function () {
+            $subtotal.html(sprintf("%.2f", subtotal));
+        });
+    }
+
+    loadDatepicker(event) {
+        $(this).datepicker({
+            changeMonth: true,
+            changeYear: true,
+            dateFormat: "yy-mm-dd",
+            container: "#detailsModalContent",
+        });
+    }
+
+    loadModal(event) {
+        let io_id = $(event.relatedTarget).data("io-id");
+        _this.order_received = [];
+        $.get(
+            "/inventory/order-products",
+            { io_id: io_id },
+            function (response) {
+                let parsed = JSON.parse(response);
+                _this.$modal_tbody.html(parsed.modal_content);
+            }
+        );
+    }
+}
+
+let objInventoryOrders = new InventoryOrders();
+const _this = objInventoryOrders;

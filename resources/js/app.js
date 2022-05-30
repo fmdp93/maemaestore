@@ -9,7 +9,7 @@ const sprintf = require("sprintf-js").sprintf;
 import "jquery-ui/ui/widgets/datepicker.js";
 
 $(function () {    
-    $("#expiration_date, #eta").datepicker({
+    $("#expiration_date, #eta, .expiration_date").datepicker({
         changeMonth: true,
         changeYear: true,
         dateFormat: "yy-mm-dd",

@@ -28,10 +28,9 @@ trait ValidationTrait{
         $product_ids = $this->input("product_id");
         foreach($prices as $key => $price){
             $real_price = Product::find($product_ids[$key])->price;
-            $markup_price = Config::get('app.markup_price');            
-            $dbmu_price = $real_price + $real_price * $markup_price;
+            $markup_price = Config::get('app.markup_price') / 100;   
             
-            if(sprintf("%.2f", $price) != sprintf("%.2f", $dbmu_price)){
+            if(sprintf("%.2f", $price) != sprintf("%.2f", $real_price)){
                 $fail("Price was modified");
             }
         }

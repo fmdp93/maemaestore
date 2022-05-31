@@ -1,8 +1,10 @@
+import * as func from "/js/function.js";
+
 hotkeys.filter = function (event) {
     return true;
 };
 
-hotkeys("f1, f2, f3, f4, f8, f9", function (event, handler) {
+hotkeys("f1, f2, f3, f4, f6, f7, f9", function (event, handler) {
     // Prevent the default refresh event under WINDOWS system
     event.preventDefault();
     // console.log(hotkeys.getPressedKeyCodes());
@@ -19,17 +21,22 @@ hotkeys("f1, f2, f3, f4, f8, f9", function (event, handler) {
         case "f4":
             $("#admin_nav a:nth-child(4)")[0].click();
             break;
-        case "f8":
+        case "f6":
             $("#admin_nav a:nth-child(5)")[0].click();
             break;
-        case "f9":
+        case "f7":
             $("#admin_nav a:nth-child(6)")[0].click();
+            break;
+        case "f9":
+            $("#admin_nav a:nth-child(7)")[0].click();
             break;
     }
 });
 
-hotkeys("*", function (event, handler) {
+hotkeys("*", function(event, handler){
     if (hotkeys.isPressed(18) && hotkeys.isPressed("v")) {
         $("#btn-deliveries")[0].click();
     }
+    
+    func.setPosHotkeys(event, handler);
 });

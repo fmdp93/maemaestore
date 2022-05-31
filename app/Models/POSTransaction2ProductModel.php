@@ -28,8 +28,9 @@ class POSTransaction2ProductModel extends Model
         $model = POSTransaction2ProductModel::select(DB::raw("
             pt2p.pos_transaction_id t_id,             
             pt2p.quantity pt2p_quantity, 
+            pt2p.refunded_quantity,
             SUM(pt2p.quantity - pt2p.refunded_quantity) pt2p_quantities,
-            SUM(pt2p.price * pt2p.quantity) pt2p_price_total,
+            SUM(pt2p.price * (pt2p.quantity - pt2p.refunded_quantity) * (1 - pt2p.senior_discount)) pt2p_price_total,
             pt.created_at t_date, pt.amount_paid,
             p.name p_name, p.description
         "))
@@ -38,7 +39,7 @@ class POSTransaction2ProductModel extends Model
             ->join("product as p", "p.id", "=", "pt2p.product_id")
             ->where("status_id", 4) //completed
             ->groupBy("pt.id")
-            ->having("pt2p_quantity", ">", 0);
+            ->having(DB::raw("pt2p_quantity - refunded_quantity"), ">", 0);
 
         if ($from && $to) {
             $model = $model->where("pt.created_at", ">=", $from . " $time_start")

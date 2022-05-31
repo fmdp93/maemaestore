@@ -47,6 +47,9 @@ Route::post('/login', [UserController::class, 'login']);
 Route::group(['middleware' => 'auth'], function () {
   Route::post('/', [IndexController::class, 'index']);
 
+  /**
+   * Admin routes
+   */
   Route::get('/unauthorized/admin', [PageUnauthorized::class, 'admin']);
   // Route::group(['middleware' => 'can:do_admin,' . User::class], function () {
   Route::group(['middleware' => RoleMiddleware::class . ':admin'], function () {
@@ -120,10 +123,10 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/accounts/edit-account/save', [AccountsController::class, 'editAccountSave']);
     Route::delete('/accounts/delete-cashier', [AccountsController::class, 'deleteCashier']);
 
-    Route::get('/log-manager/set-pin', [PINController::class, 'setPinFlashAdmin']);
+    Route::get('/log-manager/set-pin', [PINController::class, 'setPinFlash']);
 
     $pin_mw = PinMiddleware::class;
-    $action = action([PINController::class, 'setPinFlashAdmin']);
+    $action = action([PINController::class, 'setPinFlash']);
     Route::group(['middleware' => "$pin_mw:$action"], function () {
       Route::get('/log-manager', [LogManagerController::class, 'index']);
       Route::get('/log-manager/product', [LogManagerController::class, 'product']);
@@ -138,41 +141,16 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/settings/restore-db', [SettingsController::class, 'restoreDb'])->name('restore_db');
 
     Route::get('/switch-user', [UserController::class, 'index']);
+    Route::get('/pos/search_pos_transaction', [POSController::class, 'searchPosTransction'])
+      ->name('search_pos_transaction');
   });
 
+  /**
+   * Cashier Routes
+   */
   Route::get('/unauthorized/cashier', [PageUnauthorized::class, 'cashier']);
   // Route::group(['middleware' => 'can:do_cashier,' . User::class], function () {
   Route::group(['middleware' => RoleMiddleware::class . ':cashier'], function () {
-    Route::get('/pos/set-pin', [PINController::class, 'setPinFlashCashier']);
-
-    Route::get('/pos', [POSController::class, 'index']);
-    Route::get('/pos/inventory-search', [POSController::class, 'inventorySearch']);
-    Route::get('/pos/get-table-row', [POSController::class, 'getTableRow']);
-    Route::post('/pos/checkout', [POSController::class, 'checkout']);
-    Route::get('/pos/finish', [POSController::class, 'finish']);
-    Route::get('/pos/receipt', [POSController::class, 'receipt']);
-    Route::get('/pos/receipt-url', [POSController::class, 'receiptUrl']);
-
-    // Return Refunds routes
-    defined('RR_INDEX') || define('RR_INDEX', '/pos/return-refund');
-    Route::get(RR_INDEX, [RRController::class, 'index'])
-        ->name('rr_index');
-    Route::get('search_rr_pt_id', [RRController::class, 'searchRR'])
-        ->name('search_rr_pt_id');
-    Route::get('/pos/return-refund/{pt_id?}', [RRController::class, 'rr_transaction_details'])
-        ->name('rr_transaction_details')
-        ->where('pt_id', '[0-9]');
-
-    $pin_mw = PinMiddleware::class;
-    $action = action([PINController::class, 'setPinFlashCashier']);
-    Route::group(['middleware' => "$pin_mw:$action"], function () {      
-      Route::get('/pos/return-refund/form', [RRController::class, 'rrform'])
-        ->name('rr_form');
-      Route::post('/pos/return-refund-submit', [RRController::class, 'store']);
-    });
-    
-    Route::get('/rr/inventory-search', [RRController::class, 'inventorySearch']);
-    Route::get('/rr/get-table-row', [RRController::class, 'getTableRow']);
 
     // Cashier/products
     Route::get('/cashier-products', [CashierProductsController::class, 'index']);
@@ -185,7 +163,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/customer', [CustomerController::class, 'index'])
       ->name('customer');
     Route::get('/customer/add', [CustomerController::class, 'add_customer'])
-    ->name('add_customer');
+      ->name('add_customer');
     Route::post('/customer/add_submit', [CustomerController::class, 'add_customer_submit'])
       ->name('add_customer_submit');
     Route::get('/customer/edit', [CustomerController::class, 'edit_customer'])
@@ -196,10 +174,49 @@ Route::group(['middleware' => 'auth'], function () {
       ->name('delete_customer');
     // Asnyc
     Route::get('/customer/search-for-table', [CustomerController::class, 'searchForTable'])
-      ->name('customer_search_for_table');
-    Route::get('/customer/search-for-pos', [CustomerController::class, 'searchForPos'])
-      ->name('customer_search_for_pos');
+      ->name('customer_search_for_table');    
   });
+
+  /** POS Routes */
+  Route::get('/pos', [POSController::class, 'index']);
+  Route::get('/pos/inventory-search', [POSController::class, 'inventorySearch']);
+  Route::get('/pos/get-table-row', [POSController::class, 'getTableRow']);
+  Route::post('/pos/checkout', [POSController::class, 'checkout']);
+
+  defined('URI_POS_TRANSACTIONS') || define('URI_POS_TRANSACTIONS', '/pos/transactions');
+  Route::get(URI_POS_TRANSACTIONS, [POSController::class, 'finish'])
+    ->name('pos_finish');
+
+  Route::get('/pos/receipt', [POSController::class, 'receipt']);
+  Route::get('/pos/receipt-url', [POSController::class, 'receiptUrl']);
+
+  // Async
+  Route::get('/customer/search-for-pos', [CustomerController::class, 'searchForPos'])
+    ->name('customer_search_for_pos');
+
+  // Return Refunds routes
+  defined('RR_INDEX') || define('RR_INDEX', '/pos/return-refund');
+  Route::get(RR_INDEX, [RRController::class, 'index'])
+    ->name('rr_index');
+  Route::get('search_rr_pt_id', [RRController::class, 'searchRR'])
+    ->name('search_rr_pt_id');
+  Route::get('/pos/return-refund/{pt_id?}', [RRController::class, 'rr_transaction_details'])
+    ->name('rr_transaction_details')
+    ->where('pt_id', '[0-9]');
+
+  Route::get('/rr/inventory-search', [RRController::class, 'inventorySearch']);
+  Route::get('/rr/get-table-row', [RRController::class, 'getTableRow']);
+
+  Route::get('/pos/set-pin', [PINController::class, 'setPinFlash']);
+  $pin_mw = PinMiddleware::class;
+  $action = action([PINController::class, 'setPinFlash']);
+  Route::group(['middleware' => "$pin_mw:$action"], function () {
+    Route::get('/pos/return-refund/form', [RRController::class, 'rrform'])
+      ->name('rr_form');
+    Route::post('/pos/return-refund-submit', [RRController::class, 'store']);
+  });
+
+  /** End of POS routes */
 
   Route::get('/pin/validate-pin', [PINController::class, 'validatePin']);
   Route::post('/pin/submit-pin', [PINController::class, 'submitPin']);

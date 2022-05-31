@@ -51,7 +51,7 @@ class AccountsController extends Controller
 
         $user = new User();
         $user->username = $request->input('username');
-        $user->password = $request->input('password');
+        $user->password = Hash::make($request->input('password'));
         $user->first_name = $request->input('first_name');
         $user->last_name = $request->input('last_name');
         $user->address = $request->input('address');

@@ -21,16 +21,19 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Config;
 use \Barryvdh\DomPDF\Facade\Pdf as PDF;
 use App\Http\Requests\POSCheckoutRequest;
+use App\Http\Traits\UserTrait;
 use App\Models\POSTransaction2ProductModel;
 
 class POSController extends Controller
 {
+    use UserTrait;
     private $tbody_content;
     public function index(Request $request)
     {
         $data['heading'] = 'Point Of Sale';
         $data['title'] = 'POS';
         $data['form'] = 'pos';
+        $this->setUserContent($data);
         $data['senior_discount'] = ConfigModel::find(3)->value; // 3 for senior discount
 
         $this->setLastTableContent($request, $data['form']);
@@ -87,7 +90,7 @@ class POSController extends Controller
             $POSTransaction2Product->senior_discount = $senior_discount;
 
             $POSTransaction2Product->save();
-            
+
             // reduce stocks in inventory
             //find inventory items with similar item_code of product_id
             $item_code = Product::find($product_id)->item_code;
@@ -100,7 +103,7 @@ class POSController extends Controller
 
             // dd($inventory_items->get());
 
-            foreach ($inventory_items->get() as $key => $inventory_item) {                
+            foreach ($inventory_items->get() as $key => $inventory_item) {
                 $previous_quantity = Inventory::getStock($inventory_item->p_id);
                 DB::enableQueryLog();
                 $DeductInv = new Inventory();
@@ -124,24 +127,26 @@ class POSController extends Controller
                     [
                         'stock' => DB::raw("stock - $deducting_quantity"),
                     ]
-                );                
+                );
                 $updated_quantity = Inventory::find($inventory_item->i_id)->stock;
                 $deducting_quantity -= $inventory_item->stock;
 
-                $this->logInventoryDeduction($inventory_item->i_id, $previous_quantity, $updated_quantity);                
+                $this->logInventoryDeduction($inventory_item->i_id, $previous_quantity, $updated_quantity);
                 break;
-            }                        
+            }
         }
 
+        $request->session()->flash('msg_success', 'Transaction completed!');
         return redirect(action([POSController::class, 'finish'], ['transaction_id' => $POSTransaction->id]));
     }
 
-    private function logInventoryDeduction($inventory_id, $previous_quantity, $updated_quantity){
+    private function logInventoryDeduction($inventory_id, $previous_quantity, $updated_quantity)
+    {
         // Log
-        if($previous_quantity == 0 && $updated_quantity == 0){
+        if ($previous_quantity == 0 && $updated_quantity == 0) {
             return;
         }
-        
+
         InventoryLog::log(
             $inventory_id,
             $previous_quantity,
@@ -152,10 +157,47 @@ class POSController extends Controller
 
     public function finish(Request $request)
     {
-        $data['title'] = 'Transaction Completed';
-        $data['heading'] = 'Transaction Completed';
+        $search = $request->input('q');
+        $data['title'] = 'Transactions';
+        $data['heading'] = 'Transactions';
         $data['transaction_id'] = $request->input('transaction_id');
+        $this->setUserContent($data);
+
+        $data['search'] = $search;
+
+        $Transaction = new POSTransactionModel();
+        $data['transactions'] = $Transaction->getPosTransactions($search, URI_POS_TRANSACTIONS);
+        $data['d_none'] = count($data['transactions']) ? 'd-none' : '';
+
+
         return view('pages.cashier.pos-finish', $data);
+    }
+    
+    // Async
+    public function searchPosTransction(Request $request)
+    {
+        $search = $request->input('q');
+
+        $Transaction = new POSTransactionModel();
+
+        DB::enableQueryLog();
+        $data['transactions'] = $Transaction->getPosTransactions($search, URI_POS_TRANSACTIONS);        
+        $data['search'] = "$search";
+        $rows = (string) view("components.pos-transactions-list", $data);
+
+        $data['d_none'] = count($data['transactions']) ? 'd-none' : '';
+        $table_empty = (string) view("layouts.empty-table", $data);
+        $links = (string) $data['transactions']->links();
+        $row_count = count($data['transactions']);
+        $response = [
+            'rows_html' => $rows,
+            'links_html' => $links,
+            'table_empty' => $table_empty,
+            'row_count' => $row_count,
+            'last_query' => DB::getQueryLog(),
+        ];
+        $response = json_encode($response);
+        return Response()->json($response);
     }
 
     public function receipt(Request $request)
@@ -254,7 +296,7 @@ class POSController extends Controller
 
     private function getProductFromRequest($request)
     {
-        DB::enableQueryLog();        
+        DB::enableQueryLog();
         $inventory = Inventory::select(
             DB::raw("SUM(i.stock) i_stock,
             (SELECT MIN(product_id) 
@@ -287,5 +329,5 @@ class POSController extends Controller
         $inventory->groupBy('p.item_code');
 
         return $inventory->first();
-    }
+    }    
 }

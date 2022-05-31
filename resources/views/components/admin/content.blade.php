@@ -44,7 +44,7 @@
                     <i class="fa-solid fa-box align-middle"></i>
                 </div>
                 <span>INVENTORY</span>
-            </a>
+            </a>            
 
             <a class="p-3 d-block {{ navActive('sales-report') }}" href="{{ url('/sales-report') }}" title="[F3]">
                 <div class="icon-container rounded-circle mx-auto text-center">
@@ -58,11 +58,17 @@
                 </div>
                 <span>ACCOUNTS</span>
             </a>
-            <a class="p-3 d-block {{ navActive('log-manager') }}" href="{{ url('/log-manager') }}" title="[F8]">
+            <a class="p-3 d-block {{ navActive('log-manager') }}" href="{{ url('/log-manager') }}" title="[F6]">
                 <div class="icon-container rounded-circle mx-auto text-center">
                     <i class="fa-solid fa-table-list align-middle"></i>
                 </div>
                 <span>LOG MANAGER</span>
+            </a>
+            <a class="p-3 d-block {{ navActive('pos') }}" href="{{ url('/pos') }}" title="[F7]">
+                <div class="icon-container rounded-circle mx-auto text-center">
+                    <i class="fa-solid fa-clipboard-list align-middle"></i>
+                </div>
+                <span>POS</span>
             </a>
             <a class="p-3 d-block" href="{{ url('/logout') }}" title="[F9]">
                 <div class="icon-container rounded-circle mx-auto text-center">

@@ -79,4 +79,13 @@ trait UserTrait
         $request->session()->flash('msg_success', 'Account updated!');
         return redirect()->action([self::$action_class, 'editAccount']);
     }
+
+    private function setUserContent(&$data)
+    {        
+        if (Auth::user()->role_id == 1) {
+            $data['user'] = "admin";
+        } else if (Auth::user()->role_id == 2) {
+            $data['user'] = 'cashier';
+        }
+    }
 }

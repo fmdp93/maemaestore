@@ -17,7 +17,7 @@ use App\Http\Controllers\RRController;
     </script>
 @endsection
 
-@section('cashier_content')
+@section("{$user}_content")
     <div class="row px-xl-5 mb-xl-3">
         @include('layouts.heading')
         <div class="col-xl-3">
@@ -65,7 +65,7 @@ use App\Http\Controllers\RRController;
             </div>
             @if ($errors->any())
                 @php
-                    var_dump($errors->all());
+                    // var_dump($errors->all());
                     $message = 'Please Fix the errors below';
                 @endphp
                 @include('components.error-message')
@@ -140,5 +140,5 @@ use App\Http\Controllers\RRController;
 
 
 @section('content')
-    @include('components.cashier.content')
+    @include("components.{$user}.content")
 @endsection

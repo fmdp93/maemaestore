@@ -11,7 +11,7 @@ use App\Http\Controllers\AccountsController;
     <script src="{{ asset('js/scope/rr_index.js') }}" defer type="module"></script>
 @endsection
 
-@section('cashier_content')
+@section("{$user}_content")
     <div class="row px-xl-5">
         @include('layouts.heading')
         <div class="col-xl-12">
@@ -56,5 +56,5 @@ use App\Http\Controllers\AccountsController;
 @endsection
 
 @section('content')
-    @include('components.cashier.content')
+    @include("components.{$user}.content")
 @endsection

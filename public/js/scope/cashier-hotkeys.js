@@ -1,3 +1,5 @@
+import * as func from "/js/function.js";
+
 hotkeys.filter = function (event) {
     return true;
 };
@@ -22,15 +24,6 @@ hotkeys("f1, f2, f3, f9", function (event, handler) {
     }
 });
 
-hotkeys("*", function (event, handler) {    
-    if (hotkeys.isPressed(18) && hotkeys.isPressed("r")) {
-        $("#btn-return-refund")[0].click();
-    }
-    
-    if (hotkeys.isPressed(18) && hotkeys.isPressed("a")) {
-        $("#add-item")[0].click();
-    }
-    if (hotkeys.isPressed(18) && hotkeys.isPressed("c")) {
-        $("#clear-table")[0].click();
-    }
+hotkeys("*", function(event, handler){
+    func.setPosHotkeys(event, handler);
 });

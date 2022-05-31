@@ -1,6 +1,7 @@
 @php
 use App\Http\Controllers\RRController;
 use App\Http\Controllers\POSController;
+
 @endphp
 
 @extends('layouts.app')
@@ -13,7 +14,7 @@ use App\Http\Controllers\POSController;
     <script src="{{ asset('js/scope/pos.js') }}" defer type="module"></script>
 @endsection
 
-@section('cashier_content')
+@section("{$user}_content")
     <div class="row px-xl-5 mb-xl-3">
         @include('layouts.heading')
         <div class="col-xl-12">
@@ -21,6 +22,12 @@ use App\Http\Controllers\POSController;
                 title="[Alt] + [R]">
                 <i class="fa-solid fa-receipt"></i> Return/Refund
             </a>
+            @if(Auth::user()->role_id == 1)
+                <a href="{{ route('pos_finish') }}" id="btn-transactions" class="btn btn-success text-white mb-xl-3"
+                    title="[Alt] + [T]">
+                    <i class="fa-solid fa-file-invoice"></i> Transactions
+                </a>
+            @endif
         </div>
         <div class="col-xl-3">
             <form id="{{ $form = 'pos' }}" action="{{ action([POSController::class, 'checkout']) }}" method="POST">
@@ -192,5 +199,5 @@ use App\Http\Controllers\POSController;
 
 
 @section('content')
-    @include('components.cashier.content')
+    @include("components.{$user}.content")
 @endsection

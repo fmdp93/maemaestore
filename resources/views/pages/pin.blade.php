@@ -12,7 +12,7 @@ use App\Http\Controllers\PINController;
     <script src="{{ asset('js/scope/rr.js') }}" defer type="module"></script>
 @endsection
 
-@section($content)
+@section("{$user}_content")
     <div class="row px-xl-5 mb-xl-3">
         @include('layouts.heading')
         <div class="col-xl-3">
@@ -38,5 +38,5 @@ use App\Http\Controllers\PINController;
 
 
 @section('content')
-    @include($include_content)
+    @include("components.{$user}.content")
 @endsection

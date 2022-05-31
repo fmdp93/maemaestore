@@ -17,11 +17,13 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Config;
 use \Barryvdh\DomPDF\Facade\Pdf as PDF;
 use App\Http\Requests\POSCheckoutRequest;
+use App\Http\Traits\UserTrait;
 use App\Models\POSTransaction2ProductModel;
 use PosTransaction2Product;
 
 class RRController extends Controller
 {
+    use UserTrait;
     private $tbody_content;
 
     public function __construct()
@@ -35,7 +37,8 @@ class RRController extends Controller
 
         $data['heading'] = "Return/Refund";
         $data['title'] = "Return/Refund";
-        $data['search'] = $search;     
+        $data['search'] = $search;   
+        $this->setUserContent($data)  ;
 
         $PosTransaction2Product = new POSTransaction2ProductModel();        
         $data['return_refunds'] = $PosTransaction2Product->getPosTransaction($search, RR_INDEX);
@@ -78,6 +81,7 @@ class RRController extends Controller
         $data['heading'] = 'Return/Refund';
         $data['title'] = 'Return/Refund';        
         $data['form'] = 'rr';
+        $this->setUserContent($data);
         $this->setLastTableContent($request, $data['form']);
 
         $data['tbody_content'] = $this->tbody_content;
@@ -111,7 +115,8 @@ class RRController extends Controller
         session()->forget([
             'name',
             'item_code',
-            'errors'
+            'errors',
+            'old',
         ]);
         $request->session()->flash('msg_success', "Product {$validated['type']} successful!");
         return redirect(action([POSController::class, 'index']));
@@ -130,27 +135,7 @@ class RRController extends Controller
             foreach($products as $product){ 
                 $a_product = new POSTransaction2ProductModel();                
                 $refunded_qty = $a_product->refundPosTransaction2Product($product, $refund_quantity, $remark);
-                
-                if($validated['type'] == 'return'){                        
-                    $previous_quantity = Inventory::getStock($product_id);
-                    $inventory = new Inventory();
-                    // DB::enableQueryLog();
-                    $inventory->returnStock($product->product_id, $refunded_qty);                    
-                    // dd(DB::getQueryLog());                    
-
-                    $Inventory = Inventory::where('product_id', $product_id);
-                    $inventory_id = $Inventory->first()->id;
-                                        
-                    $updated_quantity = Inventory::find($inventory_id)->stock;
-
-                    // Log
-                    InventoryLog::log(
-                        $inventory_id,
-                        $previous_quantity,
-                        $updated_quantity,
-                        8 // 8 for add stock
-                    );
-                }                
+                                          
                 $refund_quantity -= $refunded_qty;
             }   
         }

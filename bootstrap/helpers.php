@@ -26,3 +26,7 @@ function increaseNumByPercent($number, $percent){
 function getInputFloatPattern(){
     return 'pattern="^\d*(\.\d{0,2})?$"';
 }
+
+function negativeToZero($number){
+    return $number < 0 ? 0 : $number;
+}

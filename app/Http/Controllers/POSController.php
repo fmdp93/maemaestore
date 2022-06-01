@@ -6,12 +6,15 @@ use PDF as PDF2;
 use Dompdf\Dompdf;
 // use Dompdf\Dompdf;
 use Dompdf\Options;
+use App\Models\Role;
 use App\Models\Product;
 use App\Models\Customer;
 use App\Models\Inventory;
 use App\Models\ConfigModel;
+use PosTransaction2Product;
 use App\Models\InventoryLog;
 use Illuminate\Http\Request;
+use App\Http\Traits\UserTrait;
 use App\Http\Requests\RRRequest;
 use Illuminate\Support\Facades\DB;
 use App\Models\POSTransactionModel;
@@ -21,7 +24,6 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Config;
 use \Barryvdh\DomPDF\Facade\Pdf as PDF;
 use App\Http\Requests\POSCheckoutRequest;
-use App\Http\Traits\UserTrait;
 use App\Models\POSTransaction2ProductModel;
 
 class POSController extends Controller
@@ -74,6 +76,11 @@ class POSController extends Controller
         $POSTransaction->customer_name = (string) $request->input('customer_name');
         $POSTransaction->customer_address = (string) $request->input('customer_address');
         $POSTransaction->customer_contact_detail = (string) $request->input('customer_contact_detail');
+        $POSTransaction->gcash_name = (string) $request->input('gcash_name');
+        $POSTransaction->gcash_num = (string) $request->input('gcash_num');
+        $POSTransaction->cc_name = (string) $request->input('cc_name');
+        $POSTransaction->cc_num = (string) $request->input('cc_num');
+        $POSTransaction->mode_of_payment = (string) $request->input('mode_of_payment');
         $POSTransaction->save();
 
         // insert products
@@ -172,7 +179,7 @@ class POSController extends Controller
 
         return view('pages.cashier.pos-finish', $data);
     }
-    
+
     // Async
     public function searchPosTransction(Request $request)
     {
@@ -181,7 +188,7 @@ class POSController extends Controller
         $Transaction = new POSTransactionModel();
 
         DB::enableQueryLog();
-        $data['transactions'] = $Transaction->getPosTransactions($search, URI_POS_TRANSACTIONS);        
+        $data['transactions'] = $Transaction->getPosTransactions($search, URI_POS_TRANSACTIONS);
         $data['search'] = "$search";
         $rows = (string) view("components.pos-transactions-list", $data);
 
@@ -329,5 +336,71 @@ class POSController extends Controller
         $inventory->groupBy('p.item_code');
 
         return $inventory->first();
-    }    
+    }
+
+    public function installments(Request $request)
+    {
+        $search = $request->input('q');
+
+        $data['heading'] = "Installments";
+        $data['title'] = "Installments";
+        $data['search'] = $search;
+        $data['view_action'] = route('pos_installment_details');
+        $data['user'] = Role::find(Auth::user()->role_id)->name;
+
+        $Installments = new POSTransactionModel();
+        $data['installments'] = $Installments->getPosTransactions($search, URI_POS_INSTALLMENTS, MODE_CREDIT_CARD);
+        $data['d_none'] = count($data['installments']) ? 'd-none' : '';
+
+        return view('pages.installments', $data);
+    }
+
+    public function installment_details($transaction_id)
+    {
+        $model = new POSTransaction2ProductModel();
+        $data['heading'] = 'Installment Details';        
+        $data['pos_transaction2products'] = $model->getSalesReportFor($transaction_id);
+        $data['transaction_id'] = $transaction_id;
+        $data['user'] = Role::find(Auth::user()->role_id)->name;
+
+        return view('pages.installment-details', $data);
+    }
+
+    public function searchInstallment(Request $request)
+    {
+        $search = $request->input('q');
+
+        $Transaction = new POSTransactionModel();
+
+        DB::enableQueryLog();
+        $data['installments'] = $Transaction->getPosTransactions($search, URI_POS_INSTALLMENTS, MODE_CREDIT_CARD);
+        $data['view_action'] = $request->input('view_action');
+        $data['search'] = "$search";
+        $rows = (string) view("components.installment-list", $data);
+
+        $data['d_none'] = count($data['installments']) ? 'd-none' : '';
+        $table_empty = (string) view("layouts.empty-table", $data);
+        $links = (string) $data['installments']->links();
+        $row_count = count($data['installments']);
+        $response = [
+            'rows_html' => $rows,
+            'links_html' => $links,
+            'table_empty' => $table_empty,
+            'row_count' => $row_count,
+            'last_query' => DB::getQueryLog(),
+        ];
+        $response = json_encode($response);
+        return Response()->json($response);
+    }
+
+    public function payBalance(Request $request){
+        $transaction_id = $request->input('transaction_id');
+        POSTransactionModel::where('id', $transaction_id)
+            ->update(
+                ['amount_paid' => DB::raw('amount_paid + ' . $request->input('pay_amount'))]
+            );
+
+        $request->session()->flash('msg_success', 'Payment successfull for Transaction #' . $transaction_id);
+        return redirect(route('pos_installments'));
+    }
 }

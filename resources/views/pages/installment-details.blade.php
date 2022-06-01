@@ -4,12 +4,16 @@ use App\Http\Controllers\SalesReportController;
 
 @extends('layouts.app')
 
-@section('admin_content')
+@section('header_scripts')
+    <script src="{{ asset('/js/scope/installment-details.js') }}" type="module" defer></script>
+@endsection
+
+@section("{$user}_content")
     <div class="row">
         <div class="col-xl-12 px-xl-5">
             <div class="row">
                 @include('layouts.heading')
-                <div class="col-12 mt-3">
+                <div class="col-12 mt-3">                    
                 </div>
                 <div class="col-xl-12">
                     <h5>Transaction #{{ $transaction_id }}</h5>
@@ -47,7 +51,7 @@ use App\Http\Controllers\SalesReportController;
                             @endforeach
                         </tbody>
                     </table>
-                </div>
+                </div>                
             </div>
             <div class="row">
                 <div class="col-xl-4 ms-auto">
@@ -66,11 +70,26 @@ use App\Http\Controllers\SalesReportController;
                                 <td class="fs-5 text-end"> {{ number_format($item->amount_paid, 2) }}</td>
                             </tr>
                             <tr>
-                                <td class="fs-5">Change:</td>
+                                <td class="fs-5">Remaining Balance</td>
+                                <td class="fs-5 text-end"> {{ number_format(negativeToZero($total_price - $item->amount_paid), 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fs-5"><label for="pay_amount" form="cc_payment">Pay Amount</label></td>
                                 @php
                                     $total_sales = $item->amount_paid - $total_price;
                                 @endphp
-                                <td class="fs-5 text-end"> {{ number_format(negativeToZero($total_sales), 2) }}</td>
+                                <td class="fs-5 text-end">
+                                    <form action="{{ route('pay_balance') }}" id="cc_payment" name="cc_payment" method="POST">
+                                        @csrf
+                                        <input type="hidden" value="{{ $transaction_id }}" name="transaction_id">
+                                        <input type="number" name="pay_amount" id="pay_amount" class="form-control">
+                                    </form>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2">
+                                    <input type="submit" value="Pay" class="form-control" name="submit" form="cc_payment">
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -81,5 +100,5 @@ use App\Http\Controllers\SalesReportController;
 @endsection
 
 @section('content')
-    @include('components.admin.content')
+    @include("components.{$user}.content")
 @endsection

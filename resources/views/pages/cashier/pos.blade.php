@@ -11,6 +11,15 @@ use App\Http\Controllers\POSController;
 @endsection
 
 @section('header_scripts')
+    <script defer>
+        const MODE_CASH = {{ MODE_CASH }};
+        const MODE_GCASH = {{ MODE_GCASH }};
+        const MODE_CREDIT_CARD = {{ MODE_CREDIT_CARD }};
+        let show_modal = false;
+        @if ($errors->any())
+            show_modal = true;
+        @endif
+    </script>
     <script src="{{ asset('js/scope/pos.js') }}" defer type="module"></script>
 @endsection
 
@@ -18,16 +27,19 @@ use App\Http\Controllers\POSController;
     <div class="row px-xl-5 mb-xl-3">
         @include('layouts.heading')
         <div class="col-xl-12">
-            <a href="{{ route('rr_index') }}" id="btn-return-refund" class="btn btn-danger mb-xl-3"
-                title="[Alt] + [R]">
-                <i class="fa-solid fa-receipt"></i> Return/Refund
+            <a href="{{ route('rr_index') }}" id="btn-return-refund" class="btn btn-success text-white mb-xl-3" title="[Alt] + [R]">
+                <i class="fa-solid fa-receipt"></i> Returns/Refunds
             </a>
-            @if(Auth::user()->role_id == 1)
+            @if (Auth::user()->role_id == 1)
                 <a href="{{ route('pos_finish') }}" id="btn-transactions" class="btn btn-success text-white mb-xl-3"
                     title="[Alt] + [T]">
                     <i class="fa-solid fa-file-invoice"></i> Transactions
                 </a>
             @endif
+            <a href="{{ route('pos_installments') }}" id="btn-installments" class="btn btn-success text-white mb-xl-3"
+                title="">
+                <i class="fa-solid fa-credit-card"></i> Installments
+            </a>
         </div>
         <div class="col-xl-3">
             <form id="{{ $form = 'pos' }}" action="{{ action([POSController::class, 'checkout']) }}" method="POST">
@@ -99,12 +111,6 @@ use App\Http\Controllers\POSController;
                     Clear Table</button>
 
             </div>
-            @if ($errors->any())
-                @php
-                    $message = 'Please Fix the errors below';
-                @endphp
-                @include('components.error-message')
-            @endif
             @error('product_id')
                 @include('components.error-message')
             @enderror
@@ -149,6 +155,18 @@ use App\Http\Controllers\POSController;
 
                             </div>
 
+                            <label for="mode_of_payment">Mode of Payment</label>
+                            <div class="input-group mb-3">
+                                <select name="mode_of_payment" id="mode_of_payment" class="form-select" form="pos">
+                                    <option value="{{ MODE_CASH }}"
+                                        {{ old('mode_of_payment') == MODE_CASH ? 'selected' : '' }}>Cash</option>
+                                    <option value="{{ MODE_GCASH }}"
+                                        {{ old('mode_of_payment') == MODE_GCASH ? 'selected' : '' }}>GCash</option>
+                                    <option value="{{ MODE_CREDIT_CARD }}"
+                                        {{ old('mode_of_payment') == MODE_CREDIT_CARD ? 'selected' : '' }}>Credit Card
+                                    </option>
+                                </select>
+                            </div>
                             <div class="form-check mb-3">
                                 <input type="checkbox" name="senior_discounted" id="senior_discounted" value="true"
                                     class="form-check-input" form="pos">
@@ -185,6 +203,54 @@ use App\Http\Controllers\POSController;
                             <input type="text" name="customer_contact_detail" id="customer_contact_detail"
                                 value="{{ old('customer_contact_detail') }}" class="form-control mb-3" form="pos"
                                 autocomplete="off">
+
+
+                            <div class="d-none" id="gcash_inputs">
+                                @error('gcash_name')
+                                    @include('components.error-message')
+                                @enderror
+                                <label for="gcash_name">Account Name</label>
+                                <input type="text" id="gcash_name" name="gcash_name" value="{{ old('gcash_name') }}"
+                                    class="form-control mb-3" form="pos">
+                                @error('gcash_num')
+                                    @include('components.error-message')
+                                @enderror
+                                <label for="gcash_num">GCash Number</label>
+                                <input type="number" id="gcash_num" name="gcash_num" value="{{ old('gcash_num') }}"
+                                    class="form-control mb-3" form="pos">
+                            </div>
+                            <div class="d-none" id="cc_inputs">
+                                @error('cc_name')
+                                    @include('components.error-message')
+                                @enderror
+                                <label for="cc_name">Account Name</label>
+                                <input type="text" id="cc_name" name="cc_name" value="{{ old('cc_name') }}"
+                                    class="form-control mb-3" form="pos">
+                                @error('cc_num')
+                                    @include('components.error-message')
+                                @enderror
+                                <label for="cc_num">Credit Card Number</label>
+                                <input type="number" id="cc_num" name="cc_num" value="{{ old('cc_num') }}"
+                                    class="form-control mb-3" form="pos">
+
+                                @error('cc_payment_term')
+                                    @include('components.error-message')
+                                @enderror
+                                <p class="my-0">Term</p>
+                                <input type="radio" class="form-check-input" name="cc_payment_term"
+                                    {{ old('cc_payment_term') == TERM_1_WEEK ? 'checked' : '' }} id="term-1-week"
+                                    value="{{ TERM_1_WEEK }}" form="pos">
+                                <label for="term-1-week">1 week</label>
+                                <input type="radio" class="form-check-input ms-3" name="cc_payment_term"
+                                    {{ old('cc_payment_term') == TERM_15_DAYS ? 'checked' : '' }} id="term-15-days"
+                                    value="{{ TERM_15_DAYS }}" form="pos">
+                                <label for="term-15-days">15 days</label>
+                                <input type="radio" class="form-check-input ms-3" name="cc_payment_term"
+                                    {{ old('cc_payment_term') == TERM_30_DAYS ? 'checked' : '' }} id="term-30-days"
+                                    value="{{ TERM_30_DAYS }}" form="pos">
+                                <label for="term-30-days">30 days</label>
+
+                            </div>
 
                             <button id="submit_pos" class="form-control btn btn-button text-primary py-xl-2 px-xl-5"
                                 type="submit" form="pos">Finish</button>

@@ -26,18 +26,18 @@ class SalesReportController extends Controller
         $data['total_items'] = $total_items->total_items;
         $data['total_sales'] = $total_items->total_sales;
         $data['total_price'] = $total_items->total_price;
-        $data['profit'] = $total_items->total_sales - $total_items->total_price;
+        $data['profit'] = $total_items->profit;
         $data['from'] = $from ? date("F j, Y", strtotime($from)) : 'start';
         $data['to'] = $to ? date("F j, Y", strtotime($to)) : 'end';
 
         return view('pages.admin.sales-report', $data);
     }    
 
-    public function posTransaction2Product(Request $request){
-        $id = $request->input('id');
+    public function posTransaction2Product($transaction_id){        
         $model = new POSTransaction2ProductModel();
         $data['heading'] = 'Sales Report Details';
-        $data['pos_transaction2products'] = $model->getSalesReportFor($id);
+        $data['pos_transaction2products'] = $model->getSalesReportFor($transaction_id);
+        $data['transaction_id'] = $transaction_id;
 
         return view('pages.admin.sales-report-details', $data);
     }

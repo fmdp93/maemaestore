@@ -10,7 +10,7 @@
         <td>{{ $transaction->pt2p_quantities }}</td>
         <td>{{ sprintf('%.2f', $transaction->pt2p_price_total) }}</td>
         <td>{{ sprintf('%.2f', $transaction->amount_paid) }}</td>
-        <td>{{ sprintf('%.2f', $transaction->amount_paid - $transaction->pt2p_price_total) }}</td>
+        <td>{{ sprintf('%.2f', negativeToZero($transaction->amount_paid - $transaction->pt2p_price_total)) }}</td>
         <td>
             <a class="btn btn-success text-white"
                 href="{{ action([POSController::class, 'receipt'], ['transaction_id' => $transaction->t_id]) }}">

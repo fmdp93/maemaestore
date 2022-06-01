@@ -1,5 +1,5 @@
 import { objBarcodeReader } from "/js/scope/barcode_reader.js";
-import { toggletableEmpty } from "/js/function.js";
+import * as func from "/js/function.js";
 import { Pin } from "/js/class/pin.js";
 import { CustomerSearchAutocomplete } from "/js/decorator/CustomerSearchAutocomplete.js";
 
@@ -33,10 +33,11 @@ class POS {
         this.$senior_discounted = $("#senior_discounted");
         this.$senior_discount = $("#senior_discount");
 
-        // Barcode               
+        // Barcode
         this.objBarcodeReader = objBarcodeReader;
         this.objBarcodeReader.$item_code = this.$item_code;
-        this.objBarcodeReader.then_callback = this.objBarcodeReader.changeItemCode;
+        this.objBarcodeReader.then_callback =
+            this.objBarcodeReader.changeItemCode;
         this.objBarcodeReader.done_callback = this.requestProductById;
 
         this.$pos_error = $("#pos-error");
@@ -44,17 +45,26 @@ class POS {
         // Pay cash Modal
         this.elemModal = $("#pay-cash-modal > .modal")[0];
         this.modal = new bootstrap.Modal(this.elemModal);
-        
+
         this.$delete_item_form = $("#delete-item-form");
         this.Pin = new Pin(this);
 
         // autocomplete
-        this.$customer_search = $("#customer_search");           
+        this.$customer_search = $("#customer_search");
         this.$customer_id = $("#customer_id");
         this.$customer_name = $("#customer_name");
         this.$customer_address = $("#customer_address");
         this.$customer_contact_detail = $("#customer_contact_detail");
-        this.objCustomerSearchAutocomplete = new CustomerSearchAutocomplete(this);                 
+        this.objCustomerSearchAutocomplete = new CustomerSearchAutocomplete(
+            this
+        );
+
+        // Mode of Payment
+        this.$mode_of_payment = $("#mode_of_payment");
+        this.$gcash_num = $("#gcash_num");
+        this.$cc_num = $("#cc_num");
+        this.$gcash_inputs = $("#gcash_inputs");
+        this.$cc_inputs = $("#cc_inputs");
 
         this.triggerEvents();
     }
@@ -88,27 +98,53 @@ class POS {
         $("#products_list").on(
             "keydown",
             "input[name='quantity[]']",
-            this.quantityPreventNegative
-        );        
+            func.preventPlusMinus
+        );
         this.$clear_table.on("click", this.clearTable);
         this.$pay_cash.on("click", this.showModal);
         this.$amount_paid.on("keyup change", this.isAmountValid);
-        this.$amount_paid.on("keydown", this.preventPlusMinus);
+        this.$amount_paid.on("keydown", func.preventPlusMinus);
         this.$submit_pos.on("click", this.submitPos);
 
         this.elemModal.addEventListener("hide.bs.modal", function (event) {
             _this.$pos_error.addClass("d-none");
         });
 
+        this.elemModal.addEventListener("shown.bs.modal", this.toggleModeOfPaymentInputs);
+
         this.Pin.shown();
 
-        this.$delete_item_form.on('submit', this.deleteItem)
-        this.$senior_discounted.on('change', this.applySeniorDiscount)
+        this.$delete_item_form.on("submit", this.deleteItem);
+        this.$senior_discounted.on("change", this.applySeniorDiscount);
+
+        this.$mode_of_payment.on("change", function(event){
+            _this.isAmountValid(event);
+            _this.toggleModeOfPaymentInputs(event);
+        });
+        this.$gcash_num.on("keydown", func.preventPlusMinus);
+        this.$cc_num.on("keydown", func.preventPlusMinus);
+        this.isShowModal();
     }
 
-    preventPlusMinus(event) {
-        if (_this.isPlusMinus(event.keyCode)) {
-            return false;
+    isShowModal() {
+        if (show_modal) {
+            this.modal.show();
+        }
+    }
+
+    toggleModeOfPaymentInputs(event) {
+        let mode = _this.$mode_of_payment.val();
+        if (mode == MODE_CASH) {
+            _this.$gcash_inputs.addClass("d-none");
+            _this.$cc_inputs.addClass("d-none");
+        }
+        if (mode == MODE_GCASH) {
+            _this.$gcash_inputs.addClass("d-block").removeClass("d-none");
+            _this.$cc_inputs.addClass("d-none").removeClass("d-block");
+        }
+        if (mode == MODE_CREDIT_CARD) {
+            _this.$gcash_inputs.addClass("d-none").removeClass("d-block");
+            _this.$cc_inputs.addClass("d-block").removeClass("d-none");
         }
     }
 
@@ -121,22 +157,36 @@ class POS {
         // if not enough funds to pay
         if (amount_paid <= 0) {
             //error
-            if(amount_paid != ""){
+            if (amount_paid != "") {
                 _this.showPosError("Not enough funds");
-            }            
+            }
             return "invalid";
         }
 
         // if not enough funds to pay
-        if (amount_paid < total) {
+        if(amount_paid <= 0 && amount_paid != ""){
+            _this.showPosError("Minimum amount paid is 1");
+            return "invalid";
+        }
+
+        if (amount_paid < total && _this.$mode_of_payment.val() != MODE_CREDIT_CARD) {            
             //error
             _this.showPosError("Not enough funds");
             return "invalid";
         }
 
-        _this.$change.val(sprintf("%.2f", change));
+        _this.setChange(change)
+         
         _this.$pos_error.addClass("d-none");
         return true;
+    }
+
+    setChange(change){
+        if(change >= 0){
+            _this.$change.val(sprintf("%.2f", change));
+        }else{
+            _this.$change.val("0.00");
+        }      
     }
 
     submitPos(event) {
@@ -181,21 +231,19 @@ class POS {
     clearTable(event) {
         // event.preventDefault();
         _this.$tbody.html("");
-        toggletableEmpty(_this.$tbody, _this.$table_empty);
+        func.toggletableEmpty(_this.$tbody, _this.$table_empty);
     }
 
     deleteItem(event) {
         event.preventDefault();
         _this.Pin.isPinCorrect(function () {
-            _this.Pin.$triggeredDeleteButton.parents("tr").remove().promise().done(_this.updateTotal);
-            toggletableEmpty(_this.$tbody, _this.$table_empty);            
+            _this.Pin.$triggeredDeleteButton
+                .parents("tr")
+                .remove()
+                .promise()
+                .done(_this.updateTotal);
+            func.toggletableEmpty(_this.$tbody, _this.$table_empty);
         });
-    }
-
-    quantityPreventNegative(event) {
-        if (_this.isPlusMinus(event.keyCode)) {
-            return false;
-        }
     }
 
     updateForm(event) {
@@ -240,8 +288,6 @@ class POS {
         );
     }
 
-    
-
     isPlusMinus(key) {
         let prevented_keys = [109, 107, 189, 187];
         if ($.inArray(key, prevented_keys) > -1) {
@@ -257,13 +303,13 @@ class POS {
     }
 
     addItem(event) {
-        event.preventDefault();        
+        event.preventDefault();
         $.get(
             "/pos/get-table-row",
             {
                 item_code: _this.$item_code.val(),
                 quantity: _this.$quantity.val(),
-                form: _this.$form_pos.attr('id'),
+                form: _this.$form_pos.attr("id"),
             },
             _this.addItemBtnResponse
         )
@@ -309,7 +355,7 @@ class POS {
         if (parsed_response?.tbody) {
             _this.$tbody.append(parsed_response.tbody);
 
-            toggletableEmpty(_this.$tbody, _this.$table_empty);
+            func.toggletableEmpty(_this.$tbody, _this.$table_empty);
         }
     }
 
@@ -362,7 +408,7 @@ class POS {
         });
 
         //senior discount
-        if(_this.$senior_discounted.is(':checked')){
+        if (_this.$senior_discounted.is(":checked")) {
             total = total * (1 - parseFloat(_this.$senior_discount.val()));
         }
 
@@ -370,7 +416,7 @@ class POS {
         _this.$total.find("span").html(sprintf("%.2f", total));
     }
 
-    applySeniorDiscount(){
+    applySeniorDiscount() {
         let defer = $.Deferred();
         let filtered = defer.then(_this.updateTotal);
         defer.resolve();
@@ -380,4 +426,3 @@ class POS {
 
 let objPOS = new POS();
 const _this = objPOS;
-

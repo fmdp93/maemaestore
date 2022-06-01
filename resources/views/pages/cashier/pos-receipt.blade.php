@@ -89,7 +89,7 @@
                 </tr>
                 <tr>
                     <td class="pt-3 p-0 m-0">Change: </td>
-                    <td class="pt-3 text-end p-0 m-0">{{ sprintf('%.2f', $item->amount_paid - $total) }}</td>
+                    <td class="pt-3 text-end p-0 m-0">{{ sprintf('%.2f', negativeToZero($item->amount_paid - $total)) }}</td>
                 </tr>
             </tbody>
         </table>

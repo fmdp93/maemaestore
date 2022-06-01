@@ -30,7 +30,7 @@ class POSTransaction2ProductModel extends Model
             pt2p.quantity pt2p_quantity, 
             pt2p.refunded_quantity,
             SUM(pt2p.quantity - pt2p.refunded_quantity) pt2p_quantities,
-            SUM(pt2p.price * (pt2p.quantity - pt2p.refunded_quantity) * (1 - pt2p.senior_discount)) pt2p_price_total,
+            SUM(pt2p.price * (pt2p.quantity - pt2p.refunded_quantity)) pt2p_price_total,
             pt.created_at t_date, pt.amount_paid,
             p.name p_name, p.description
         "))
@@ -46,7 +46,7 @@ class POSTransaction2ProductModel extends Model
                 ->where("pt.created_at", "<=", $to . " $time_end");
         }
 
-        $model = $model->orderBy('pt.created_at');
+        $model = $model->orderBy('pt.created_at', 'desc');
 
         if ($paginated) {
             $model = $model->paginate(Config::get('constant.per_page'))
@@ -65,6 +65,7 @@ class POSTransaction2ProductModel extends Model
 
     public function getSalesReportFor($id)
     {
+        DB::enableQueryLog();
         $model = POSTransaction2ProductModel::select(DB::raw("
             pt2p.pos_transaction_id t_id, 
             (pt2p.quantity - pt2p.refunded_quantity) pt2p_quantity,
@@ -78,6 +79,9 @@ class POSTransaction2ProductModel extends Model
             ->where("status_id", 4) //completed
             ->where("pt.id", $id)
             ->having("pt2p_quantity", ">", 0);
+
+            // $model->get();
+        // dd(DB::getQueryLog());
         return $model;
     }
 
@@ -85,10 +89,23 @@ class POSTransaction2ProductModel extends Model
     {
         $time_start = "00:00:00";
         $time_end = "23:59:59";
+        $pt2p_item_total_selling_price = "((pt2p.quantity - pt2p.refunded_quantity) * pt2p.price)";
+        $pt2p_amount_paid_or_total_sales = "(IF(pt.amount_paid < $pt2p_item_total_selling_price,
+             pt.amount_paid, $pt2p_item_total_selling_price))";
+        $pt2p_item_total_base_price = "(pt2p.base_price * (pt2p.quantity - pt2p.refunded_quantity))";
+        // idk profit yet
+        $pt2p_profit = "$pt2p_item_total_selling_price - $pt2p_item_total_base_price";
+        // base_price = 800
+        // selling_price = 1000
+        // sale = 850 (the lacked or exact amount paid for the item)
+        // amount paid is lacked or exact if it is >= the selling price
+        // profit = sale - base_price
+
         $model = POSTransaction2ProductModel::select(DB::raw("
             SUM(pt2p.quantity - pt2p.refunded_quantity) total_items, 
-            SUM(pt2p.base_price * (pt2p.quantity - pt2p.refunded_quantity)) total_price,
-            SUM((pt2p.quantity - pt2p.refunded_quantity) * pt2p.price) total_sales
+            SUM($pt2p_item_total_base_price) total_price,
+            SUM($pt2p_amount_paid_or_total_sales) total_sales,
+            SUM(IF($pt2p_profit < 0, 0, $pt2p_profit)) profit            
         "))
             ->from("pos_transaction2product as pt2p")
             ->join("pos_transaction as pt", "pt.id", "=", "pt2p.pos_transaction_id")
@@ -119,13 +136,14 @@ class POSTransaction2ProductModel extends Model
         return $refund_qty;
     }
 
-    public function getPosTransaction($search, $page_path)
+    public function getPosTransaction($search, $page_path, $where = "")
     {
+        DB::enableQueryLog();
         $model = $this::select(DB::raw('
             pt.id pt_id, pt.created_at, pt.customer_name, pt.amount_paid, 
             pt2p.remark, pt2p.price pt2p_price, pt2p.refunded_quantity,
                 pt2p.refunded_at,
-            p.name p_name           
+            p.name p_name, p.description, (pt2p.quantity - pt2p.refunded_quantity) pt2p_quantities                     
             '))
             ->from('pos_transaction as pt')
             ->join('pos_transaction2product as pt2p', 'pt2p.pos_transaction_id', '=', 'pt.id')
@@ -136,7 +154,7 @@ class POSTransaction2ProductModel extends Model
                     ->orWhere('created_at', 'LIKE', "%$search%");
             })
             ->whereNotNull('refunded_at')
-            ->orderBy('pt.id', 'desc')
+            ->orderBy('pt.id', 'desc')            
             ->paginate(Config::get('constant.per_page'))
             ->withPath($page_path)
             ->appends(
@@ -144,6 +162,8 @@ class POSTransaction2ProductModel extends Model
                     'q' => $search,
                 ]
             );
+
+        // dd(DB::getQueryLog());
 
         return $model;
     }

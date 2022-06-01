@@ -15,7 +15,7 @@ class POSTransactionModel extends Model
 
     public $timestamps = false;
 
-    public function getPosTransactions($search, $page_path)
+    public function getPosTransactions($search, $page_path, $where = "")
     {
         DB::enableQueryLog();
         $model = POSTransaction2ProductModel::select(DB::raw("
@@ -23,7 +23,7 @@ class POSTransactionModel extends Model
             pt2p.quantity pt2p_quantity, 
             pt2p.refunded_quantity,
             SUM(pt2p.quantity - pt2p.refunded_quantity) pt2p_quantities,
-            SUM(pt2p.price * (pt2p.quantity - pt2p.refunded_quantity) * (1 - pt2p.senior_discount)) pt2p_price_total,
+            SUM(pt2p.price * (pt2p.quantity - pt2p.refunded_quantity)) pt2p_price_total,
             pt.created_at t_date, pt.amount_paid,
             p.name p_name, p.description
         "))
@@ -33,6 +33,12 @@ class POSTransactionModel extends Model
             ->orWhere(function ($query) use ($search) {
                 $query->where('pt.id', $search)
                     ->orWhere('p.name', 'LIKE', "%$search%");
+            })
+            ->when($where, function ($query) use ($where) {
+                $query->where('mode_of_payment', $where)
+                    ->whereRaw('pt.amount_paid < (
+                                (pt2p.quantity - pt2p.refunded_quantity) * pt2p.price
+                            )');
             })
             ->where("status_id", 4) //completed
             ->groupBy("pt.id")

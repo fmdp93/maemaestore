@@ -17,7 +17,7 @@ use App\Http\Controllers\AccountsController;
         <div class="col-xl-12">
             <div class="row">
                 <div class="col-12 col-xl-3">
-                    <a href="{{ route('rr_form') }}" class="btn btn-success py-xl-2 px-xl-3 mb-xl-3 text-primary"><i
+                    <a href="{{ route('rr_form') }}" class="btn btn-danger py-xl-2 px-xl-3 mb-xl-3 text-primary"><i
                             class="fa fa-plus-circle"></i> Return/Refund</a>
                 </div>
                 <div class="col-xl-3 ms-auto">

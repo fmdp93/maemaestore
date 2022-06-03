@@ -24,7 +24,9 @@ class InventoryOrder extends Model
             ->join('product as p', 'p.id', '=', 'io2p.product_id')
             ->join('supplier as s', 's.id', '=', 'p.supplier_id')
             ->groupBy('io2p.transaction_id')
-            ->where('date_delivered', null);        
+            ->groupBy('p.supplier_id')
+            ->where('date_delivered', null)
+            ->where('io2p.status_id', null);        
         // $query->get();
         // dd(DB::getQueryLog());
         foreach ($wheres as $fields) {

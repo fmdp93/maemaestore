@@ -91,9 +91,10 @@ class POSController extends Controller
             $POSTransaction2Product->quantity = $validated['quantity'][$key];
 
             $senior_discount = $request->input("senior_discounted") == "true" ? (float) ConfigModel::find(3)->value : 0;
-            $POSTransaction2Product->price = $validated['price'][$key] * (1 - $senior_discount);
-            $base_price = Product::find($product_id)->base_price;
-            $POSTransaction2Product->base_price = $base_price;
+            $POSTransaction2Product->price = $validated['price'][$key] * (1 - $senior_discount);            
+            $Product = Product::find($product_id);
+            $POSTransaction2Product->selling_price = $Product->price;
+            $POSTransaction2Product->base_price = $Product->base_price;
             $POSTransaction2Product->senior_discount = $senior_discount;
 
             $POSTransaction2Product->save();
@@ -217,7 +218,7 @@ class POSController extends Controller
         $data['items'] = POSTransactionModel::select(DB::raw('
             pt.created_at, pt.amount_paid, 
             pt.customer_name, pt.customer_address, pt.customer_contact_detail,
-            pt2p.id pt2p_id, pt2p.quantity, pt2p.price,
+            pt2p.id pt2p_id, pt2p.quantity, pt2p.price, pt2p.selling_price, pt2p.senior_discount,
             p.name p_name'))
             ->from('pos_transaction as pt')
             ->join('pos_transaction2product as pt2p', 'pt2p.pos_transaction_id', '=', 'pt.id')
@@ -227,7 +228,7 @@ class POSController extends Controller
 
         $view = (string) view('pages.cashier.pos-receipt', $data);
         // return $view;        
-        $static_rows_count = 23;
+        $static_rows_count = 27;
         $row_height = 16;
         $base_receipt_height = $static_rows_count * $row_height;
         $paper_height = $base_receipt_height + $row_height * $this->getItemRows($data['items']);
@@ -313,7 +314,8 @@ class POSController extends Controller
                 WHERE p2.item_code = p.item_code
                 GROUP BY p2.item_code) p_id, p.item_code, p.name p_name,
         p.description, p.price, p.unit, p.expiration_date, p.stock p_stock,
-        c.name c_name")
+        c.name c_name
+            ")            
         )
             ->from('inventory as i')
             ->join('product as p', 'p.id', '=', 'i.product_id')

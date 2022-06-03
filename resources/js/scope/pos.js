@@ -16,6 +16,7 @@ class POS {
         this.$item_code = $("#item_code");
         this.$s_item_name = $("#name");
         this.$quantity = $("#s_quantity");
+        this.$s_stock = $("#s_stock");
         this.quantityTooltip;
         this.$tbody = $("#products_list tbody");
         this.$table_empty = $(".table-empty");
@@ -32,6 +33,7 @@ class POS {
         this.$change = $("#change");
         this.$senior_discounted = $("#senior_discounted");
         this.$senior_discount = $("#senior_discount");
+        this.stock_available = false;
 
         // Barcode
         this.objBarcodeReader = objBarcodeReader;
@@ -110,14 +112,17 @@ class POS {
             _this.$pos_error.addClass("d-none");
         });
 
-        this.elemModal.addEventListener("shown.bs.modal", this.toggleModeOfPaymentInputs);
+        this.elemModal.addEventListener(
+            "shown.bs.modal",
+            this.toggleModeOfPaymentInputs
+        );
 
         this.Pin.shown();
 
         this.$delete_item_form.on("submit", this.deleteItem);
         this.$senior_discounted.on("change", this.applySeniorDiscount);
 
-        this.$mode_of_payment.on("change", function(event){
+        this.$mode_of_payment.on("change", function (event) {
             _this.isAmountValid(event);
             _this.toggleModeOfPaymentInputs(event);
         });
@@ -164,29 +169,32 @@ class POS {
         }
 
         // if not enough funds to pay
-        if(amount_paid <= 0 && amount_paid != ""){
+        if (amount_paid <= 0 && amount_paid != "") {
             _this.showPosError("Minimum amount paid is 1");
             return "invalid";
         }
 
-        if (amount_paid < total && _this.$mode_of_payment.val() != MODE_CREDIT_CARD) {            
+        if (
+            amount_paid < total &&
+            _this.$mode_of_payment.val() != MODE_CREDIT_CARD
+        ) {
             //error
             _this.showPosError("Not enough funds");
             return "invalid";
         }
 
-        _this.setChange(change)
-         
+        _this.setChange(change);
+
         _this.$pos_error.addClass("d-none");
         return true;
     }
 
-    setChange(change){
-        if(change >= 0){
+    setChange(change) {
+        if (change >= 0) {
             _this.$change.val(sprintf("%.2f", change));
-        }else{
+        } else {
             _this.$change.val("0.00");
-        }      
+        }
     }
 
     submitPos(event) {
@@ -220,12 +228,34 @@ class POS {
     updateSearchSubtotal(response) {
         let parsed = JSON.parse(response);
         let quantity = _this.$quantity.val();
-        _this.quantityTooltip?.dispose();
+        _this.disposeToolTip();
 
         if (parsed.result?.p_id) {
             let price = parsed.result.price;
+            let item_code = parsed.result.item_code;
+
+            if (!(_this.stock_available = _this.isStockAvailable())) {
+                // quantity = _this.$s_stock.val();
+                _this.quantityTooltip.show();
+                // _this.$quantity.val(quantity);
+                _this.$s_total.val("");
+                return;
+            }
+            let table_input_quantity = _this.$tbody
+                .find(`input[value="${item_code}"]`)
+                .parents("tr")
+                .find('input[name="quantity[]"]');
+            table_input_quantity?.val(quantity);  
+                          
             _this.$s_total.val(sprintf("%.2f", price * quantity));
+            _this.updateForm(null, table_input_quantity);
         }
+    }
+
+    disposeToolTip(){
+        if(_this.quantityTooltip?._element != null){
+            _this.quantityTooltip.dispose();
+        } 
     }
 
     clearTable(event) {
@@ -246,11 +276,10 @@ class POS {
         });
     }
 
-    updateForm(event) {
-        let $this = $(this);
-        let parentTable = "#products_list";
+    updateForm(event, $input = "") {       
+        let $this = $input || $(this);
         let price = $this
-            .parents(parentTable)
+            .parents("tr")
             .find("input[name='price[]']")
             .val();
         let quantity = $this.val();
@@ -258,7 +287,6 @@ class POS {
 
         let data = {
             $this: $this,
-            parentTable: parentTable,
             price: price,
             quantity: quantity,
             subtotal: subtotal,
@@ -276,6 +304,7 @@ class POS {
     }
 
     requestProduct(event) {
+        _this.disposeToolTip();
         if (_this.isPlusMinus(event.keyCode)) {
             return false;
         }
@@ -295,6 +324,7 @@ class POS {
         }
     }
     requestProductById() {
+        _this.disposeToolTip();
         $.get(
             "/pos/inventory-search",
             { item_code: _this.$item_code.val() },
@@ -304,6 +334,15 @@ class POS {
 
     addItem(event) {
         event.preventDefault();
+
+        // stop if item_code exists in table
+        let found_item_code = _this.$tbody
+            .find(`input[value="${_this.$item_code.val()}"]`)
+            ?.val();
+        if (found_item_code == _this.$item_code.val()) {
+            return;
+        }
+
         $.get(
             "/pos/get-table-row",
             {
@@ -322,34 +361,12 @@ class POS {
 
     addItemBtnResponse(response) {
         let parsed_response = JSON.parse(response);
-        let quantity = _this.$quantity.val();
         let result = parsed_response.result;
+        let quantity = _this.$quantity.val();
 
         // check stock
-        if (result?.p_id) {
-            let item_code = _this.$item_code.val();
-            let table_stock_array = _this.$tbody
-                .find(`input[value='${item_code}']`)
-                .parents("tr")
-                .find(`input[name='quantity[]']`);
-            let table_stock = 0;
-            if (table_stock_array.length > 0) {
-                table_stock_array.each(function () {
-                    table_stock += parseFloat($(this).val());
-                });
-            }
-
-            let inventory_stock = result.i_stock - table_stock;
-            if (quantity > inventory_stock) {
-                _this.quantityTooltip = new bootstrap.Tooltip(
-                    _this.$quantity[0],
-                    {
-                        title: "Not enough stock",
-                    }
-                );
-
-                return;
-            }
+        if (!_this.stock_available && quantity != "") {
+            return;
         }
 
         if (parsed_response?.tbody) {
@@ -357,6 +374,23 @@ class POS {
 
             func.toggletableEmpty(_this.$tbody, _this.$table_empty);
         }
+    }
+
+    isStockAvailable() {
+        let quantity = parseInt(_this.$quantity.val());
+        let stock = parseInt(_this.$s_stock.val());
+
+        if (quantity > stock) {
+            _this.initToolTip(`Max quantity is ${stock}`);
+            return false;
+        }
+        return true;
+    }
+
+    initToolTip(title) {
+        _this.quantityTooltip = new bootstrap.Tooltip(_this.$quantity[0], {
+            title: title,
+        });
     }
 
     requestProductResponse(response) {

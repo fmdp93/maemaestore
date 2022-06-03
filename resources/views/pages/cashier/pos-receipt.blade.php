@@ -26,12 +26,12 @@
             padding: 12px;
         }
 
-        #header{
+        #header {
             line-height: 1;
             vertical-align: middle;
         }
-        
-        .icon{
+
+        .icon {
             height: 17px;
             width: 20px;
             display: inline;
@@ -39,7 +39,7 @@
             vertical-align: middle;
         }
 
-        .icon + b{
+        .icon+b {
             line-height: 1;
             vertical-align: middle;
         }
@@ -73,24 +73,42 @@
                 @foreach ($items as $item)
                     <tr>
                         <td class="p-0 m-0">{{ $item->p_name }} x {{ $item->quantity }}</td>
-                        <td class="text-end p-0 m-0">{{ $item->price * $item->quantity }}</td>
+                        <td class="text-end p-0 m-0">{{ $item->selling_price * $item->quantity }}</td>
                     </tr>
                     @php
-                        $total += $item->price * $item->quantity;
+                        $total += $item->selling_price * $item->quantity;
                     @endphp
                 @endforeach
                 <tr>
                     <td class="pt-5 p-0 m-0">Total:</td>
                     <td class="text-end pt-5 p-0 m-0">{{ sprintf('%.2f', $total) }}</td>
                 </tr>
+                @php
+                    $discount = $total * $item->senior_discount;
+                    $discounted_total = $total - $discount;
+                @endphp
+                @if ($item->senior_discount)
+                    <tr>
+                        <td class="pt-3 p-0 m-0">Senior Discount: </td>
+                        <td class="pt-3 text-end p-0 m-0">
+                            {{ sprintf('%.2f', negativeToZero($discount)) }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="pt-5 p-0 m-0">Discounted Total:</td>
+                        <td class="text-end pt-5 p-0 m-0">{{ sprintf('%.2f', $discounted_total) }}</td>
+                    </tr>
+                @endif
+                
                 <tr>
                     <td class="p-0 m-0">Amount Paid:</td>
                     <td class="text-end p-0 m-0">{{ sprintf('%.2f', $item->amount_paid) }}</td>
                 </tr>
                 <tr>
                     <td class="pt-3 p-0 m-0">Change: </td>
-                    <td class="pt-3 text-end p-0 m-0">{{ sprintf('%.2f', negativeToZero($item->amount_paid - $total)) }}</td>
-                </tr>
+                    <td class="pt-3 text-end p-0 m-0">{{ sprintf('%.2f', negativeToZero($item->amount_paid - $discounted_total)) }}
+                    </td>
+                </tr>                
             </tbody>
         </table>
     </div>

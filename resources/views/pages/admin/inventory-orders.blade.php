@@ -14,15 +14,15 @@
             <table id="inventory_order_list" class="table table-striped">
                 <thead>
                     <tr>
-                        <th scope="col">ID</th>
-                        <th scope="col">Vendor</th>
-                        <th scope="col">Company</th>
-                        <th scope="col">Contact</th>
-                        <th scope="col">Address</th>
-                        <th scope="col" class="text-end">Tax</th>
-                        <th scope="col" class="text-end">Shipping Fee</th>
-                        <th scope="col">Leading Time</th>
-                        <th scope="col">Action</th>
+                        <th>ID</th>
+                        <th>Vendor</th>
+                        <th>Company</th>
+                        <th>Contact</th>
+                        <th>Address</th>
+                        <th class="text-end">Tax</th>
+                        <th class="text-end">Shipping Fee</th>
+                        <th>Leading Time</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -35,10 +35,11 @@
             <div id="details-modal">
                 <div class="modal fade" id="detailsModalContent" tabindex="-1"
                     aria-labelledby="detailsModalContentLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-xl">
+                    <div class="modal-dialog modal-fullscreen p-5">
                         <div class="modal-content">                            
                             <div class="modal-header">
-                                <h5 class="modal-title" id="detailsModalContentLabel" class="d-block">Products
+                                <h5 class="modal-title" id="detailsModalContentLabel" class="d-block">
+                                    Ordered Products'
                                     List</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"
                                     aria-label="Close"></button>
@@ -50,13 +51,17 @@
                                         <th>Name</th>
                                         <th>Category</th>
                                         <th>Description</th>
+                                        <th class="text-end">Base Price</th>
+                                        <th class="text-end">Tax</th>
+                                        <th class="text-end">Markup Price</th>
+                                        <th class="text-end">Selling Price</th>
                                         <th class="fit">Quantity</th>
                                         <th class="">Expiration</th>
-                                        <th class="text-end">Price</th>
+                                        <th class="text-end">Ordered Price</th>
                                         <th class="text-end">Total</th>
                                         <th class="text-center">Action</th>
                                     </thead>
-                                    <tbody>
+                                    <tbody class="align-middle">
                                     </tbody>
                                 </table>
                             </div>

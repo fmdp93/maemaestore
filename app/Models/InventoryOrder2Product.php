@@ -77,7 +77,8 @@ class InventoryOrder2Product extends Model
                 io2p.price io2p_price, io2p.quantity io2p_quantity,
             c.name c_name,
             p.id p_id, p.name p_name, p.item_code p_item_code, p.description p_desc,
-                p.expiration_date'))
+                p.expiration_date,
+                p.base_price, p.tax p_tax, p.markup, p.price selling_price'))
             ->from('inventory_order2_product as io2p')
             ->join('product as p', 'p.id', '=', 'io2p.product_id')
             ->join('product_category as c', 'c.id', '=', 'p.category_id')

@@ -11,6 +11,18 @@
             <td>{{ $product->p_name }}</td>
             <td>{{ $product->c_name }}</td>
             <td>{{ $product->p_desc }}</td>
+            <td class="text-end">
+                {{ sprintf("%.2f",$product->base_price) }}
+            </td>
+            <td class="text-end">
+                {{ sprintf("%.2f", $product->base_price * $product->p_tax / 100) }}
+            </td>
+            <td class="text-end">
+                {{ sprintf("%.2f", $product->base_price * $product->markup / 100) }}
+            </td>
+            <td class="text-end">
+                {{ sprintf("%.2f", $product->selling_price) }}
+            </td>
             <td class="fit">
                 <input type="number" name="quantity" class="quantity form-control"
                     value="{{ $product->io2p_quantity }}">
@@ -19,6 +31,7 @@
                 <input type="text" name="expiration_date" class="expiration_date form-control ms-auto"
                     value="{{ $product->expiration_date }}">
             </td>
+            
             <td class="text-end">
                 {{ sprintf('%.2f', $product->io2p_price) }}
                 <input type="hidden" name="price" value="{{ sprintf('%.2f', $product->io2p_price) }}">

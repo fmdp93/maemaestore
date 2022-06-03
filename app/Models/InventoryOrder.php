@@ -18,9 +18,9 @@ class InventoryOrder extends Model
     {
         DB::enableQueryLog();
         $query = $this::select(DB::raw('io.id io_id, vendor, company_name, 
-            contact_detail, address, tax, shipping_fee, eta, date_delivered, SUM(io2p.price * io2p.quantity) io2p_total_price'))
+            contact_detail, address, io.tax, shipping_fee, eta, date_delivered, SUM(io2p.price * io2p.quantity) io2p_total_price'))
             ->from('inventory_order as io')
-            ->join('inventory_order2_product as io2p', 'io.id', '=', 'io2p.transaction_id')
+            ->join('inventory_order2_product as io2p', 'io.id', '=', 'io2p.transaction_id')            
             ->groupBy('io2p.transaction_id')
             ->where('date_delivered', null);        
         // $query->get();

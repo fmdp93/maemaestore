@@ -82,7 +82,6 @@ use App\Http\Controllers\InventoryController;
             @if ($errors->any())
                 @php
                     $message = 'Please Fix the errors below';
-                    print_r($errors->all());
                 @endphp
                 <div class="py-3">
                     @include('components.error-message')
@@ -116,7 +115,7 @@ use App\Http\Controllers\InventoryController;
             <div class="row mt-3">
                 <div class="col-xl-4 ms-auto">
                     <input type="hidden" name="supplier_search_id" id="supplier_search_id"
-                        form="purchase-order" value="{{ old('supplier_search_id') }}">
+                    value="{{ old('supplier_search_id') }}">
                     @error('vendor')
                         @include('components.error-message')
                     @enderror

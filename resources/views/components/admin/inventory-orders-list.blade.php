@@ -14,11 +14,13 @@
         <td class="text-nowrap">
             <div class="d-flex justify-content-around">
 
-                <button class="view-details btn btn-success px-3 py-1" data-io-id={{ $io->io_id }}
+                <button class="view-details btn btn-success px-3 py-1" data-io-id="{{ $io->io_id }}"
+                    data-supplier-id="{{ $io->supplier_id }}"
                     data-bs-toggle="modal" data-bs-target="#detailsModalContent">View Details</button>
                 <form action="{{ route('purchase_order_cancel') }}" method="POST" class="px-1">
                     @csrf
                     <input type="hidden" value="{{ $io->io_id }}" name="io_id">
+                    <input type="hidden" value="{{ $io->supplier_id }}" name="supplier_id">
                     {{-- Need to pass url_params to set GET params after redirection from an action like delete --}}
 
                     <button type="submit" class="btn btn-danger text-primary">

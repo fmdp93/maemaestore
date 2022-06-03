@@ -109,8 +109,12 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/inventory/get-inventory-order-processing', [InventoryController::class, 'getInventoryOrderProcessing']);
     Route::get('/inventory/order-products', [InventoryController::class, 'orderProducts']);
     Route::post('/inventory/add', [InventoryController::class, 'store']);
+    // Async 
     Route::get('/inventory/search', [InventoryController::class, 'inventorySearch']);
-    Route::get('/vendor/search', [SuppliersController::class, 'searchVendor']);
+    Route::get('/purchase-order/search/', [InventoryController::class, 'purchaseOrderSearch']);
+    Route::get('/purchase-order/supplier-search/', [InventoryController::class, 'purchaseOrderSupplierSearch']);
+    Route::get('/vendor/search', [SuppliersController::class, 'searchVendor']);    
+
 
     Route::get('/sales-report', [SalesReportController::class, 'index']);
     Route::get('/sales-report/transaction/{id}', [SalesReportController::class, 'posTransaction2Product'])

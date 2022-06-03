@@ -109,10 +109,12 @@ class InventoryOrders {
 
     loadModal(event) {
         let io_id = $(event.relatedTarget).data("io-id");
+        let supplier_id = $(event.relatedTarget).data("supplier-id");
         _this.order_received = [];
         $.get(
             "/inventory/order-products",
-            { io_id: io_id },
+            { io_id: io_id,
+                supplier_id: supplier_id},
             function (response) {
                 let parsed = JSON.parse(response);
                 _this.$modal_tbody.html(parsed.modal_content);

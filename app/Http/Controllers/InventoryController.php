@@ -162,8 +162,9 @@ class InventoryController extends Controller
     public function orderProducts(Request $request)
     {
         $io_id = $request->input('io_id');
+        $supplier_id = $request->input('supplier_id');
         $InventoryOrder2Product = new InventoryOrder2Product();
-        $data['io_products'] = $InventoryOrder2Product->getProcessingProducts($io_id);
+        $data['io_products'] = $InventoryOrder2Product->getProcessingProducts($io_id, $supplier_id);
         $response['modal_content'] = (string) view('components.io2p-rows', $data);
 
         $response = json_encode($response);
@@ -174,7 +175,54 @@ class InventoryController extends Controller
     {
         $data['heading'] = 'Purchase Order Form';
 
+        $this->setHalfStockTbodyContent($request);
+
+        $this->setLastTableContent($request);
+
+        $data['tbody_content'] = $this->tbody_content;
+        $data['d_none'] = !empty($data['tbody_content']) ? 'd-none' : '';
+
         return view('pages.admin.purchase-order', $data);
+    }
+
+    private function setHalfStockTbodyContent($request)
+    {
+        if ($request->input('request_half_stock') == 1 && empty(old())) {
+            $Inventory = new Inventory();
+            $products = $Inventory->getHalfStock();
+
+            if (!empty($products)) {
+                foreach ($products as $product) {
+                    $data['form'] = 'purchase-order';
+                    $data['p_id'] = $product->p_id;
+                    $data['code'] = $product->item_code;
+                    $data['name'] = $product->p_name;
+                    $data['description'] = $product->description;
+                    $data['quantity'] = $product->p_stock - $product->i_stock;
+                    $data['price'] = $product->price;
+                    $data['subtotal'] = $data['price'] * $data['quantity'];
+                    $this->tbody_content .= (string) view("components.purchase-order-row", $data);
+                }
+            }
+            ($this->tbody_content);
+        }
+    }
+
+    private function setLastTableContent($request)
+    {
+        if (!empty($request->old('product_id'))) {
+            foreach ($request->old('product_id') as $key => $product_id) {
+                $data['p_id'] = $request->old('product_id')[$key];
+                $data['code'] = $request->old('t_item_code')[$key];
+                $data['name'] = $request->old('t_name')[$key];
+                $data['description'] = $request->old('t_description')[$key];
+                $data['quantity'] = $request->old('quantity')[$key];
+                $data['price'] = $request->old('price')[$key];
+                $data['subtotal'] = $data['price'] * $data['quantity'];
+                $data['form'] = 'purchase-order';
+                $this->tbody_content .= (string) view("components.purchase-order-row", $data);
+            }
+        }
     }
 
     public function orderReceived(Request $request)
@@ -190,12 +238,12 @@ class InventoryController extends Controller
             (object) [
                 'column_name' => 'item_code',
                 'operator' => '=',
-                'value' => $item_code,                
+                'value' => $item_code,
             ],
             (object) [
                 'column_name' => 'expiration_date',
                 'operator' => '=',
-                'value' => $input_expiration_date,                
+                'value' => $input_expiration_date,
             ],
         ];
         $io2p = InventoryOrder2Product::getOrderedProduct($wheres)->first();
@@ -203,17 +251,17 @@ class InventoryController extends Controller
         if ($io2p !== null) {
             $existing_product_expiration_date = $io2p->expiration_date;
         }
-        
+
         // different expiration, new item to product
         if ($input_expiration_date != $existing_product_expiration_date) {
             $wheres = [
                 (object) [
                     'column_name' => 'item_code',
                     'operator' => '=',
-                    'value' => $item_code,                
+                    'value' => $item_code,
                 ],
             ];
-            $io2p = InventoryOrder2Product::getOrderedProduct($wheres)->first();            
+            $io2p = InventoryOrder2Product::getOrderedProduct($wheres)->first();
             $Product = new Product();
             $Product->item_code = $io2p->item_code;
             $Product->category_id = $io2p->category_id;
@@ -304,18 +352,10 @@ class InventoryController extends Controller
         $transaction_id = $InventoryOrder->id; // id of latest insert
 
         $InventoryOrder2Product = new InventoryOrder2Product();
-        $order_count = $InventoryOrder2Product->insert_products($transaction_id, $request->input('supplier_search_id'));
+        $InventoryOrder2Product->insert_products($request, $transaction_id);
 
-        // delete InventoryOrder if no orders made
-        if ($order_count == false) {
-            InventoryOrder::where("id", $transaction_id)
-                ->delete();
-            $message = "No orders made, stocks are full/overstocked.";
-        }
 
-        if ($order_count == true) {
-            $message = 'Purchase order submitted!';
-        }
+        $message = 'Purchase order submitted!';
 
         $request->session()->flash('msg_success', $message);
         $request->session()->forget('get_half_stock');
@@ -355,5 +395,98 @@ class InventoryController extends Controller
         ];
         $response = json_encode($response);
         return Response()->json($response);
+    }
+
+    public function purchaseOrderSearch(Request $request)
+    {
+        $tbody_content = '';
+        $item_code = $request->input('item_code');
+        DB::enableQueryLog();
+        $product = Inventory::select(
+            DB::raw('p.id p_id, p.item_code, p.name p_name,
+        p.description, p.price, p.unit, p.expiration_date, p.stock p_stock,
+        c.name c_name')
+        )
+            ->from('product as p')
+            ->leftJoin('product_category as c', 'p.category_id', '=', 'c.id')
+            ->where('p.item_code', $item_code)
+            ->whereNull('p.deleted_at')
+            ->whereIn('p.id', function ($query) {
+                $query->select(DB::raw('max(id)'))
+                    ->from('product')
+                    ->groupBy('item_code');
+            })
+            ->first();
+
+
+        $tbody_content = $this->getPurchasOrderRow($product, request()->input('quantity'));
+
+        $params['result'] = $product;
+        $params['tbody'] = $tbody_content;
+        return $this->getPurcOrdResponse($params);
+    }
+
+    public function purchaseOrderSupplierSearch(Request $request)
+    {
+        $tbody_content = '';
+        $supplier_id = $request->input('supplier_id');
+        DB::enableQueryLog();
+        $products = Inventory::select(
+            DB::raw('
+                ((SELECT stock max_stock FROM product 
+                    WHERE item_code = p.item_code order by id desc limit 1) 
+                    - SUM(IF(i.stock is NULL, 0, i.stock))) order_quantity,
+                p.id p_id, p.item_code, p.name p_name,
+                p.description, p.price, p.unit, p.expiration_date, p.stock p_stock,
+                c.name c_name')
+        )
+            ->from('product as p')
+            ->leftJoin('product_category as c', 'p.category_id', '=', 'c.id')
+            ->leftJoin('inventory as i', 'i.product_id', '=', 'p.id')
+            ->where('p.supplier_id', $supplier_id)
+            ->whereNull('p.deleted_at')
+            ->whereNull('i.status_id') //not archived
+            ->whereIn('p.id', function ($query) {
+                $query->select(DB::raw('max(id)'))
+                    ->from('product')
+                    ->groupBy('item_code');
+            })
+            ->having('order_quantity', '>', 0)
+            ->groupBy('p.item_code');
+
+        foreach ($products->get() as $product) {
+            $tbody_content .= $this->getPurchasOrderRow($product, $product->order_quantity);
+        }
+
+        $params['tbody'] = $tbody_content;
+        return $this->getPurcOrdResponse($params);
+    }
+
+    private function getPurcOrdResponse($params)
+    {
+        $response = [
+            'table_empty' => (string) view('layouts.empty-table'),
+            'last_query' => DB::getQueryLog(),
+        ];
+
+        $response = array_merge($response, $params);
+
+        $response = json_encode($response);
+        return Response()->json($response);
+    }
+
+    private function getPurchasOrderRow($product, $quantity)
+    {
+        if (!empty($product)) {
+            $data['p_id'] = $product->p_id;
+            $data['code'] = $product->item_code;
+            $data['name'] = $product->p_name;
+            $data['description'] = $product->description;
+            $data['quantity'] = $quantity;
+            $data['price'] = $product->price;
+            $data['subtotal'] = $data['price'] * $data['quantity'];
+            $data['form'] = 'purchase-order';
+            return $tbody_content = (string) view("components.purchase-order-row", $data);
+        }
     }
 }

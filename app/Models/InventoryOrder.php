@@ -17,10 +17,12 @@ class InventoryOrder extends Model
     public function getProcessing($wheres = [])
     {
         DB::enableQueryLog();
-        $query = $this::select(DB::raw('io.id io_id, vendor, company_name, 
-            contact_detail, address, io.tax, shipping_fee, eta, date_delivered, SUM(io2p.price * io2p.quantity) io2p_total_price'))
+        $query = $this::select(DB::raw('io.id io_id, s.id supplier_id, s.vendor, s.company_name, 
+            s.contact_detail, s.address, io.tax, shipping_fee, eta, date_delivered, SUM(io2p.price * io2p.quantity) io2p_total_price'))
             ->from('inventory_order as io')
             ->join('inventory_order2_product as io2p', 'io.id', '=', 'io2p.transaction_id')            
+            ->join('product as p', 'p.id', '=', 'io2p.product_id')
+            ->join('supplier as s', 's.id', '=', 'p.supplier_id')
             ->groupBy('io2p.transaction_id')
             ->where('date_delivered', null);        
         // $query->get();

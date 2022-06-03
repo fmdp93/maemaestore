@@ -14,39 +14,15 @@ class InventoryOrder2Product extends Model
 
     public $timestamps = false;
 
-    public function insert_products($transaction_id, $supplier_id)
-    {
-        DB::enableQueryLog();
-        // max_stock came from max stock of latest product
-        $products = Product::select(DB::raw('            
-            ((SELECT stock max_stock FROM product 
-                WHERE item_code = p.item_code order by id desc limit 1) 
-                - SUM(IF(i.stock is NULL, 0, i.stock))) order_quantity,
-             MAX(p.id) last_product_id, p.price'))
-            ->from('product as p')
-            ->leftJoin('inventory as i', 'i.product_id', '=', 'p.id')
-            ->where('supplier_id', $supplier_id)
-            ->whereNull('i.status_id') //inventory product not archive
-            ->having('order_quantity', '>', 0)
-            ->groupBy('p.item_code');
-        // $products->get();
-        // dd(DB::getQueryLog());
-        $row_count = 0;
-        foreach ($products->get() as $key => $product) {
-            // if quantity is overstock
-            if ($product->order_quantity < 0) {
-                continue;
-            }
-
+    public function insert_products($request, $transaction_id){        
+        foreach($request->input('product_id') as $key => $product_id){
             $InventoryOrder2Product = new InventoryOrder2Product();
             $InventoryOrder2Product->transaction_id = $transaction_id;
-            $InventoryOrder2Product->product_id = $product->last_product_id;
-            $InventoryOrder2Product->quantity = $product->order_quantity;
-            $InventoryOrder2Product->price = $product->price;
-            $InventoryOrder2Product->save();
-            $row_count++;
-        }
-        return $row_count > 0 ? true : false;
+            $InventoryOrder2Product->product_id = $product_id;
+            $InventoryOrder2Product->quantity = $request->input('quantity')[$key];
+            $InventoryOrder2Product->price = $request->input('price')[$key];
+            $InventoryOrder2Product->save();            
+        }        
     }
 
     public static function getOrderedProduct($wheres)
@@ -68,7 +44,7 @@ class InventoryOrder2Product extends Model
         return $query;
     }
 
-    public function getProcessingProducts($transaction_id)
+    public function getProcessingProducts($transaction_id, $supplier_id)
     {
         DB::enableQueryLog();
         $query = $this::select(DB::raw('
@@ -84,6 +60,7 @@ class InventoryOrder2Product extends Model
             ->join('product_category as c', 'c.id', '=', 'p.category_id')
             ->join('inventory_order as io', 'io.id', '=', 'io2p.transaction_id')
             ->where('io2p.transaction_id', $transaction_id)
+            ->where('p.supplier_id', $supplier_id)
             ->whereNull('io2p.status_id');
 
         // $query->get();

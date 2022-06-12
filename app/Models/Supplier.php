@@ -48,4 +48,11 @@ class Supplier extends Model
             ->limit(Config::get('constant.autocomplete_suggestion_count'));
         return $vendor->get();
     }
+
+    public static function getVendorDetailsBy($id)
+    {
+        return Supplier::where('id', $id)
+            ->whereNull('deleted_at')
+            ->first();
+    }
 }

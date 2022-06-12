@@ -34,8 +34,6 @@ class StorePurchaseOrderRequest extends FormRequest
             'company' => 'required',
             'address' => 'required',
             'eta' => 'required|date',
-            'shipping_fee' => 'required|integer',
-            'tax' => 'required|integer',
         ];
     }
 }

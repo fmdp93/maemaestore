@@ -5,14 +5,9 @@
         <td>{{ $io->company_name }}</td>
         <td>{{ $io->contact_detail }}</td>
         <td>{{ $io->address }}</td>
-        <td class="text-end">{{ sprintf('%.2f', $io->tax) }}</td>
-        <td class="text-end fit">{{ sprintf('%.2f', $io->shipping_fee) }}</td>
-        {{-- total --}}
-        {{-- <td class="text-end">
-            {{ sprintf('%.2f', $io->io2p_total_price + $io->shipping_fee + $io->tax) }}</td> --}}
         <td class="fit">{{ $io->eta }}</td>
         <td class="text-nowrap">
-            <div class="d-flex justify-content-around">
+            <div class="d-flex">
 
                 <button class="view-details btn btn-success px-3 py-1" data-io-id="{{ $io->io_id }}"
                     data-supplier-id="{{ $io->supplier_id }}"

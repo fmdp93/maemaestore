@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Supplier;
+use App\Models\Inventory;
 use App\Models\ProductLog;
 use App\Rules\IntNoNegative;
 use Illuminate\Http\Request;
@@ -11,7 +13,6 @@ use App\Rules\FloatNoNegative;
 use App\Http\Traits\ProductsTrait;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Inventory;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Validator;
 
@@ -41,9 +42,31 @@ class ProductsController extends Controller
     {
         $data['heading'] = 'Add Products';
         $data['categories'] = Category::all();
-        $data['tax'] = empty(old('tax')) ? Config::get('app.markup_price') : old('tax');                
+        $data['markup'] = empty(old('markup')) ? Config::get('app.markup_price') : old('markup');                
+        $data['suppliers'] = Supplier::all();
 
         return view('pages.admin.add-product', $data);
+    }
+
+    /**
+     * Async request
+     * 
+     * @return Response()->json()
+     */
+
+    public function getItemCodeDetails(Request $request){
+        $item_code = $request->input('item_code');
+        DB::enableQueryLog();
+        $product = Product::byItemCode($item_code);
+
+        $response = [
+            'product' => $product,
+            'last_query' => DB::getQueryLog(),
+        ];
+
+        $response = json_encode($response);
+
+        return Response()->json($response);
     }
 
     public function getNewItemCode(Request $request)
@@ -76,8 +99,7 @@ class ProductsController extends Controller
         $rules = [
             'product_id' => 'required',
             'expiration_date' => 'required|date',
-            'base_price' => ['required', 'numeric', 'min:0'],            
-            'tax' => ['required', 'numeric', 'min:0'],            
+            'base_price' => ['required', 'numeric', 'min:0'],                           
             'markup' => ['required', 'numeric', 'min:0'],            
             'selling_price' => ['required', 'numeric', 'min:0'], 
             'supplier_search_id' => 'required|numeric|min:1',
@@ -99,8 +121,7 @@ class ProductsController extends Controller
             ->update(
                 [
                     'expiration_date' => $request->input('expiration_date'),
-                    'base_price' => $request->input('base_price'),
-                    'tax' => $request->input('tax'),
+                    'base_price' => $request->input('base_price'),                    
                     'markup' => $request->input('markup'),
                     'price' => $request->input('selling_price'),
                     'supplier_id' => $request->input('supplier_search_id'),
@@ -130,8 +151,7 @@ class ProductsController extends Controller
             'name' => 'required',
             'description' => 'required',
             'category_id' => 'required|integer',
-            'base_price' => ['required', 'numeric', 'min:0'],            
-            'tax' => ['required', 'numeric', 'min:0'],            
+            'base_price' => ['required', 'numeric', 'min:0'],                        
             'markup' => ['required', 'numeric', 'min:0'],            
             'selling_price' => ['required', 'numeric', 'min:0'],            
             'unit' => 'required',
@@ -157,8 +177,7 @@ class ProductsController extends Controller
         $Product->name = $request->input('name');
         $Product->description = $request->input('description');
         $Product->category_id = $request->input('category_id');
-        $Product->base_price = $request->input('base_price');
-        $Product->tax = $request->input('tax');
+        $Product->base_price = $request->input('base_price');        
         $Product->markup = $request->input('markup');
         $Product->price = $request->input('selling_price');
         $Product->unit = $request->input('unit');

@@ -40,3 +40,7 @@ export function setPosHotkeys(event, handler) {
         $("#btn-transactions")[0].click();
     }
 }
+
+export function falsyToZero(x){
+    return x ? x : 0;
+}

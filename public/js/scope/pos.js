@@ -40,7 +40,7 @@ class POS {
         this.objBarcodeReader.$item_code = this.$item_code;
         this.objBarcodeReader.then_callback =
             this.objBarcodeReader.changeItemCode;
-        this.objBarcodeReader.done_callback = this.requestProductById;
+        this.objBarcodeReader.done_callback = this.requestProductByItemCode;
 
         this.$pos_error = $("#pos-error");
 
@@ -81,16 +81,15 @@ class POS {
             this.requestProduct
         );
 
-        this.$item_code.on("change keyup", this.requestProductById);
+        this.$item_code.on("change keyup", function(event){
+            _this.requestProductByItemCode(event, _this.requestProductByItemCodeResponse)
+        });
 
         this.$add_item.on("click", this.addItem);
         this.$quantity.on(
             "change keydown",
             "",
-            {
-                response: this.updateSearchSubtotal,
-            },
-            this.requestProduct
+            this.filterSearchQuantity
         );
         $("#products_list").on(
             "change keyup",
@@ -227,27 +226,28 @@ class POS {
 
     updateSearchSubtotal(response) {
         let parsed = JSON.parse(response);
-        let quantity = _this.$quantity.val();
+        let quantity = parseFloat(func.falsyToZero(_this.$quantity.val()));        
+        let item_subtotal = 0;
         _this.disposeToolTip();
 
         if (parsed.result?.p_id) {
-            let price = parsed.result.price;
+            let price = parseFloat(func.falsyToZero(parsed.result.price));                     
             let item_code = parsed.result.item_code;
 
             if (!(_this.stock_available = _this.isStockAvailable())) {
-                // quantity = _this.$s_stock.val();
                 _this.quantityTooltip.show();
-                // _this.$quantity.val(quantity);
                 _this.$s_total.val("");
                 return;
             }
+            // update row in table
             let table_input_quantity = _this.$tbody
                 .find(`input[value="${item_code}"]`)
                 .parents("tr")
                 .find('input[name="quantity[]"]');
             table_input_quantity?.val(quantity);  
-                          
-            _this.$s_total.val(sprintf("%.2f", price * quantity));
+                                      
+            item_subtotal = price * quantity;
+            _this.$s_total.val(sprintf("%.2f", item_subtotal));
             _this.updateForm(null, table_input_quantity);
         }
     }
@@ -323,12 +323,23 @@ class POS {
             return true;
         }
     }
-    requestProductById() {
+
+    filterSearchQuantity(event){
         _this.disposeToolTip();
+        if (_this.isPlusMinus(event.keyCode)) {
+            return false;
+        }        
+
+        _this.requestProductByItemCode(event, _this.updateSearchSubtotal);
+    }
+
+    requestProductByItemCode(event, response) {
+        _this.disposeToolTip();
+
         $.get(
             "/pos/inventory-search",
             { item_code: _this.$item_code.val() },
-            _this.requestProductByIdResponse
+            response
         );
     }
 
@@ -412,7 +423,7 @@ class POS {
         }
     }
 
-    requestProductByIdResponse(response) {
+    requestProductByItemCodeResponse(response) {
         let parsed_response = JSON.parse(response);
 
         _this.$quantity.val("");

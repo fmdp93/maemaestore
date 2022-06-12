@@ -79,6 +79,20 @@ class SuppliersController extends Controller
         return Response()->json(json_encode($response));
     }
 
+    // async
+    public function addItemSearchVendor(Request $request){
+        $supplier_id = $request->input('supplier_id');
+        DB::enableQueryLog();
+        $supplier = Supplier::getVendorDetailsBy($supplier_id);      
+        $response = [
+            'supplier' => $supplier,
+            'last_query' => DB::getQueryLog(),
+        ];
+    
+        $response = json_encode($response);
+        return Response()->json($response);
+    }
+
     public function add_supplier()
     {
         $data['heading'] = "Add Supplier";

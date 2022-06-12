@@ -10,12 +10,9 @@
             </td>
             <td>{{ $product->p_name }}</td>
             <td>{{ $product->c_name }}</td>
-            <td>{{ $product->p_desc }}</td>
+            <td>{{ Str::limit($product->p_desc, 50) }}</td>
             <td class="text-end">
                 {{ sprintf("%.2f",$product->base_price) }}
-            </td>
-            <td class="text-end">
-                {{ sprintf("%.2f", $product->base_price * $product->p_tax / 100) }}
             </td>
             <td class="text-end">
                 {{ sprintf("%.2f", $product->base_price * $product->markup / 100) }}
@@ -32,9 +29,8 @@
                     value="{{ $product->expiration_date }}">
             </td>
             
-            <td class="text-end">
-                {{ sprintf('%.2f', $product->io2p_price) }}
-                <input type="hidden" name="price" value="{{ sprintf('%.2f', $product->io2p_price) }}">
+            <td class="text-end">                
+                <input type="text" name="price" value="{{ sprintf('%.2f', $product->io2p_price) }}" class="price form-control ms-auto">
             </td>
             <td class="text-end subtotal">
                 {{ sprintf('%.2f', $product->io2p_price * $product->io2p_quantity) }}

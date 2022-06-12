@@ -69,6 +69,10 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/category/add', [CategoryController::class, 'store']);
     Route::delete('/category/delete', [CategoryController::class, 'delete']);
 
+
+    //Async
+    Route::get('/product/get-item-code-details', [ProductsController::class, 'getItemCodeDetails']);
+
     Route::get('/inventory', [InventoryController::class, 'index'])
       ->middleware(InventoryMiddleware::class);
     Route::post('/inventory/archive', [InventoryController::class, 'archive'])
@@ -82,7 +86,8 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/inventory/archive-search', [InventoryController::class, 'archiveSearch'])
       ->name('inventory_archive_search');
 
-    Route::get('/inventory/orders', [InventoryController::class, 'orders']);
+    Route::get('/inventory/orders', [InventoryController::class, 'orders'])
+      ->name('orders');
     // Route::get('/inventory/orders/{id}', [InventoryController::class, 'order_details'])
     //   ->name('order_details')
     //   ->where('id', PATTERN_ID);
@@ -109,11 +114,17 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/inventory/get-inventory-order-processing', [InventoryController::class, 'getInventoryOrderProcessing']);
     Route::get('/inventory/order-products', [InventoryController::class, 'orderProducts']);
     Route::post('/inventory/add', [InventoryController::class, 'store']);
+    defined('URI_INV_ORDER_HISTORY') || define('URI_INV_ORDER_HISTORY', '/inventory/order-history');
+    Route::get(URI_INV_ORDER_HISTORY, [InventoryController::class, 'orderHistory'])
+      ->name('inventory_order_history');
     // Async 
     Route::get('/inventory/search', [InventoryController::class, 'inventorySearch']);
+    Route::get('/inventory/order-history-search', [InventoryController::class, 'searchOrderHistory'])
+      ->name('search_order_history');
     Route::get('/purchase-order/search/', [InventoryController::class, 'purchaseOrderSearch']);
     Route::get('/purchase-order/supplier-search/', [InventoryController::class, 'purchaseOrderSupplierSearch']);
-    Route::get('/vendor/search', [SuppliersController::class, 'searchVendor']);    
+    Route::get('/vendor/search', [SuppliersController::class, 'searchVendor']);
+    Route::get('/product/add-item-search-vendor', [SuppliersController::class, 'addItemSearchVendor']);
 
 
     Route::get('/sales-report', [SalesReportController::class, 'index']);
@@ -179,7 +190,7 @@ Route::group(['middleware' => 'auth'], function () {
       ->name('delete_customer');
     // Asnyc
     Route::get('/customer/search-for-table', [CustomerController::class, 'searchForTable'])
-      ->name('customer_search_for_table');    
+      ->name('customer_search_for_table');
   });
 
   /** POS Routes */
@@ -194,10 +205,10 @@ Route::group(['middleware' => 'auth'], function () {
 
   Route::get('/pos/receipt', [POSController::class, 'receipt']);
   Route::get('/pos/receipt-url', [POSController::class, 'receiptUrl']);
-  
+
   defined('URI_POS_INSTALLMENTS') || define('URI_POS_INSTALLMENTS', '/pos/installments');
   Route::get(URI_POS_INSTALLMENTS, [POSController::class, 'installments'])
-    ->name('pos_installments');  
+    ->name('pos_installments');
   Route::get('/pos/installment-details/{id?}', [POSController::class, 'installment_details'])
     ->name('pos_installment_details')
     ->where('id', PATTERN_ID);
@@ -220,7 +231,7 @@ Route::group(['middleware' => 'auth'], function () {
   Route::get('/pos/return-refund/{pt_id?}', [RRController::class, 'rr_transaction_details'])
     ->name('rr_transaction_details')
     ->where('pt_id', '[0-9]');
-    
+
 
   Route::get('/rr/inventory-search', [RRController::class, 'inventorySearch']);
   Route::get('/rr/get-table-row', [RRController::class, 'getTableRow']);

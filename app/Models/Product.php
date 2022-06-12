@@ -31,6 +31,7 @@ class Product extends Model
     public static function addStock($product_id, $quantity)
     {
         $Inventory = Inventory::where('product_id', $product_id)
+            ->whereNull('status_id')
             ->get();
 
         if (count($Inventory) === 0) {
@@ -59,7 +60,7 @@ class Product extends Model
         $Products = Product::select(
             DB::raw('p.id p_id, p.item_code, p.name p_name,
                 p.description, c.name c_name, 
-                p.price, p.tax, p.markup, p.base_price, p.stock, p.unit, p.expiration_date')
+                p.price, p.markup, p.base_price, p.stock, p.unit, p.expiration_date')
         )
             ->from('product as p')
             ->leftJoin('product_category as c', 'p.category_id', '=', 'c.id')
@@ -94,5 +95,23 @@ class Product extends Model
             ->from("product as p")
             ->leftJoin("supplier as s", "s.id", "=", "p.supplier_id")
             ->where("p.id", $id);
+    }
+
+    public static function byItemCode($item_code)
+    {
+        // $product = new Product();
+        // var_dump($id);
+
+        return Product::select(DB::raw("MAX(p.id) p_id,
+            p.name p_name, p.description, p.price, p.base_price, p.markup, p.unit, 
+            p.stock, p.expiration_date,
+            c.id c_id, c.name c_name,
+            s.id s_id, s.vendor, s.company_name, s.contact_detail, s.address"))
+            ->from("product as p")
+            ->leftJoin('product_category as c', 'c.id', '=', 'p.category_id')
+            ->leftJoin("supplier as s", "s.id", "=", "p.supplier_id")
+            ->where("p.item_code", $item_code)
+            ->groupBy("p.item_code")
+            ->first();
     }
 }

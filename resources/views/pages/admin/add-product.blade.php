@@ -5,6 +5,7 @@ use App\Http\Controllers\CategoryController;
 @extends('layouts.app')
 
 @section('header_scripts')
+    <script>const default_markup = {{ $markup }}</script>
     <script src="{{ asset('js/scope/add_product.js') }}" defer type="module"></script>
 @endsection
 
@@ -79,10 +80,6 @@ use App\Http\Controllers\CategoryController;
                     @include('components.error-message')
                 @enderror
 
-                @error('tax')
-                    @include('components.error-message')
-                @enderror
-
                 @error('markup')
                     @include('components.error-message')
                 @enderror
@@ -92,31 +89,22 @@ use App\Http\Controllers\CategoryController;
                 @enderror
 
                 <div class="row">
-                    <div class="col-xl-3">
+                    <div class="col-xl-4">
                         <label for="base_price">Base Price</label>
                         <input name="base_price" id="base_price" class="form-control form-control-xl mb-xl-3" type="number"
                             min="0" step=".01" aria-label="base_price" value="{{ old('base_price') }}"
                             {{ getInputFloatPattern() }}>
-                    </div>
-                    <div class="col-xl-3">
-                        <label for="tax">Tax</label>
-                        <div class="input-group mb-xl-3">
-                            <input name="tax" id="tax" class="form-control form-control-xl" type="number" min="0" step=".01" 
-                                aria-label="tax" aria-describedby="tax-addon" value="{{ $tax }}"
-                                {{ getInputFloatPattern() }}>
-                            <span class="input-group-text" id="tax-addon">%</span>
-                        </div>
-                    </div>
-                    <div class="col-xl-3">
+                    </div>                    
+                    <div class="col-xl-4">
                         <label for="markup">Markup Price</label>
                         <div class="input-group mb-xl-3">
                             <input name="markup" id="markup" class="form-control form-control-xl" type="number" min="0" step=".01" 
-                                aria-label="markup" aria-describedby="markup-addon" value="{{ old('markup') }}"
+                                aria-label="markup" aria-describedby="markup-addon" value="{{ $markup }}"
                                 {{ getInputFloatPattern() }}>
                             <span class="input-group-text" id="markup-addon">%</span>
                         </div>
                     </div>
-                    <div class="col-xl-3">
+                    <div class="col-xl-4">
                         <label for="selling_price">Selling Price</label>
                         <input name="selling_price" id="selling_price" class="form-control form-control-xl mb-xl-3"
                             type="number" step=".01" aria-label="selling_price" value="{{ old('selling_price') }}"
@@ -149,15 +137,18 @@ use App\Http\Controllers\CategoryController;
                     placeholder="2030-12-30" aria-label="expiration_date" value="{{ old('expiration_date') }}"
                     autocomplete="off">
 
-                @error('supplier_search_id')
-                    @include('components.error-message')
+                @error('supplier')
+                @include('components.error-message')
                 @enderror
-                <label for="supplier_search">Search Supplier <a href="{{ route('add_supplier') }}"
-                        class="text-decoration-underline" target="_blank">(New Supplier? Click here)</a></label>
-                <input type="text" name="supplier_search" id="supplier_search" value="{{ old('supplier_search') }}"
-                    class="form-control mb-3" autocomplete="off">
-                <input type="hidden" name="supplier_search_id" id="supplier_search_id"
-                    value="{{ old('supplier_search_id') }}">
+                <label for="supplier">Supplier</label>
+                <select name="supplier" id="supplier" class="form-select mb-3">
+                    @foreach ($suppliers as $supplier)
+                        <option value="{{ $supplier->id }}" 
+                            {{ old('supplier') == $supplier->id ? 'selected' : '' }}>
+                            {{ sprintf("%s, %s", ucwords($supplier->vendor), ucwords($supplier->company_name)) }}
+                        </option>
+                    @endforeach
+                </select>
 
                 <label for="vendor">Vendor</label>
                 <input type="text" name="vendor" id="vendor" value="{{ old('vendor') }}" class="form-control mb-3"

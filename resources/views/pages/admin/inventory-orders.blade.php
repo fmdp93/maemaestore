@@ -11,6 +11,9 @@
             <a href="{{ url('/inventory/purchase-order') }}" class="btn btn-success mb-xl-3 text-primary">
                 <i class="fa fa-plus-circle"></i> Purchase Order
             </a>
+            <a href="{{ route('inventory_order_history') }}" class="btn btn-success mb-xl-3 text-primary">
+                <i class="fa fa-clock"></i> History
+            </a>
             <table id="inventory_order_list" class="table table-striped">
                 <thead>
                     <tr>
@@ -19,14 +22,12 @@
                         <th>Company</th>
                         <th>Contact</th>
                         <th>Address</th>
-                        <th class="text-end">Tax</th>
-                        <th class="text-end">Shipping Fee</th>
                         <th>Leading Time</th>
                         <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @include('components.admin.inventory-orders-list');
+                    @include('components.admin.inventory-orders-list')
                 </tbody>
             </table>
             {{-- <input type="text" name="expiration_date[]" class="expiration_date form-control ms-auto">
@@ -52,7 +53,6 @@
                                         <th>Category</th>
                                         <th>Description</th>
                                         <th class="text-end">Base Price</th>
-                                        <th class="text-end">Tax</th>
                                         <th class="text-end">Markup Price</th>
                                         <th class="text-end">Selling Price</th>
                                         <th class="fit">Quantity</th>

@@ -16,7 +16,6 @@ class Products {
         this.$item_code = $("#item_code");
         this.$item_name = $("#item_name");
         this.$base_price = $("#base_price");
-        this.$tax = $("#tax");
         this.$markup = $("#markup");
         this.$selling_price = $("#selling_price");
         this.$expiration_date = $("#expiration_date");
@@ -73,8 +72,7 @@ class Products {
         _this.$product_id.val(product_id);
         _this.$item_code.val($(this).find("input[name='item_code']").val());
         _this.$item_name.val($(this).find("input[name='p_name']").val());
-        _this.$base_price.val($(this).find("input[name='base_price']").val());
-        _this.$tax.val($(this).find("input[name='tax']").val());
+        _this.$base_price.val($(this).find("input[name='base_price']").val());        
         _this.$markup.val($(this).find("input[name='markup']").val());
         _this.$selling_price.val($(this).find("input[name='selling_price']").val());
         _this.$expiration_date.val(
@@ -124,24 +122,6 @@ class Products {
         _this.$tbody.html(response.rows_html);
         _this.$pages.html(response.links_html);
         toggletableEmpty(_this.$tbody, _this.$table_empty);
-    }
-
-    updateSellingPrice(event) {
-        let defer = $.Deferred();
-        let selling_price = 0;
-        let filtered = defer.then(function () {
-            let base_price = parseFloat(_this.$base_price.val()) || 0;
-            let tax = parseFloat(_this.$tax.val()) || 0;
-            let markup = parseFloat(_this.$markup.val()) || 0;
-            markup = func.percentageOfNum(base_price, markup);
-            let price_with_tax = func.increaseNumByPercent(base_price, tax);
-            selling_price = price_with_tax + markup;
-        });
-
-        defer.resolve();
-        filtered.done(function(){
-            _this.$selling_price.val(sprintf("%.2f", selling_price));
-        });        
     }
 }
 

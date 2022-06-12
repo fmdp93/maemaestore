@@ -18,7 +18,10 @@ class POSTransaction2ProductColumnBasePriceSeeder extends Seeder
         
         $model = POSTransaction2ProductModel::all();
         // set base price
-        foreach($model as $item){
+        foreach($model as $item){            
+            if(Product::find($item->product_id) == null){
+                continue;
+            }
             $base_price = Product::find($item->product_id)->price;
             POSTransaction2ProductModel::where('id', $item->id)
                 ->update([

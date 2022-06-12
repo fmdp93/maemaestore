@@ -227,13 +227,102 @@ class InventoryController extends Controller
 
     public function orderReceived(Request $request)
     {
-        $io2p_id = $request->input('io2p_id');
-        $input_expiration_date = $request->input('expiration_date');
         $quantity = $request->input('quantity');
-        $item_code = $request->input('item_code');
-        $transaction_id = $request->input('transaction_id');
         $product_id = $request->input('product_id');
 
+        $new_product_id = $this->newProductIfNotSame();
+        $product_id = $new_product_id ? $new_product_id : $product_id;
+
+
+        $previous_quantity = Inventory::getStock($product_id);
+
+        // new or update inventory item
+        $inventory_id = Product::addStock($product_id, $quantity);
+
+        $updated_quantity = Inventory::find($inventory_id)->stock;
+
+        $this->partialReceive($quantity, $product_id);
+
+        DB::enableQueryLog();
+
+        $this->saveDateDelivered();
+
+        // Log
+        InventoryLog::log(
+            $inventory_id,
+            $previous_quantity,
+            $updated_quantity,
+            8 // 8 for add stock
+        );
+
+        $response = [];
+        $response = json_encode($response);
+        return Response()->json(($response));
+    }
+
+    private function partialReceive($quantity, $product_id)
+    {
+        $io2p_id = request()->input('io2p_id');
+        $this->price = request()->input('price');
+        $io2p = InventoryOrder2Product::find($io2p_id);
+        /**
+         * if all item is not received, create a new 
+         * inventory_order2product row with the amount received, deduct that
+         * to the amount where it came from
+         */
+
+        if ($quantity < $io2p->quantity) {
+            $new_io2p = new InventoryOrder2Product();
+            $new_io2p->transaction_id = $io2p->transaction_id;
+            $new_io2p->product_id = $product_id;
+            $new_io2p->quantity = $quantity;
+            $new_io2p->price = $this->price;
+            $new_io2p->status_id = STATUS_ORDER_RECEIVED;
+
+            $new_io2p->save();
+
+            // deduct io2p quantity
+            InventoryOrder2Product::where('id', $io2p_id)
+                ->update([
+                    'quantity' => DB::raw("quantity - $quantity"),
+                ]);
+        } else {
+            // Order received remaining quantity for existing io2p    
+            InventoryOrder2Product::where('id', $io2p_id)
+                ->update([
+                    'quantity' => $quantity,
+                    'price' => $this->price,
+                    'status_id' => STATUS_ORDER_RECEIVED,
+                ]);
+        }
+    }
+
+    private function saveDateDelivered()
+    {
+        $transaction_id = request()->input('transaction_id');
+        // if all products delivered, save date_delivered to InventoryOrder
+        $InventoryOrder2Product = InventoryOrder2Product::where('transaction_id', $transaction_id)
+            ->whereNull('status_id');
+
+        if (count($InventoryOrder2Product->get()) == 0) {
+            InventoryOrder::where('id', $transaction_id)
+                ->update([
+                    'date_delivered' => date('Y-m-d'),
+                ]);
+        }
+    }
+
+    /**
+     * Create a new product if expiration or price is not the same
+     * 
+     * @return $product_id
+     */
+
+    private function newProductIfNotSame()
+    {
+        $input_expiration_date = request()->input('expiration_date');
+        $item_code = request()->input('item_code');
+        $input_price = request()->input('price');
         $wheres = [
             (object) [
                 'column_name' => 'item_code',
@@ -250,10 +339,12 @@ class InventoryController extends Controller
         $existing_product_expiration_date = "";
         if ($io2p !== null) {
             $existing_product_expiration_date = $io2p->expiration_date;
+            $existing_product_price = $io2p->price; //product base price
         }
 
         // different expiration, new item to product
-        if ($input_expiration_date != $existing_product_expiration_date) {
+        if ($input_expiration_date != $existing_product_expiration_date
+            || $existing_product_price != $input_price) {
             $wheres = [
                 (object) [
                     'column_name' => 'item_code',
@@ -261,12 +352,17 @@ class InventoryController extends Controller
                     'value' => $item_code,
                 ],
             ];
+            DB::enableQueryLog();
             $io2p = InventoryOrder2Product::getOrderedProduct($wheres)->first();
+            // print_r(DB::getQueryLog());
+            // die();
             $Product = new Product();
             $Product->item_code = $io2p->item_code;
             $Product->category_id = $io2p->category_id;
             $Product->stock = $io2p->stock;
-            $Product->price = $io2p->price;
+            $Product->base_price = $input_price;
+            $Product->markup = $io2p->markup;
+            $Product->price = increaseNumByPercent($input_price, $io2p->markup);
             $Product->name = $io2p->name;
             $Product->unit = $io2p->unit;
             $Product->description = $io2p->description;
@@ -274,47 +370,8 @@ class InventoryController extends Controller
             $Product->expiration_date = $input_expiration_date;
             $Product->save();
 
-            $product_id = $Product->id;
+            return $Product->id;
         }
-
-        $previous_quantity = Inventory::getStock($product_id);
-
-        // new inventory item or update inventory
-        $inventory_id = Product::addStock($product_id, $quantity);
-
-        $updated_quantity = Inventory::find($inventory_id)->stock;
-
-        // Order received for a product
-        InventoryOrder2Product::where('id', $io2p_id)
-            ->update([
-                'status_id' => 2, //order received
-                'received_quantity' => $quantity,
-            ]);
-
-        DB::enableQueryLog();
-
-        // if all products delivered, save date_delivered to InventoryOrder
-        $InventoryOrder2Product = InventoryOrder2Product::where('transaction_id', $transaction_id)
-            ->whereNull('status_id');
-
-        if (count($InventoryOrder2Product->get()) == 0) {
-            InventoryOrder::where('id', $transaction_id)
-                ->update([
-                    'date_delivered' => date('Y-m-d'),
-                ]);
-        }
-
-        // Log
-        InventoryLog::log(
-            $inventory_id,
-            $previous_quantity,
-            $updated_quantity,
-            8 // 8 for add stock
-        );
-
-        $response = [];
-        $response = json_encode($response);
-        return Response()->json(($response));
     }
 
     public function orderCancel(Request $request)
@@ -342,8 +399,6 @@ class InventoryController extends Controller
         $InventoryOrder->company_name = $request->input('company');
         $InventoryOrder->contact_detail = $request->input('contact');
         $InventoryOrder->address = $request->input('address');
-        $InventoryOrder->tax = $request->input('tax');
-        $InventoryOrder->shipping_fee = $request->input('shipping_fee');
         $InventoryOrder->eta = $request->input('eta');
         $InventoryOrder->action_id = 1; // 1 = Order Processing
 
@@ -404,7 +459,7 @@ class InventoryController extends Controller
         DB::enableQueryLog();
         $product = Inventory::select(
             DB::raw('p.id p_id, p.item_code, p.name p_name,
-        p.description, p.price, p.unit, p.expiration_date, p.stock p_stock,
+        p.description, p.base_price, p.unit, p.expiration_date, p.stock p_stock,
         c.name c_name')
         )
             ->from('product as p')
@@ -437,7 +492,7 @@ class InventoryController extends Controller
                     WHERE item_code = p.item_code order by id desc limit 1) 
                     - SUM(IF(i.stock is NULL, 0, i.stock))) order_quantity,
                 p.id p_id, p.item_code, p.name p_name,
-                p.description, p.price, p.unit, p.expiration_date, p.stock p_stock,
+                p.description, p.base_price, p.unit, p.expiration_date, p.stock p_stock,
                 c.name c_name')
         )
             ->from('product as p')
@@ -483,10 +538,51 @@ class InventoryController extends Controller
             $data['name'] = $product->p_name;
             $data['description'] = $product->description;
             $data['quantity'] = $quantity;
-            $data['price'] = $product->price;
+            $data['price'] = $product->base_price;
             $data['subtotal'] = $data['price'] * $data['quantity'];
             $data['form'] = 'purchase-order';
             return $tbody_content = (string) view("components.purchase-order-row", $data);
         }
+    }
+
+    public function orderHistory(Request $request)
+    {
+        $search = $request->input('q');
+
+        $data['heading'] = "Inventory Order History";
+        $data['title'] = "Inventory Order History";
+        $data['search'] = $search;
+
+        $InventoryOrder2Product = new InventoryOrder2Product();
+        $data['products'] = $InventoryOrder2Product->getOrderHistory($search, URI_INV_ORDER_HISTORY);
+        $data['d_none'] = count($data['products']) ? 'd-none' : '';
+
+        return view('pages.admin.order-history', $data);
+    }
+
+    public function searchOrderHistory(Request $request)
+    {
+        $search = $request->input('q');
+
+        $InventoryOrder2Product = new InventoryOrder2Product();
+
+        DB::enableQueryLog();
+        $data['products'] = $InventoryOrder2Product->getOrderHistory($search, URI_INV_ORDER_HISTORY);        
+        $data['search'] = "$search";
+        $rows = (string) view("components.admin.order-history-list", $data);
+
+        $data['d_none'] = count($data['products']) ? 'd-none' : '';
+        $table_empty = (string) view("layouts.empty-table", $data);
+        $links = (string) $data['products']->links();
+        $row_count = count($data['products']);
+        $response = [
+            'rows_html' => $rows,
+            'links_html' => $links,
+            'table_empty' => $table_empty,
+            'row_count' => $row_count,
+            'last_query' => DB::getQueryLog(),
+        ];
+        $response = json_encode($response);
+        return Response()->json($response);
     }
 }

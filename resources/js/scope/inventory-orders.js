@@ -1,3 +1,5 @@
+import * as func from "/js/function.js";
+
 class InventoryOrders {
     constructor() {
         this.order_received = [];
@@ -23,6 +25,7 @@ class InventoryOrders {
             _this.$modal_tbody.html("");
             _this.loadInventoryOrdersList(event);
         });
+        this.$body.on("keyup change", "input[name='price']", this.updateSubtotal);
     }
 
     loadInventoryOrdersList(event) {
@@ -43,6 +46,8 @@ class InventoryOrders {
         let expiration_date = $expiration_date.val();
         let $quantity = tr_parent.find(".quantity");
         let quantity = $quantity.val();
+        let $price = tr_parent.find(".price");
+        let price = $price.val();
         let $item_code = tr_parent.find(".item_code");
         let item_code = $item_code.val();
         let $transaction_id = tr_parent.find(".transaction_id");
@@ -60,6 +65,7 @@ class InventoryOrders {
             _token: token,
             io2p_id: io2p_id,
             expiration_date: expiration_date,
+            price: price,
             quantity: quantity,
             item_code: item_code,
             transaction_id: transaction_id,
@@ -77,17 +83,14 @@ class InventoryOrders {
     }
 
     updateSubtotal(event) {
-        let price = $(this).parents("tr").find("input[name='price']").val();
-        price = price ? price : 0;
+        let price = func.falsyToZero($(this).parents("tr").find("input[name='price']").val());
         let $subtotal = $(this).parents("tr").find(".subtotal");
-        let subtotal = $subtotal.val();
-        subtotal = subtotal ? subtotal : 0;
+        let subtotal = func.falsyToZero($subtotal.val());        
 
         let defer = $.Deferred();
         let filtered = defer.then(
             function () {
-                let qty = $(this).val();
-                qty = qty ? qty : 0;
+                let qty = func.falsyToZero($(this).parents("tr").find("input[name='quantity']").val());                
                 subtotal = parseFloat(price) * parseFloat(qty);
             }.bind(this)
         );

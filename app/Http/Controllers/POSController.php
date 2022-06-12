@@ -264,10 +264,12 @@ class POSController extends Controller
 
     public function inventorySearch(Request $request)
     {
+        DB::enableQueryLog();
         $product = $this->getProductFromRequest($request);
 
         $response = [
             'result' => $product,
+            'last_query' => DB::getQueryLog(),
         ];
 
         $response = json_encode($response);

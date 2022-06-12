@@ -17,12 +17,13 @@ class ProductNewPriceColumnsSeeder extends Seeder
     {
         $model = Product::all();
         $mark_up = Config::get('app.markup_price');
-        foreach($model as $row){
+        foreach ($model as $row) {
+            $price = $row->price ? $row->price : increaseNumByPercent($row->price, $mark_up);
             Product::where('id', $row->id)
                 ->update([
-                    'price' => increaseNumByPercent($row->price, $mark_up),
+                    'price' => $price,
                     'base_price' => $row->price,
-                    'tax' => $mark_up,                    
+                    'markup' => $mark_up,
                 ]);
         }
     }

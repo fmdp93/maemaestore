@@ -27,7 +27,7 @@
             {{ $product->company_name }}
         </td>
         <td>
-            {{ $product->description }}
+            {{ Str::limit($product->description, 40) }}
         </td>
         <td>
             {{ $product->c_name }}

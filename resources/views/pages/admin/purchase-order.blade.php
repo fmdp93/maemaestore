@@ -82,7 +82,7 @@ use App\Http\Controllers\InventoryController;
             @if ($errors->any())
                 @php
                     $message = 'Please Fix the errors below';
-                    print_r($errors->all());
+                    // print_r($errors->all());
                 @endphp
                 <div class="py-3">
                     @include('components.error-message')
@@ -149,20 +149,7 @@ use App\Http\Controllers\InventoryController;
                     <input type="text" name="eta" id="eta" value="{{ old('eta') }}" class="form-control mb-3"
                         form="purchase-order" autocomplete="off">
                 </div>
-                <div class="col-xl-4">
-                    @error('shipping_fee')
-                        @include('components.error-message')
-                    @enderror
-                    <label for="shipping_fee">Shipping Fee</label>
-                    <input type="number" name="shipping_fee" id="shipping_fee" value="{{ old('shipping_fee') }}"
-                        class="form-control mb-3" form="purchase-order" autocomplete="off">
-                    @error('tax')
-                        @include('components.error-message')
-                    @enderror
-                    <label for="tax">Tax</label>
-                    <input type="number" name="tax" id="tax" class="form-control mb-3" value="{{ old('tax') }}"
-                        form="purchase-order" autocomplete="off">
-                    <hr>
+                <div class="col-xl-4">                   
                     <div>
                         <b class="fs-5">Total</b>
                         <b class="fs-5 float-end" id="total">

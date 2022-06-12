@@ -14,7 +14,7 @@
             <input type="hidden" name="p_name" value="{{ $product->p_name }}">
         </td>
         <td>
-            {{ $product->description }}
+            {{ Str::limit($product->description, 40) }}
             <input type="hidden" name="description" value="{{ $product->description }}">
         </td>
         <td>
@@ -24,10 +24,6 @@
         <td>
             {{ $product->base_price }}
             <input type="hidden" name="base_price" value="{{ $product->base_price }}">
-        </td>
-        <td>
-            {{ $product->tax }}
-            <input type="hidden" name="tax" value="{{ $product->tax }}">
         </td>
         <td>
             {{ $product->markup }}

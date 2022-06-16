@@ -4,30 +4,33 @@ use App\Models\User;
 use App\Http\Middleware\LoginCheck;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RRController;
+use App\Http\Middleware\PinMiddleware;
 use App\Http\Controllers\PINController;
 use App\Http\Controllers\POSController;
+use App\Http\Middleware\RoleMiddleware;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\TestController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\IndexController;
+use App\Http\Controllers\PageUnauthorized;
 use App\Http\Controllers\AccountsController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Middleware\InventoryMiddleware;
+use App\Http\Middleware\PosFinishMiddleware;
 use Illuminate\Auth\Middleware\Authenticate;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\SuppliersController;
 use App\Http\Controllers\Test\CarsController;
 use App\Http\Controllers\LogManagerController;
 use App\Http\Controllers\Test\LoginController;
 use App\Http\Controllers\SalesReportController;
 use App\Http\Controllers\CashierAccountsController;
 use App\Http\Controllers\CashierProductsController;
-use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\PageUnauthorized;
-use App\Http\Controllers\SuppliersController;
-use App\Http\Middleware\PinMiddleware;
-use App\Http\Middleware\RoleMiddleware;
+use App\Http\Controllers\InventoryReportController;
+use App\Http\Middleware\AfterPosFinishMiddleware;
 
 /*
 |--------------------------------------------------------------------------
@@ -88,9 +91,7 @@ Route::group(['middleware' => 'auth'], function () {
 
     Route::get('/inventory/orders', [InventoryController::class, 'orders'])
       ->name('orders');
-    // Route::get('/inventory/orders/{id}', [InventoryController::class, 'order_details'])
-    //   ->name('order_details')
-    //   ->where('id', PATTERN_ID);
+
     Route::get('/inventory/purchase-order', [InventoryController::class, 'purchaseOrder']);
     Route::get('/inventory/suppliers', [SuppliersController::class, 'index'])
       ->name('suppliers');
@@ -117,6 +118,8 @@ Route::group(['middleware' => 'auth'], function () {
     defined('URI_INV_ORDER_HISTORY') || define('URI_INV_ORDER_HISTORY', '/inventory/order-history');
     Route::get(URI_INV_ORDER_HISTORY, [InventoryController::class, 'orderHistory'])
       ->name('inventory_order_history');
+    Route::get('/inventory/order-history/print', [InventoryController::class, 'print_inventory_order_report'])
+      ->name('print_inventory_order_report');
     // Async 
     Route::get('/inventory/search', [InventoryController::class, 'inventorySearch']);
     Route::get('/inventory/order-history-search', [InventoryController::class, 'searchOrderHistory'])
@@ -127,10 +130,29 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/product/add-item-search-vendor', [SuppliersController::class, 'addItemSearchVendor']);
 
 
-    Route::get('/sales-report', [SalesReportController::class, 'index']);
-    Route::get('/sales-report/transaction/{id}', [SalesReportController::class, 'posTransaction2Product'])
+    Route::get('/report', [SalesReportController::class, 'index'])
+      ->name('sales_report');
+    Route::get('/report/print', [SalesReportController::class, 'print_sales_report'])
+      ->name('print_sales_report');
+    Route::get('/report/transaction/{id}', [SalesReportController::class, 'posTransaction2Product'])
       ->name('pos_transaction2product')
       ->where('id', PATTERN_ID);
+    defined('URI_INVENTORY_REPORT') || define('URI_INVENTORY_REPORT', '/report/inventory/');
+    Route::get(URI_INVENTORY_REPORT, [InventoryReportController::class, 'index'])
+      ->name('inventory_report');
+
+    Route::get('/report/inventory/print', [InventoryReportController::class, 'print_inventory_report'])
+      ->name('print_inventory_report');
+    Route::get('/report/inventory/details/{id}', [InventoryReportController::class, 'details'])
+      ->name('inventory_report_details')
+      ->where('id', PATTERN_ID);
+    Route::get('/report/inventory/details/print/{id}', [InventoryReportController::class, 'print_details'])
+      ->name('print_inventory_report_details')
+      ->where('id', PATTERN_ID);
+    Route::get('/report/inventory/{id}', [InventoryReportController::class, 'printReturnRefund'])
+      ->name('print_return_refund')
+      ->where('id', PATTERN_ID);
+
 
     Route::get('/accounts', [AccountsController::class, 'index']);
     Route::get('/accounts/add-cashier', [AccountsController::class, 'addCashier']);
@@ -139,7 +161,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/accounts/edit-account/save', [AccountsController::class, 'editAccountSave']);
     Route::delete('/accounts/delete-cashier', [AccountsController::class, 'deleteCashier']);
 
-    Route::get('/log-manager/set-pin', [PINController::class, 'setPinFlash']);
+    Route::get('/set-pin', [PINController::class, 'setPinFlash']);
 
     $pin_mw = PinMiddleware::class;
     $action = action([PINController::class, 'setPinFlash']);
@@ -149,12 +171,16 @@ Route::group(['middleware' => 'auth'], function () {
       Route::get('/log-manager/inventory', [LogManagerController::class, 'inventory']);
       Route::get('/log-manager/account', [LogManagerController::class, 'account']);
       Route::get('/log-manager/login', [LogManagerController::class, 'login']);
+
+      Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
+      Route::get('/settings/backup-db', [SettingsController::class, 'backupDb'])->name('backup_db');
+      Route::post('/settings/restore-db', [SettingsController::class, 'restoreDb'])->name('restore_db');
+      Route::post('/settings/update_serial_number', [SettingsController::class, 'update_serial_number'])
+        ->name('update_serial_number');
     });
     Route::get('/log-manager/check-pin', [LogManagerController::class, 'checkPin']);
 
-    Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
-    Route::get('/settings/backup-db', [SettingsController::class, 'backupDb'])->name('backup_db');
-    Route::post('/settings/restore-db', [SettingsController::class, 'restoreDb'])->name('restore_db');
+
 
     Route::get('/switch-user', [UserController::class, 'index']);
     Route::get('/pos/search_pos_transaction', [POSController::class, 'searchPosTransction'])
@@ -203,7 +229,8 @@ Route::group(['middleware' => 'auth'], function () {
   Route::get(URI_POS_TRANSACTIONS, [POSController::class, 'finish'])
     ->name('pos_finish');
 
-  Route::get('/pos/receipt', [POSController::class, 'receipt']);
+  Route::get('/pos/receipt', [POSController::class, 'receipt'])
+    ->name('receipt');
   Route::get('/pos/receipt-url', [POSController::class, 'receiptUrl']);
 
   defined('URI_POS_INSTALLMENTS') || define('URI_POS_INSTALLMENTS', '/pos/installments');

@@ -41,11 +41,11 @@ body {
 
   input[type="submit"],
   #search + span {
-    background: map-get($theme-colors, "button");
-    color: map-get($theme-colors, "primary");
+    background: map-get($theme-colors, "button-submit");
+    color: map-get($theme-colors, "white");
 
     &:hover {
-      background: lighten(map-get($theme-colors, "button"), 10);
+      background: lighten(map-get($theme-colors, "button-submit"), 10);
     }
   }
 
@@ -146,5 +146,9 @@ body {
 
 #ui-datepicker-div, .higher-than-modal{
   z-index: 1070 !important;
+}
+
+.pdf-heading{
+  font-size: 26px;
 }
 //

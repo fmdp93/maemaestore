@@ -3,7 +3,7 @@
         <td>{{ $installment->t_id }}</td>
         <td>{{ date("F j, Y", strtotime($installment->t_date)) }}</td>
         <td>{{ $installment->p_name }}</td>
-        <td>{{ $installment->description }}</td>
+        <td>{{ Str::limit($installment->description, 40) }}</td>
         <td>{{ $installment->pt2p_quantities }}</td>
         <td>{{ sprintf("%.2f", $installment->pt2p_price_total) }}</td>
         <td>{{ sprintf("%.2f", $installment->amount_paid ) }}</td>  

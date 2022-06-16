@@ -18,7 +18,7 @@ class CashierProductsController extends Controller
 
     public function index(Request $request){
         $data['heading'] = 'Products';
-        $data['categories'] = Category::all();
+        $data['categories'] = Category::whereNull('deleted_at')->orderBy('name')->get();
         $data['search'] = $request->input('q');
         $data['category_id'] = $request->input('category_id');
         $data['expiry'] = $request->input('expiry');        

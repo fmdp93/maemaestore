@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Illuminate\Http\Request;
+use App\Http\Traits\SearchTrait;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Config;
 use App\Models\POSTransaction2ProductModel;
 
 class SalesReportController extends Controller
 {
-    //
+    use SearchTrait;
     public function index(Request $request)
     {
         $from = urldecode($request->input('from'));
@@ -42,52 +45,42 @@ class SalesReportController extends Controller
         return view('pages.admin.sales-report-details', $data);
     }
 
-    private function dateFilterSetFrom(&$from)
-    {
-        $date_filter = request()->input('date_filter');
+    public function print_sales_report(Request $request){        
+        $from = urldecode($request->input('from'));
+        $to = urldecode($request->input('to'));
+        $model = new POSTransaction2ProductModel();
+        $data['heading'] = 'Sales Report';
+        DB::enableQueryLog();
+        $this->dateFilterSetFrom($from);
+        $this->dateFilterSetTo($to);
+        $data['transactions'] = $model->getSalesReport($from, $to, false)->get();
+        // dd(DB::getQueryLog());
+        $total_items = $model->getSalesReportTotals($from, $to);
 
-        switch ($date_filter) {
-            case 'daily':
-                $dt = new \DateTime();
-                $from = $dt->format('Y-m-d') . " 00:00:00";
-                break;
-            case 'weekly':
-                $dt = new \DateTime('monday this week');
-                $from = $dt->format('Y-m-d') . " 00:00:00";
-                break;
-            case 'monthly':
-                $dt = new \DateTime('first day of this month');
-                $from = $dt->format('Y-m-d') . " 00:00:00";
-                break;
-            case 'yearly':
-                $dt = new \DateTime('first day of January');
-                $from = $dt->format('Y-m-d') . " 00:00:00";
-                break;
-        }
+        $data['total_items'] = $total_items->total_items;
+        $data['total_sales'] = $total_items->total_sales;
+        $data['total_price'] = $total_items->total_price;
+        $data['profit'] = $total_items->profit;
+        $data['from'] = $from ? date("F j, Y", strtotime($from)) : 'start';
+        $data['to'] = $to ? date("F j, Y", strtotime($to)) : 'end';
+
+        $view = (string)  view('pages.admin.print-sales-report', $data);        
+        // return $view;
+        $options = new Options();
+        $dompdf = new Dompdf();
+        $publicPath = base_path('public/');
+        $current_options = $dompdf->getOptions();
+        $options->set('chroot', $publicPath);
+        $options->set('fontDir', $publicPath);
+
+        $dompdf->setPaper('letter', 'landscape');
+        $dompdf->setOptions($options);
+        $dompdf->setBasePath(base_path('public/'));
+
+        $dompdf->loadHTML($view);
+        $dompdf->render();
+        $date_range = $from && $to ? "$from-to-$to-" : "";
+        $dompdf->stream("{$date_range}sales-report");
     }
 
-    private function dateFilterSetTo(&$to)
-    {
-        $date_filter = request()->input('date_filter');
-        $dt = new \DateTime();
-
-        switch ($date_filter) {
-            case 'daily':
-                $dt = new \DateTime();
-                $to = $dt->format('Y-m-d') . " 23:59:59";
-                break;
-            case 'weekly':
-                $dt = new \DateTime('sunday this week');
-                $to = $dt->format('Y-m-d') . " 23:59:59";
-                break;
-            case 'monthly':
-                $dt = new \DateTime('last day of this month');
-                $to = $dt->format('Y-m-d') . " 23:59:59";
-                break;
-            case 'yearly':
-                $dt = new \DateTime('last day of December');
-                $to = $dt->format('Y-m-d') . " 23:59:59";
-                break;
-        }
-    }
 }

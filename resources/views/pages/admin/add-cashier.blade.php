@@ -63,7 +63,7 @@ use App\Http\Controllers\AccountsController;
                 <input name="age" id="age" class="form-control form-control-xl mb-xl-3" type="number" placeholder="18"
                     aria-label="age" value="{{ old('age') }}" min="5">
 
-                <input type="submit" class="float-end btn btn-button text-primary py-xl-2 px-xl-5" value="Add Cashier">
+                <input type="submit" class="float-end btn btn-button-submit text-white py-xl-2 px-xl-5" value="Add Cashier">
             </form>
         </div>
         <div class="col-xl-4">

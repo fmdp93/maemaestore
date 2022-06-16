@@ -1560,6 +1560,7 @@ a.ui-button:active,
   --bs-low: #fab389;
   --bs-half: #ebd592;
   --bs-transparent: transparent;
+  --bs-button-submit: #187bdd;
   --bs-font-sans-serif: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --bs-font-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --bs-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0));
@@ -5524,6 +5525,51 @@ fieldset:disabled .btn {
   border-color: transparent;
 }
 
+.btn-button-submit {
+  color: #000;
+  background-color: #187bdd;
+  border-color: #187bdd;
+}
+
+.btn-button-submit:hover {
+  color: #000;
+  background-color: #3b8fe2;
+  border-color: #2f88e0;
+}
+
+.btn-check:focus + .btn-button-submit,
+.btn-button-submit:focus {
+  color: #000;
+  background-color: #3b8fe2;
+  border-color: #2f88e0;
+  box-shadow: 0 0 0 0.25rem rgba(20, 105, 188, 0.5);
+}
+
+.btn-check:checked + .btn-button-submit,
+.btn-check:active + .btn-button-submit,
+.btn-button-submit:active,
+.btn-button-submit.active,
+.show > .btn-button-submit.dropdown-toggle {
+  color: #000;
+  background-color: #4695e4;
+  border-color: #2f88e0;
+}
+
+.btn-check:checked + .btn-button-submit:focus,
+.btn-check:active + .btn-button-submit:focus,
+.btn-button-submit:active:focus,
+.btn-button-submit.active:focus,
+.show > .btn-button-submit.dropdown-toggle:focus {
+  box-shadow: 0 0 0 0.25rem rgba(20, 105, 188, 0.5);
+}
+
+.btn-button-submit:disabled,
+.btn-button-submit.disabled {
+  color: #000;
+  background-color: #187bdd;
+  border-color: #187bdd;
+}
+
 .btn-outline-primary {
   color: #f0fff0;
   border-color: #f0fff0;
@@ -6241,6 +6287,46 @@ fieldset:disabled .btn {
 .btn-outline-transparent:disabled,
 .btn-outline-transparent.disabled {
   color: transparent;
+  background-color: transparent;
+}
+
+.btn-outline-button-submit {
+  color: #187bdd;
+  border-color: #187bdd;
+}
+
+.btn-outline-button-submit:hover {
+  color: #000;
+  background-color: #187bdd;
+  border-color: #187bdd;
+}
+
+.btn-check:focus + .btn-outline-button-submit,
+.btn-outline-button-submit:focus {
+  box-shadow: 0 0 0 0.25rem rgba(24, 123, 221, 0.5);
+}
+
+.btn-check:checked + .btn-outline-button-submit,
+.btn-check:active + .btn-outline-button-submit,
+.btn-outline-button-submit:active,
+.btn-outline-button-submit.active,
+.btn-outline-button-submit.dropdown-toggle.show {
+  color: #000;
+  background-color: #187bdd;
+  border-color: #187bdd;
+}
+
+.btn-check:checked + .btn-outline-button-submit:focus,
+.btn-check:active + .btn-outline-button-submit:focus,
+.btn-outline-button-submit:active:focus,
+.btn-outline-button-submit.active:focus,
+.btn-outline-button-submit.dropdown-toggle.show:focus {
+  box-shadow: 0 0 0 0.25rem rgba(24, 123, 221, 0.5);
+}
+
+.btn-outline-button-submit:disabled,
+.btn-outline-button-submit.disabled {
+  color: #187bdd;
   background-color: transparent;
 }
 
@@ -7918,6 +8004,16 @@ fieldset:disabled .btn {
   color: rgba(0, 0, 0, 0.68);
 }
 
+.alert-button-submit {
+  color: #0e4a85;
+  background-color: #d1e5f8;
+  border-color: #bad7f5;
+}
+
+.alert-button-submit .alert-link {
+  color: #0b3b6a;
+}
+
 @-webkit-keyframes progress-bar-stripes {
   0% {
     background-position-x: 1rem;
@@ -8548,6 +8644,23 @@ fieldset:disabled .btn {
   color: #fff;
   background-color: rgba(0, 0, 0, 0.6);
   border-color: rgba(0, 0, 0, 0.6);
+}
+
+.list-group-item-button-submit {
+  color: #0e4a85;
+  background-color: #d1e5f8;
+}
+
+.list-group-item-button-submit.list-group-item-action:hover,
+.list-group-item-button-submit.list-group-item-action:focus {
+  color: #0e4a85;
+  background-color: #bccedf;
+}
+
+.list-group-item-button-submit.list-group-item-action.active {
+  color: #fff;
+  background-color: #0e4a85;
+  border-color: #0e4a85;
 }
 
 .btn-close {
@@ -9797,6 +9910,15 @@ fieldset:disabled .btn {
   color: rgba(0, 0, 0, 0.2);
 }
 
+.link-button-submit {
+  color: #187bdd;
+}
+
+.link-button-submit:hover,
+.link-button-submit:focus {
+  color: #4695e4;
+}
+
 .ratio {
   position: relative;
   width: 100%;
@@ -10228,6 +10350,10 @@ fieldset:disabled .btn {
 
 .border-transparent {
   border-color: transparent !important;
+}
+
+.border-button-submit {
+  border-color: #187bdd !important;
 }
 
 .border-1 {
@@ -11097,6 +11223,10 @@ fieldset:disabled .btn {
   color: transparent !important;
 }
 
+.text-button-submit {
+  color: #187bdd !important;
+}
+
 .text-body {
   color: #212529 !important;
 }
@@ -11187,6 +11317,10 @@ fieldset:disabled .btn {
 
 .bg-transparent {
   background-color: transparent !important;
+}
+
+.bg-button-submit {
+  background-color: #187bdd !important;
 }
 
 .bg-body {
@@ -23828,13 +23962,13 @@ body {
 
 #wrapper input[type=submit],
 #wrapper #search + span {
-  background: #b3a8a8;
-  color: #f0fff0;
+  background: #187bdd;
+  color: #fff;
 }
 
 #wrapper input[type=submit]:hover,
 #wrapper #search + span:hover {
-  background: #cbc3c3;
+  background: #3e94ea;
 }
 
 #wrapper input {
@@ -23947,5 +24081,9 @@ body {
 #ui-datepicker-div,
 .higher-than-modal {
   z-index: 1070 !important;
+}
+
+.pdf-heading {
+  font-size: 26px;
 }
 

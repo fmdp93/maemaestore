@@ -27,10 +27,16 @@ use App\Http\Controllers\InventoryController;
             <form id="{{ $form = 'purchase-order' }}" action="{{ action([InventoryController::class, 'store']) }}"
                 method="POST" class="d-flex flex-column pb-5">
                 @csrf
-                <label for="supplier_search">Search Supplier</label>
-                <input type="text" name="supplier_search" id="supplier_search" value="{{ old('supplier_search') }}"
-                    class="form-control mb-3" form="purchase-order" autocomplete="off">                
-                <button id="add-supplier-items" class="float-end btn btn-button text-primary py-xl-2 px-xl-5" type="submit">Add
+                <label for="supplier">Supplier</label>
+                <select name="supplier" id="supplier" class="form-select mb-3">
+                    @foreach ($suppliers as $supplier)
+                        <option value="{{ $supplier->id }}" 
+                            {{ old('supplier') == $supplier->id ? 'selected' : '' }}>
+                            {{ sprintf("%s, %s", ucwords($supplier->vendor), ucwords($supplier->company_name)) }}
+                        </option>
+                    @endforeach
+                </select>             
+                <button id="add-supplier-items" class="float-end btn btn-button-submit text-white py-xl-2 px-xl-5" type="submit">Add
                     Supplier's Items</button>
             </form>            
             <form action="#" class="d-flex flex-column">
@@ -64,7 +70,7 @@ use App\Http\Controllers\InventoryController;
                 <label for="s_quantity">Quantity</label>
                 <input name="s_quantity" id="s_quantity" class="form-control form-control-xl mb-xl-3" type="number" min="1"
                     aria-label="s_quantity" tabindex="2" value="{{ old('s_quantity') }}" autocomplete="off">
-                <button id="add-item" class="btn btn-button text-primary py-xl-2 px-xl-5" type="submit">Add
+                <button id="add-item" class="btn btn-button-submit text-white py-xl-2 px-xl-5" type="submit">Add
                     Item</button>
             </form>            
         </div>

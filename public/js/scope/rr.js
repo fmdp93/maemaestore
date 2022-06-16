@@ -1,4 +1,4 @@
-import { toggletableEmpty } from "/js/function.js";
+import * as func from "/js/function.js";
 
 var tooltipTriggerList = [].slice.call(
     document.querySelectorAll('[data-bs-toggle="tooltip"]')
@@ -27,6 +27,8 @@ class RR {
         this.$submit_pos = $("#submit_pos");
         this.$change = $("#change");
         this.$initial_load = $("#initial_load");
+        this.$transaction_id = $("#transaction_id");
+        this.$transaction_search = $("#transaction_search");
         this.$form_submitted = false;
         this.triggerEvents();
     }
@@ -35,22 +37,24 @@ class RR {
         this.$s_item_name.on(
             "change keyup",
             "",
-            {
-                response: this.requestProductResponse,
-            },
-            this.requestProduct
+            { response: this.requestProductResponse },
+            this.requestProductByItemName
         );
 
-        this.$item_code.on("change keyup", this.requestProductById);
+        this.$item_code.on(
+            "change keyup",
+            "",
+            { response: this.requestProductByItemCodeResponse },
+            this.requestProductByItemCode
+        );
+        this.$transaction_search.on("click", this.addProductsToForm);
 
         this.$add_item.on("click", this.addProductToForm);
         this.$quantity.on(
             "change keydown",
             "",
-            {
-                response: this.updateSearchSubtotal,
-            },
-            this.requestProduct
+            { response: this.updateSearchSubtotal },
+            this.requestProductByItemCode
         );
         $("#products_list").on(
             "change keyup",
@@ -91,13 +95,13 @@ class RR {
     clearTable(event) {
         // event.preventDefault();
         _this.$tbody.html("");
-        toggletableEmpty(_this.$tbody, _this.$table_empty);
+        func.toggletableEmpty(_this.$tbody, _this.$table_empty);
     }
 
     deleteItem(event) {
         event.preventDefault();
         $(this).parents("tr").remove().promise().done(_this.updateTotal);
-        toggletableEmpty(_this.$tbody, _this.$table_empty);
+        func.toggletableEmpty(_this.$tbody, _this.$table_empty);
     }
 
     quantityPreventNegative(event) {
@@ -141,9 +145,31 @@ class RR {
         }
 
         let response = event.data.response;
+        let params = event.data.params;
+        $.get("/rr/inventory-search", params, response);
+    }
+
+    requestProductByItemName(event) {
+        if (_this.isPlusMinus(event.keyCode)) {
+            return false;
+        }
+
+        let response = event.data.response;
         $.get(
             "/rr/inventory-search",
             { item_name: _this.$s_item_name.val() },
+            response
+        );
+    }
+    requestProductByItemCode(event) {
+        if (_this.isPlusMinus(event.keyCode)) {
+            return false;
+        }
+
+        let response = event.data.response;
+        $.get(
+            "/rr/inventory-search",
+            { item_code: _this.$item_code.val() },
             response
         );
     }
@@ -153,13 +179,6 @@ class RR {
         if ($.inArray(key, prevented_keys) > -1) {
             return true;
         }
-    }
-    requestProductById() {
-        $.get(
-            "/rr/inventory-search",
-            { item_code: _this.$item_code.val() },
-            _this.requestProductByIdResponse
-        );
     }
 
     addProductToForm(event) {
@@ -171,21 +190,37 @@ class RR {
                 quantity: _this.$quantity.val(),
                 form: _this.$form.attr("id"),
             },
-            _this.addItemBtnResponse
+            _this.resUpdateTbody
         )
             .promise()
             .then(_this.updateTotal)
             .done(_this.isAmountValid);
     }
 
-    addItemBtnResponse(response) {
+    addProductsToForm(event) {
+        event.preventDefault();        
+        $.get(
+            "/rr/get-table-row",
+            {
+                transaction_id: _this.$transaction_id.val(),
+                quantity: _this.$quantity.val(),
+                form: _this.$form.attr("id"),
+            },
+            _this.resUpdateTbody
+        )
+            .promise()
+            .then(_this.updateTotal)
+            .done(_this.isAmountValid);
+    }
+
+    resUpdateTbody(response) {
         let parsed_response = JSON.parse(response);
 
-        if (parsed_response?.tbody) {
+        _this.$tbody.html("");
+        if (parsed_response?.tbody) {            
             _this.$tbody.append(parsed_response.tbody);
-
-            toggletableEmpty(_this.$tbody, _this.$table_empty);
         }
+        func.toggletableEmpty(_this.$tbody, _this.$table_empty);
     }
 
     requestProductResponse(response) {
@@ -207,7 +242,7 @@ class RR {
         }
     }
 
-    requestProductByIdResponse(response) {
+    requestProductByItemCodeResponse(response) {
         let parsed_response = JSON.parse(response);
 
         _this.$quantity.val("");
@@ -246,8 +281,8 @@ const _this = objRR;
 
 // Prevent back button reload
 $(document).ready(function () {
-    setTimeout(function () {        
-        if($("#initial_load").val() == 1){
+    setTimeout(function () {
+        if ($("#initial_load").val() == 1) {
             location.reload();
         }
     }, 500);

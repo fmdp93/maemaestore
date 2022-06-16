@@ -12,7 +12,8 @@ class CategoryController extends Controller
 {    
     public function index(){
         $data['heading'] = 'Add Category';
-        $data['categories'] = Category::orderBy('id', 'desc')
+        $data['categories'] = Category::whereNull('deleted_at')
+            ->orderBy('id', 'desc')
             ->paginate(Config::get('constant.per_page'));
         return view('pages.admin.add-category', $data);
     }

@@ -63,7 +63,7 @@ use App\Http\Controllers\POSController;
                         <button id="scanner" class="btn btn-success"><i class="fa-solid fa-barcode"></i></button>
                     </div>
                 </div>
-                <button id="add-item" class="float-end btn btn-button text-primary py-xl-2 px-xl-5" type="submit"
+                <button id="add-item" class="float-end btn btn-button-submit text-white py-xl-2 px-xl-5" type="submit"
                     title="[Alt] + [A]">Add
                     Item</button>
             </form>
@@ -175,6 +175,10 @@ use App\Http\Controllers\POSController;
                                 <label for="senior_discounted">Senior ({{ $senior_discount * 100 }}% off)</label>
                             </div>
 
+                            <label for="pay-cash-total">Total</label>
+                            <input name="pay-cash-total" id="pay-cash-total" class="form-control form-control-xl mb-xl-3" type="number"
+                                aria-label="pay-cash-total" value="{{ old('pay-cash-total') }}" readonly form="pos">
+
                             <label for="amount_paid">Amount Paid</label>
                             <input name="amount_paid" id="amount_paid" class="form-control form-control-xl mb-xl-3"
                                 type="number" min="1" aria-label="amount_paid" value="{{ old('amount_paid') }}"
@@ -252,7 +256,7 @@ use App\Http\Controllers\POSController;
 
                             </div>
 
-                            <button id="submit_pos" class="form-control btn btn-button text-primary py-xl-2 px-xl-5"
+                            <button id="submit_pos" class="form-control btn btn-button-submit text-white py-xl-2 px-xl-5"
                                 type="submit" form="pos">Finish</button>
                         </div>
                     </div>

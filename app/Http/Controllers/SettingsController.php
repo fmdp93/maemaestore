@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 // require( base_path() . '/src/shuttle-export/dumper.php');
 
+use App\Models\ConfigModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -12,8 +13,9 @@ class SettingsController extends Controller
 {
     public function index()
     {
-        $data['title'] = 'Backup/Restore Database';
-        $data['heading'] = 'Backup/Restore Database';
+        $data['title'] = 'Settings';
+        $data['heading'] = 'Settings';
+        $data['serial_number'] = ConfigModel::find(CONFIG_SERIAL_NUMBER)->value;
         return view('pages.admin.settings', $data);
     }
 
@@ -83,5 +85,25 @@ class SettingsController extends Controller
 
         $request->session()->flash('msg_success', 'Database restoration completed!');
         return redirect(route('settings'));
+    }
+
+    public function update_serial_number(Request $request){
+        $input_serial_number = $request->input('serial_number');
+
+        $validator = Validator::make($request->all(), [
+            'serial_number' => 'required|integer|min:1'
+        ]);
+
+        if($validator->fails()){
+            return back()->withInput()->withErrors($validator);
+        }
+
+        ConfigModel::where('id', CONFIG_SERIAL_NUMBER)
+            ->update(
+                ['value' => $input_serial_number,]
+            );
+        
+        $request->session()->flash('msg_success', 'Serial number updated successfully!');
+        return back();
     }
 }

@@ -1,5 +1,6 @@
 const bootstrap = require("bootstrap/dist/js/bootstrap.js");
 const sprintf = require("sprintf-js").sprintf;
+const _ = require("lodash");
 // import hotkeys from "hotkeys-js";
 // window.app_exports.hotkeys = hotkeys;
 

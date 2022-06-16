@@ -15,7 +15,7 @@
                         <p class="fs-3">Some of your product/s falls below half of max stock.
                         <p>
                             <a href="{{ action([InventoryController::class, 'purchaseOrder']) }}?request_half_stock=1"
-                                class="btn btn-button px-4 py-3">Order products now</a>
+                                class="btn btn-button-submit text-white px-4 py-3">Order products now</a>
                     </div>
                 </div>
             </div>

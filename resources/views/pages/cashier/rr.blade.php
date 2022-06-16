@@ -20,9 +20,8 @@ use App\Http\Controllers\RRController;
 @section("{$user}_content")
     <div class="row px-xl-5 mb-xl-3">
         @include('layouts.heading')
-        <div class="col-xl-3">
-            {{-- {{ session('pin2') }} --}}
-            <form id="{{ $form }}" action="{{ action([RRController::class, 'store']) }}" method="POST">
+        {{-- <div class="col-xl-3">            
+            
                 @csrf
                 <input type="text" value="0" class="d-none" id="initial_load" name="initial_load">
                 <label for="name">Item Name</label>
@@ -47,21 +46,42 @@ use App\Http\Controllers\RRController;
                 <label for="s_price">Unit Price</label>
                 <input name="s_price" id="s_price" class="form-control form-control-xl mb-xl-3" type="number" min="1"
                     aria-label="s_price" readonly value="{{ old('s_price') }}" form="{{ $form }}">
-                <button id="add-item" class="float-end btn btn-button text-primary py-xl-2 px-xl-5" type="submit">Add
+                <button id="add-item" class="float-end btn btn-button-submit text-white py-xl-2 px-xl-5" type="submit">Add
                     Item</button>
             </form>
-        </div>
-        <div class="col-xl-9">
-            <div class="d-flex align-items-end mb-3 w-50 ms-auto">
-                <b class="fs-5 ms-auto" id="total">
-                    <b class="fs-5 me-5">Total</b>
-                    <input type="hidden" name="total" value="{{ old('total') ?? '0.00' }}" form="{{ $form }}">
-                    <span>{{ old('total') ?? '0.00' }}</span>
-                </b>
-                <button id="clear-table" class="btn btn-danger px-4 py-3 ms-auto">
-                    <i class="fa-solid fa-circle-xmark"></i>
-                    Clear Table</button>
+        </div> --}}
+        <div class="col-xl-12">
+            <div class="row mb-3">
+                <div class="col-xl-3 me-auto">
+                    <form id="{{ $form }}" action="{{ action([RRController::class, 'store']) }}" method="POST">
+                        @csrf
+                        <div class="mt-3">
+                            @error('transaction_id')
+                                @include('components.error-message')
+                            @enderror
+                        </div>
+                        <label for="transaction_id">Transaction ID</label>
 
+                        <div class="input-group">
+                            <input type="text" name="transaction_id" id="transaction_id"
+                                value="{{ old('transaction_id') }}" class="form-control" form="{{ $form }}"
+                                autocomplete="off">
+                            <input type="submit" value="Search" class="btn" id="transaction_search">
+                        </div>
+                    </form>
+                </div>
+
+                <div class="col-xl-6 d-flex align-items-end ms-auto">
+                    <b class="fs-5 ms-auto" id="total">
+                        <b class="fs-5 me-5">Total</b>
+                        <input type="hidden" name="total" value="{{ old('total') ?? '0.00' }}" form="{{ $form }}">
+                        <span>{{ old('total') ?? '0.00' }}</span>
+                    </b>
+                    <button id="clear-table" class="btn btn-danger px-4 py-3 ms-auto">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                        Clear Table</button>
+
+                </div>
             </div>
             @if ($errors->any())
                 @php
@@ -99,15 +119,7 @@ use App\Http\Controllers\RRController;
             </table>
             @include('layouts.empty-table')
             <div class="row">
-                <div class="col-xl-4 ms-auto">
-                    <div class="mt-3">
-                        @error('transaction_id')
-                            @include('components.error-message')
-                        @enderror
-                    </div>
-                    <label for="transaction_id">Transaction ID</label>
-                    <input type="text" name="transaction_id" id="transaction_id" value="{{ old('transaction_id') }}"
-                        class="form-control" form="{{ $form }}" autocomplete="off">
+                <div class="col-xl-3 ms-auto">
                     <div class="mt-3">
                         @error('type')
                             @include('components.error-message')

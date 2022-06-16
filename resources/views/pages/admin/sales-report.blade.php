@@ -13,7 +13,14 @@ use App\Http\Controllers\SalesReportController;
         <div class="col-xl-12 px-xl-5">
             <div class="row">
                 @include('layouts.heading')
-                <div class="col-12 mt-3"></div>
+                <div class="col-12 mt-3">
+                    <a href="{{ route('sales_report') }}" class="btn btn-success text-white mb-xl-3">
+                        <i class="fa-solid fa-tag"></i> Sales Report
+                    </a>
+                    <a href="{{ route('inventory_report') }}" class="btn btn-success text-white mb-xl-3">
+                        <i class="fa-solid fa-box"></i> Inventory Report
+                    </a>
+                </div>
                 <div class="col-xl-5">
                     <div class="d-flex">
                         <a class="text-center me-3" href="{{ action([SalesReportController::class, 'index']) }}">
@@ -52,9 +59,16 @@ use App\Http\Controllers\SalesReportController;
                         <input class="form-control my-auto" type="text" id="to" name="to" autocomplete="off">
                         <input type="submit" class="btn btn-primary px-4 my-auto" value="Filter">
                     </form>
+                    <a href="{{ route('print_sales_report', [
+                        'from' => request()->input('from'),
+                        'to' => request()->input('to'),
+                        'date_filter' => request()->input('date_filter'),
+                    ]) }}"
+                        class="btn btn-success text-white mt-3 float-end">
+                        <i class="fa-solid fa-print"></i> Print</a>
                 </div>
                 <div class="col-xl-12">
-                    <table id="products_list" class="table table-striped text-nowrap">
+                    <table id="products_list" class="table table-striped">
                         <thead>
                             <tr>
                                 <th scope="col">Trans. #</th>

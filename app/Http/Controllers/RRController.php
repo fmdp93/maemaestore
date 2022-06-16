@@ -26,21 +26,16 @@ class RRController extends Controller
     use UserTrait;
     private $tbody_content;
 
-    public function __construct()
-    {
-        session()->reflash();
-    }
-
     public function index(Request $request)
     {
         $search = $request->input('q');
 
         $data['heading'] = "Return/Refund";
         $data['title'] = "Return/Refund";
-        $data['search'] = $search;   
-        $this->setUserContent($data)  ;
+        $data['search'] = $search;
+        $this->setUserContent($data);
 
-        $PosTransaction2Product = new POSTransaction2ProductModel();        
+        $PosTransaction2Product = new POSTransaction2ProductModel();
         $data['return_refunds'] = $PosTransaction2Product->getPosTransaction($search, RR_INDEX);
         $data['d_none'] = count($data['return_refunds']) ? 'd-none' : '';
 
@@ -54,7 +49,7 @@ class RRController extends Controller
         $PosTransaction2Product = new POSTransaction2ProductModel();
 
         DB::enableQueryLog();
-        $data['return_refunds'] = $PosTransaction2Product->getPosTransaction($search, RR_INDEX);             
+        $data['return_refunds'] = $PosTransaction2Product->getPosTransaction($search, RR_INDEX);
         $data['search'] = "$search";
         $rows = (string) view("components.cashier.rr-list", $data);
 
@@ -73,13 +68,14 @@ class RRController extends Controller
         return Response()->json($response);
     }
 
-    public function rr_transaction_details($pt_id){
-        
+    public function rr_transaction_details($pt_id)
+    {
     }
 
-    public function rrform(Request $request){
+    public function rrform(Request $request)
+    {
         $data['heading'] = 'Return/Refund';
-        $data['title'] = 'Return/Refund';        
+        $data['title'] = 'Return/Refund';
         $data['form'] = 'rr';
         $this->setUserContent($data);
         $this->setLastTableContent($request, $data['form']);
@@ -107,49 +103,51 @@ class RRController extends Controller
         }
     }
 
-    public function store(RRRequest $request){       
+    public function store(RRRequest $request)
+    {
         $validated = $request->validated();
-        
-        $this->setRefundDetails($validated);        
+
+        $this->setRefundDetails($validated);
 
         session()->forget([
             'name',
             'item_code',
             'errors',
             'old',
-        ]);
-        $request->session()->flash('msg_success', "Product {$validated['type']} successful!");
+        ]);        
+        $request->session()->flash('msg_success', "Product {$validated['type']} successful!");        
         return redirect(action([POSController::class, 'index']));
     }
 
-    private function setRefundDetails($validated){        
+    private function setRefundDetails($validated)
+    {
         $refunded_qty = 0;
         $remark = $validated['remark'];
 
-        foreach($validated['product_id'] as $key => $product_id){
+        foreach ($validated['product_id'] as $key => $product_id) {
             // get same products to iterate from a finished transaction
             $products = POSTransaction2ProductModel::where('product_id', $product_id)
                 ->where('pos_transaction_id', $validated['transaction_id'])
                 ->get();
-                $refund_quantity = $validated['quantity'][$key];                
-            foreach($products as $product){ 
-                $a_product = new POSTransaction2ProductModel();                
+            $refund_quantity = $validated['quantity'][$key];
+            foreach ($products as $product) {
+                $a_product = new POSTransaction2ProductModel();
                 $refunded_qty = $a_product->refundPosTransaction2Product($product, $refund_quantity, $remark);
-                                          
-                $refund_quantity -= $refunded_qty;
-            }   
-        }
-    }    
 
-    
-  
+                $refund_quantity -= $refunded_qty;
+            }
+        }
+    }
+
+
+
     public function inventorySearch(Request $request)
     {
-        session()->reflash();
-        $product = $this->getProductFromRequest($request);
+        session()->keep('pin');
+        $product = Inventory::getProductFromRequest($request);
 
         $response = [
-            'result' => $product,
+            'result' => $product->first(),
         ];
 
         $response = json_encode($response);
@@ -158,59 +156,32 @@ class RRController extends Controller
 
     public function getTableRow(Request $request)
     {
-        session()->reflash();
+        session()->keep('pin');
         $tbody_content = '';
-        $product = $this->getProductFromRequest($request);
+        $products = Inventory::getProductFromRequest($request)->get();
 
-        if (!empty($product)) {
-            $data['p_id'] = $product->p_id;
-            $data['code'] = $product->item_code;
-            $data['name'] = $product->p_name;
-            $data['description'] = $product->description;
-            $data['quantity'] = $request->input('quantity');
-            $data['price'] = $product->price;
-            $data['subtotal'] = $data['price'] * $data['quantity'];
-            $data['form'] = $request->input('form');
-            $data['xmark_attr'] = 'data-bs-toggle="modal" data-bs-target="#pin-modal"';
-            $tbody_content = (string) view("components.rr-row", $data);
+        if (!empty($products)) {
+            foreach ($products as $product) {
+                $data['p_id'] = $product->p_id;
+                $data['code'] = $product->item_code;
+                $data['name'] = $product->p_name;
+                $data['description'] = $product->description;
+                $data['quantity'] = $request->input('quantity');
+                $data['price'] = $product->price;
+                $data['subtotal'] = $data['price'] * $data['quantity'];
+                $data['form'] = $request->input('form');
+                $data['xmark_attr'] = 'data-bs-toggle="modal" data-bs-target="#pin-modal"';
+                $tbody_content .= (string) view("components.rr-row", $data);
+            }
         }
 
         $response = [
-            'result' => $product,
+            'last_query' => DB::getQueryLog(),
             'tbody' => $tbody_content,
             'table_empty' => (string) view('layouts.empty-table'),
         ];
 
         $response = json_encode($response);
         return Response()->json($response);
-    }
-
-    private function getProductFromRequest($request)
-    {
-        DB::enableQueryLog();        
-        $inventory = Inventory::select(
-            DB::raw("i.stock i_stock,
-            p.id p_id, p.item_code, p.name p_name,
-        p.description, p.price, p.unit, p.expiration_date, p.stock p_stock,
-        c.name c_name")
-        )
-            ->from('inventory as i')
-            ->join('product as p', 'p.id', '=', 'i.product_id')
-            ->join('product_category as c', 'c.id', '=', 'p.category_id');
-
-        if ($request->input('item_code')) {
-            $inventory = $inventory->where('p.item_code', $request->input('item_code'));
-        }
-
-        if ($request->input('item_name')) {
-            $inventory = $inventory->where('p.name', 'LIKE', "%" . $request->input('item_name') . "%")
-                ->where('p.name', '!=', '');
-        }
-
-        if ($request->input('item_name') == "" && $request->input('item_code') == "") {
-            $inventory = $inventory->whereRaw('NULL');
-        }
-
-        return $inventory->first();
     }
 }

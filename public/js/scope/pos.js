@@ -24,6 +24,7 @@ class POS {
         this.$add_item = $("#add-item");
         this.$s_total = $("#s_total");
         this.$total = $("#total");
+        this.$pay_cash_total = $("#pay-cash-total");
         this.$form_pos = $("#pos");
         this.$input_total = this.$total.find("input");
         this.$clear_table = $("#clear-table");
@@ -459,6 +460,7 @@ class POS {
 
         _this.$input_total.val(sprintf("%.2f", total));
         _this.$total.find("span").html(sprintf("%.2f", total));
+        _this.$pay_cash_total.val(sprintf("%.2f", total));
     }
 
     applySeniorDiscount() {

@@ -1,6 +1,5 @@
 import { objBarcodeReader } from "/js/scope/barcode_reader.js";
 import * as func from "/js/function.js";
-import { SupplierSearchAutocomplete } from "/js/decorator/SupplierSearchAutocomplete.js";
 
 class PurchaseOrder {
     constructor() {
@@ -25,13 +24,7 @@ class PurchaseOrder {
         this.$company = $("#company");
         this.$contact = $("#contact");
         this.$address = $("#address");
-        this.$supplier_search_id = $("#supplier_search_id");
-
-        // autocomplete
-        this.$supplier_search = $("#supplier_search");
-        this.objSupplierSearchAutocomplete = new SupplierSearchAutocomplete(
-            this
-        );
+        this.$supplier = $("#supplier");
 
         this.triggerEvents();
     }
@@ -54,7 +47,7 @@ class PurchaseOrder {
 
     addSupplierItems(event) {
         event.preventDefault();
-        let supplier_id = _this.$supplier_search_id.val();
+        let supplier_id = _this.$supplier.val();
         $.get(
             "/purchase-order/supplier-search/",
             { supplier_id: supplier_id },

@@ -34,7 +34,7 @@
                 <input name="contact_num" id="contact_num" class="form-control form-control-xl mb-xl-3" type="text"
                     placeholder="0912-345-6789" aria-label="contact_num" value="{{ $contact_num }}">
 
-                <input type="submit" class="float-end btn btn-button text-primary py-xl-2 px-xl-5" value="Update Customer">
+                <input type="submit" class="float-end btn btn-button-submit text-white py-xl-2 px-xl-5" value="Update Customer">
             </form>
         </div>
         <div class="col-xl-4">

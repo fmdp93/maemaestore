@@ -3,12 +3,16 @@
 namespace App\Http\Controllers;
 
 use stdClass;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Supplier;
 use App\Models\Inventory;
 use App\Models\InventoryLog;
 use Illuminate\Http\Request;
 use App\Models\InventoryOrder;
+use App\Http\Traits\SearchTrait;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\DB;
 use App\Models\InventoryOrder2Product;
@@ -18,6 +22,7 @@ use App\Http\Requests\StorePurchaseOrderRequest;
 
 class InventoryController extends Controller
 {
+    use SearchTrait;
     private $tbody_content;
     public static $page_path = '/inventory';
 
@@ -25,7 +30,7 @@ class InventoryController extends Controller
     {
         $data['heading'] = 'Inventory';
         // Get parameters
-        $data['categories'] = Category::all();
+        $data['categories'] = Category::whereNull('deleted_at')->orderBy('name')->get();
         $data['search'] = $request->input('q');
         $stock_filter = $request->input('stock_filter');
         $data['category_id'] = $request->input('category_id');
@@ -174,6 +179,9 @@ class InventoryController extends Controller
     public function purchaseOrder(Request $request)
     {
         $data['heading'] = 'Purchase Order Form';
+        $data['suppliers'] = Supplier::whereNull('deleted_at')
+            ->orderBy('vendor', 'asc')
+            ->get();
 
         $this->setHalfStockTbodyContent($request);
 
@@ -252,7 +260,8 @@ class InventoryController extends Controller
             $inventory_id,
             $previous_quantity,
             $updated_quantity,
-            8 // 8 for add stock
+            8, // 8 for add stock
+            null
         );
 
         $response = [];
@@ -278,6 +287,7 @@ class InventoryController extends Controller
             $new_io2p->quantity = $quantity;
             $new_io2p->price = $this->price;
             $new_io2p->status_id = STATUS_ORDER_RECEIVED;
+            $new_io2p->date_received = date('Y-m-d H:i:s');
 
             $new_io2p->save();
 
@@ -292,6 +302,7 @@ class InventoryController extends Controller
                 ->update([
                     'quantity' => $quantity,
                     'price' => $this->price,
+                    'date_received' => date('Y-m-d H:i:s'),
                     'status_id' => STATUS_ORDER_RECEIVED,
                 ]);
         }
@@ -343,8 +354,10 @@ class InventoryController extends Controller
         }
 
         // different expiration, new item to product
-        if ($input_expiration_date != $existing_product_expiration_date
-            || $existing_product_price != $input_price) {
+        if (
+            $input_expiration_date != $existing_product_expiration_date
+            || $existing_product_price != $input_price
+        ) {
             $wheres = [
                 (object) [
                     'column_name' => 'item_code',
@@ -547,14 +560,14 @@ class InventoryController extends Controller
 
     public function orderHistory(Request $request)
     {
-        $search = $request->input('q');
+        $from = urldecode($request->input('from'));
+        $to = urldecode($request->input('to'));
 
         $data['heading'] = "Inventory Order History";
         $data['title'] = "Inventory Order History";
-        $data['search'] = $search;
 
         $InventoryOrder2Product = new InventoryOrder2Product();
-        $data['products'] = $InventoryOrder2Product->getOrderHistory($search, URI_INV_ORDER_HISTORY);
+        $data['products'] = $InventoryOrder2Product->getOrderHistory(URI_INV_ORDER_HISTORY, $from, $to);
         $data['d_none'] = count($data['products']) ? 'd-none' : '';
 
         return view('pages.admin.order-history', $data);
@@ -562,13 +575,11 @@ class InventoryController extends Controller
 
     public function searchOrderHistory(Request $request)
     {
-        $search = $request->input('q');
 
         $InventoryOrder2Product = new InventoryOrder2Product();
 
         DB::enableQueryLog();
-        $data['products'] = $InventoryOrder2Product->getOrderHistory($search, URI_INV_ORDER_HISTORY);        
-        $data['search'] = "$search";
+        $data['products'] = $InventoryOrder2Product->getOrderHistory(URI_INV_ORDER_HISTORY);
         $rows = (string) view("components.admin.order-history-list", $data);
 
         $data['d_none'] = count($data['products']) ? 'd-none' : '';
@@ -584,5 +595,45 @@ class InventoryController extends Controller
         ];
         $response = json_encode($response);
         return Response()->json($response);
+    }
+
+    public function print_inventory_order_report(Request $request)
+    {
+
+        $from = urldecode($request->input('from'));
+        $to = urldecode($request->input('to'));
+        DB::enableQueryLog();
+        $data['heading'] = "Inventory Order History";
+        $data['title'] = "Inventory Order History";
+        $data['from'] = $from ? date("F j, Y", strtotime($from)) : 'start';
+        $data['to'] = $to ? date("F j, Y", strtotime($to)) : 'end';
+
+        $InventoryOrder2Product = new InventoryOrder2Product();
+        $data['products'] = $InventoryOrder2Product->getOrderHistory(
+            URI_INV_ORDER_HISTORY,
+            $from,
+            $to,
+            false
+        )->get();
+        $data['d_none'] = count($data['products']) ? 'd-none' : '';
+
+        $view = (string) view('pages.admin.print-order-history', $data);
+        // return $view;
+        $options = new Options();
+        $dompdf = new Dompdf();
+        $publicPath = base_path('public/');
+        $current_options = $dompdf->getOptions();
+        $options->set('chroot', $publicPath);
+        $options->set('fontDir', $publicPath);
+
+        $dompdf->setPaper('letter', 'landscape');
+        $dompdf->setOptions($options);
+        $dompdf->setBasePath(base_path('public/'));
+
+        $dompdf->loadHTML($view);
+        $dompdf->render();
+
+        $date_range = $from && $to ? "$from-to-$to-" : "";
+        $dompdf->stream("{$date_range}inventory-order-report");
     }
 }

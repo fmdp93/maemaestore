@@ -56,6 +56,7 @@
             <small class="p-0 m-0 mt-1 d-block">AH26 Maharlika highway, Abar 1st San Jose City, Nueva Ecija</small>
         </div>
         <small class="p-0 m-0 pt-3 d-block">Transaction ID: {{ $transaction_id }}</small>
+        <small class="p-0 m-0 d-block">Serial Number: {{ $customer->serial_number }}</small>
         <small class="p-0 m-0 d-block">Date: {{ date('Y-m-d H:i', strtotime($items[0]->created_at)) }}</small>
         <small class="p-0 m-0 d-block">Cashier: {{ $cashier_name }}</small>
         <br>
@@ -89,7 +90,7 @@
                 @endphp
                 @if ($item->senior_discount)
                     <tr>
-                        <td class="pt-3 p-0 m-0">Senior Discount: </td>
+                        <td class="pt-3 p-0 m-0">Discount: </td>
                         <td class="pt-3 text-end p-0 m-0">
                             {{ sprintf('%.2f', negativeToZero($discount)) }}
                         </td>

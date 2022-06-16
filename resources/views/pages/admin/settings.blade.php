@@ -21,6 +21,21 @@
                 <input type="submit" value="Restore Database" class="btn mt-3">
             </form>
         </div>
+        <div class="row">
+            <div class="col-12 col-xl-3 mt-5">
+                <h3>Receipt Serial Number</h3>
+                <form action="{{ route('update_serial_number') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    @error('serial_number')
+                        @include('components.error-message')
+                    @enderror
+                    <label for="serial_number">Serial Number</label>
+                    <input type="text" class="form-control" id="serial_number" name="serial_number"
+                        value="{{ $serial_number }}">
+                    <input type="submit" value="Update" class="btn mt-3">
+                </form>
+            </div>
+        </div>
     </div>
 @endsection
 

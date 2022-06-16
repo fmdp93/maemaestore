@@ -71,8 +71,12 @@ class InventoryOrder2Product extends Model
         return $query->get();
     }
 
-    public function getOrderHistory($search, $page_path)
-    {
+    public function getOrderHistory(
+        $page_path,
+        $from = "",
+        $to = "",
+        $paginated = true
+    ) {
         $products = self::select(DB::raw('
             io2p.id io2p_id, io2p.transaction_id, io2p.quantity received_quantity,
             p.id p_id, p.item_code, p.category_id, p.stock, p.base_price,
@@ -80,21 +84,30 @@ class InventoryOrder2Product extends Model
             p.name p_name, p.unit, p.description, p.supplier_id, p.expiration_date'))
             ->from('inventory_order2_product as io2p')
             ->join('product as p', 'p.id', '=', 'io2p.product_id')
-            ->orWhere(function ($query) use ($search) {
-                $query->where('io2p.id', $search)
-                    ->orWhere('p.item_code', 'LIKE', "%$search%")
-                    ->orWhere('p.name', 'LIKE', "%$search%");
-            })
+            // ->orWhere(function ($query) use ($search) {
+            //     $query->where('io2p.id', $search)
+            //         ->orWhere('p.item_code', 'LIKE', "%$search%")
+            //         ->orWhere('p.name', 'LIKE', "%$search%");
+            // })
             ->where('io2p.status_id', STATUS_ORDER_RECEIVED)
-            ->orderBy('io2p.id', 'desc')
-            ->paginate(Config::get('constant.per_page'))
-            ->withPath($page_path)
-            ->appends(
-                [
-                    'q' => $search,
-                ]
-            );
+            ->when($from && $to, function ($query) use ($from, $to) {
+                $time_start = "00:00:00";
+                $time_end = "23:59:59";
+                $query->where("io2p.date_received", ">=", $from . " $time_start")
+                    ->where("io2p.date_received", "<=", $to . " $time_end");
+            })
+            ->orderBy('io2p.id', 'desc');
 
+        if ($paginated) {
+            $products = $products->paginate(Config::get('constant.per_page'))
+                ->withPath($page_path)
+                ->appends(
+                    [
+                        'from' => $from,
+                        'to' => $to,
+                    ]
+                );
+        }
         return $products;
     }
 }

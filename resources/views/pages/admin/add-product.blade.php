@@ -173,7 +173,7 @@ use App\Http\Controllers\CategoryController;
                 <input name="inv_stock" id="inv_stock" class="form-control form-control-xl mb-xl-3" type="number" min="0"
                     placeholder="e.g. 100" aria-label="inv_stock" value="{{ old('inv_stock') }}">
 
-                <button class="float-end btn btn-button text-primary py-xl-2 px-xl-5" type="submit"
+                <button class="float-end btn btn-button-submit text-white py-xl-2 px-xl-5" type="submit"
                     @if (count($categories) === 0) disabled @endif>Add Item</button>
             </form>
         </div>

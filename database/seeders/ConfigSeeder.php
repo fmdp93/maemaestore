@@ -31,6 +31,11 @@ class ConfigSeeder extends Seeder
                 'name' => 'senior discount',
                 'value' => '.2'
             ],
+            [
+                'id' => 4,
+                'name' => 'serial number',
+                'value' => '1'
+            ],
         ]);
     }
 }

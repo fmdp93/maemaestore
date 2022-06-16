@@ -115,16 +115,16 @@ class Inventory extends Model
         return $Inventory !== null ? $Inventory->stock : 0;
     }
 
-    public static function getStockOf($item_code){
+    public static function getStockOf($item_code)
+    {
         $stock = Inventory::select(DB::raw('SUM(i.stock) max_stock'))
             ->from("inventory as i")
             ->join("product as p", 'p.id', '=', 'i.product_id')
             ->where('p.item_code', $item_code)
             ->whereNull('deleted_at')
             ->groupBy('p.item_code')
-            ->first()
-            ;
-        
+            ->first();
+
         return $stock !== null ? $stock->max_stock : 0;
     }
 
@@ -153,10 +153,126 @@ class Inventory extends Model
                 ]
             );
 
+
         return $Archives;
     }
 
-    public static function reduceInventoryStock(){
-        
+    public function getInventoryReport($page_path, $from = "", $to = "", $paginated = true)
+    {
+        DB::enableQueryLog();
+        $Products = Inventory::select(
+            DB::raw('
+                pt2p.pos_transaction_id, 
+                p.name p_name,
+                il.updated_quantity,
+                (SELECT GROUP_CONCAT(
+                            CONCAT(p2.name, " (", pt2p2.remark, ")")
+                        ) 
+                    FROM pos_transaction2product pt2p2
+                    INNER JOIN product p2
+                        ON p2.id = pt2p2.product_id
+                    WHERE pt2p2.pos_transaction_id = pt2p.pos_transaction_id
+                        && pt2p2.remark != ""
+                    GROUP BY pt2p2.pos_transaction_id
+                ) as returns')
+        )
+            ->from('pos_transaction2product as pt2p')
+            ->join('product as p', 'p.id', '=', 'pt2p.product_id')
+            ->join('inventory_log as il', 'il.pt2p_id', '=', 'pt2p.id')
+            ->join('pos_transaction as pt', 'pt.id', '=', 'pt2p.pos_transaction_id')
+            ->when($from && $to, function ($query) use ($from, $to) {
+                $time_start = "00:00:00";
+                $time_end = "23:59:59";
+                $query->where("pt.created_at", ">=", $from . " $time_start")
+                    ->where("pt.created_at", "<=", $to . " $time_end");
+            })
+            ->groupBy('pt2p.pos_transaction_id')
+            ->orderBy('pt2p.pos_transaction_id', 'desc');
+        // ->when($paginated, function ($query) use ($page_path) {
+        //     $query->paginate(Config::get('constant.per_page'))
+        //         ->withPath($page_path);
+        // });
+
+        if ($paginated === true) {
+            $Products = $Products->paginate(Config::get('constant.per_page'))
+                ->withPath($page_path)
+                ->appends(
+                    [
+                        'from' => $from,
+                        'to' => $to,
+                    ]
+                );;
+        }
+
+        // $Products->get();
+        // echo '<pre>';
+        // print_r(DB::getQueryLog());
+        // echo '</pre>';
+        // die();
+        return $Products;
+    }
+
+    public function getReportFor($transaction_id)
+    {
+        DB::enableQueryLog();
+        $Products = Inventory::select(
+            DB::raw(
+                '
+                pt2p.pos_transaction_id, pt2p.quantity pt2p_quantity, 
+                pt2p.refunded_quantity, 
+                p.name p_name, p.item_code,
+                il.updated_quantity,
+                pt2p.remark'
+            )
+        )
+            ->from('pos_transaction2product as pt2p')
+            ->join('product as p', 'p.id', '=', 'pt2p.product_id')
+            ->join('inventory_log as il', 'il.pt2p_id', '=', 'pt2p.id')
+            ->orderBy('pt2p.id', 'asc');
+
+        // $Products->get();
+        // echo '<pre>';
+        // print_r(DB::getQueryLog());
+        // echo '</pre>';
+        // die();
+        return $Products;
+    }
+
+    public static function getProductFromRequest($request)
+    {
+        DB::enableQueryLog();
+        $inventory = Inventory::select(
+            DB::raw("i.stock i_stock,
+            p.id p_id, p.item_code, p.name p_name,
+        p.description, p.price, p.unit, p.expiration_date, p.stock p_stock,
+        c.name c_name")
+        )
+            ->from('pos_transaction2product as pt2p')
+            ->join('product as p', 'p.id', '=', 'pt2p.product_id')
+            ->join('inventory as i', 'i.product_id', '=', 'pt2p.product_id')
+            ->join('product_category as c', 'c.id', '=', 'p.category_id');
+
+        if ($request->input('transaction_id')) {
+            $inventory = $inventory->where('pos_transaction_id', $request->input('transaction_id'));
+        }
+
+        if ($request->input('item_code')) {
+            $inventory = $inventory->where('p.item_code', $request->input('item_code'));
+        }
+
+        if ($request->input('item_name')) {
+            $inventory = $inventory->where('p.name', 'LIKE', "%" . $request->input('item_name') . "%")
+                ->where('p.name', '!=', '');
+        }
+
+        if (
+            $request->input('transaction_id') == "" &&
+            $request->input('item_name') == "" &&
+            $request->input('item_code') == ""
+        ) {
+            $inventory = $inventory->whereRaw('NULL');
+        }
+
+        return $inventory;
     }
 }

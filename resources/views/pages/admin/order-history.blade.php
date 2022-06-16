@@ -1,6 +1,3 @@
-@php
-use App\Http\Controllers\AccountsController;
-@endphp
 @extends('layouts.app')
 
 @section('header_scripts')
@@ -16,15 +13,32 @@ use App\Http\Controllers\AccountsController;
         @include('layouts.heading')
         <div class="col-xl-12">
             <div class="row">
-                <div class="col-12 col-xl-3">
+                <div class="col-12 col-xl-5">
                     <a href="{{ route('orders') }}" class="btn btn-success py-xl-2 px-xl-3 mb-xl-3 text-primary"><i
                             class="fa fa-list"></i> View Orders</a>
                     <a href="{{ url('/inventory/purchase-order') }}"
                         class="btn btn-success py-xl-2 px-xl-3 mb-xl-3 text-primary">
                         <i class="fa fa-plus-circle"></i> Purchase Order</a>
                 </div>
-                <div class="col-xl-3 ms-auto">
-                    @include('components.search')
+                
+                <div class="col-xl-5 ms-auto">
+                    <form class="d-flex align-middle" action="{{ route('inventory_order_history') }}"
+                        method="GET">
+                        @csrf
+                        <label for="from" class="my-auto me-1">From</label>
+                        <input class="form-control my-auto me-xl-3" type="text" id="from" name="from" autocomplete="off"
+                            value="{{ request()->input('from') }}">
+                        <label for="to" class="my-auto me-1">To</label>
+                        <input class="form-control my-auto" type="text" id="to" name="to" autocomplete="off"
+                            value="{{ request()->input('to') }}">
+                        <input type="submit" class="btn btn-primary px-4 my-auto" value="Filter">
+                    </form>
+                    <a href="{{ route('print_inventory_order_report', [
+                        'from' => request()->input('from'),
+                        'to' => request()->input('to'),
+                    ]) }}"
+                        class="btn btn-success text-white mt-3 float-end">
+                        <i class="fa-solid fa-print"></i> Print</a>
                 </div>
             </div>
         </div>

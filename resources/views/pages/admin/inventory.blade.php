@@ -32,7 +32,7 @@
         </div>
         <div class="col-xl-auto ps-5">
             <input type="hidden" name="stock_filter" value="{{ request()->input('stock_filter') }}">            
-            <button id="normal-stock" data-filter="normal" class="btn btn-button px-4 py-3">
+            <button id="normal-stock" data-filter="normal" class="btn btn-button-submit px-4 py-3">
                 <i class="fa-solid fa-circle-check"></i>
                 Normal Stock
             </button>

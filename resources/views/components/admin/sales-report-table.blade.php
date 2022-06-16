@@ -3,7 +3,7 @@
         <td>{{ $transaction->t_id }}</td>
         <td>{{ date("F j, Y", strtotime($transaction->t_date)) }}</td>
         <td>{{ $transaction->p_name }}</td>
-        <td>{{ $transaction->description }}</td>
+        <td>{{ Str::limit($transaction->description, 40) }}</td>
         <td>{{ $transaction->pt2p_quantities }}</td>
         <td>{{ sprintf("%.2f", $transaction->pt2p_price_total) }}</td>
         <td>{{ sprintf("%.2f", $transaction->amount_paid ) }}</td>  

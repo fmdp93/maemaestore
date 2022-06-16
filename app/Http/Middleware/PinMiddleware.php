@@ -25,7 +25,7 @@ class PinMiddleware
         }
         
         // session()->flash('pin', session('pin'));
-        session()->reflash();
+        session()->keep('pin');
         return $next($request);
     }
 }

@@ -81,7 +81,10 @@ class POSController extends Controller
         $POSTransaction->cc_name = (string) $request->input('cc_name');
         $POSTransaction->cc_num = (string) $request->input('cc_num');
         $POSTransaction->mode_of_payment = (string) $request->input('mode_of_payment');
+        $POSTransaction->serial_number = ConfigModel::find(CONFIG_SERIAL_NUMBER)->value;
         $POSTransaction->save();
+
+        ConfigModel::increment_serial_number();
 
         // insert products
         foreach ($validated['product_id'] as $key => $product_id) {
@@ -91,13 +94,15 @@ class POSController extends Controller
             $POSTransaction2Product->quantity = $validated['quantity'][$key];
 
             $senior_discount = $request->input("senior_discounted") == "true" ? (float) ConfigModel::find(3)->value : 0;
-            $POSTransaction2Product->price = $validated['price'][$key] * (1 - $senior_discount);            
+            $POSTransaction2Product->price = $validated['price'][$key] * (1 - $senior_discount);
             $Product = Product::find($product_id);
             $POSTransaction2Product->selling_price = $Product->price;
             $POSTransaction2Product->base_price = $Product->base_price;
             $POSTransaction2Product->senior_discount = $senior_discount;
 
             $POSTransaction2Product->save();
+
+            $pt2p_id = $POSTransaction2Product->id;
 
             // reduce stocks in inventory
             //find inventory items with similar item_code of product_id
@@ -126,7 +131,7 @@ class POSController extends Controller
                     $updated_quantity = Inventory::find($inventory_item->i_id)->stock;
                     $deducting_quantity -= $inventory_item->stock;
 
-                    $this->logInventoryDeduction($inventory_item->i_id, $previous_quantity, $updated_quantity);
+                    $this->logInventoryDeduction($inventory_item->i_id, $previous_quantity, $updated_quantity, $pt2p_id);
                     continue;
                 }
 
@@ -139,7 +144,7 @@ class POSController extends Controller
                 $updated_quantity = Inventory::find($inventory_item->i_id)->stock;
                 $deducting_quantity -= $inventory_item->stock;
 
-                $this->logInventoryDeduction($inventory_item->i_id, $previous_quantity, $updated_quantity);
+                $this->logInventoryDeduction($inventory_item->i_id, $previous_quantity, $updated_quantity, $pt2p_id);
                 break;
             }
         }
@@ -148,7 +153,7 @@ class POSController extends Controller
         return redirect(action([POSController::class, 'finish'], ['transaction_id' => $POSTransaction->id]));
     }
 
-    private function logInventoryDeduction($inventory_id, $previous_quantity, $updated_quantity)
+    private function logInventoryDeduction($inventory_id, $previous_quantity, $updated_quantity, $pt2p_id)
     {
         // Log
         if ($previous_quantity == 0 && $updated_quantity == 0) {
@@ -159,7 +164,8 @@ class POSController extends Controller
             $inventory_id,
             $previous_quantity,
             $updated_quantity,
-            9 // 9 = stock deducted
+            9, // 9 = stock deducted
+            $pt2p_id
         );
     }
 
@@ -228,7 +234,7 @@ class POSController extends Controller
 
         $view = (string) view('pages.cashier.pos-receipt', $data);
         // return $view;        
-        $static_rows_count = 27;
+        $static_rows_count = 28;
         $row_height = 16;
         $base_receipt_height = $static_rows_count * $row_height;
         $paper_height = $base_receipt_height + $row_height * $this->getItemRows($data['items']);
@@ -317,7 +323,7 @@ class POSController extends Controller
                 GROUP BY p2.item_code) p_id, p.item_code, p.name p_name,
         p.description, p.price, p.unit, p.expiration_date, p.stock p_stock,
         c.name c_name
-            ")            
+            ")
         )
             ->from('inventory as i')
             ->join('product as p', 'p.id', '=', 'i.product_id')
@@ -362,7 +368,7 @@ class POSController extends Controller
     public function installment_details($transaction_id)
     {
         $model = new POSTransaction2ProductModel();
-        $data['heading'] = 'Installment Details';        
+        $data['heading'] = 'Installment Details';
         $data['pos_transaction2products'] = $model->getSalesReportFor($transaction_id);
         $data['transaction_id'] = $transaction_id;
         $data['user'] = Role::find(Auth::user()->role_id)->name;
@@ -397,7 +403,8 @@ class POSController extends Controller
         return Response()->json($response);
     }
 
-    public function payBalance(Request $request){
+    public function payBalance(Request $request)
+    {
         $transaction_id = $request->input('transaction_id');
         POSTransactionModel::where('id', $transaction_id)
             ->update(

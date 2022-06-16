@@ -87,7 +87,7 @@ class LogManagerController extends Controller
 
     public function checkPin(Request $request){
         $response['has_pin'] = true;
-        session()->reflash();
+        session()->keep('pin');
         if(!session('pin')){
             $response['has_pin'] = false;
         }

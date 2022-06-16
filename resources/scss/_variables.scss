@@ -13,6 +13,7 @@ $custom-colors: (
   "low": #fab389,
   "half": #ebd592,
   "transparent": transparent,
+  "button-submit": #187bdd,
 );
 
 $theme-colors: map-merge($theme-colors, $custom-colors);

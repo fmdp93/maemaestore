@@ -25,7 +25,7 @@ class ProductsController extends Controller
     public function index(Request $request)
     {
         $data['heading'] = 'Products';
-        $data['categories'] = Category::all();
+        $data['categories'] = Category::whereNull('deleted_at')->orderBy('name')->get();
         $data['search'] = $request->input('q');
         $data['category_id'] = $request->input('category_id');
         $ProductModel = new Product();
@@ -41,9 +41,11 @@ class ProductsController extends Controller
     public function addProduct()
     {
         $data['heading'] = 'Add Products';
-        $data['categories'] = Category::all();
+        $data['categories'] = Category::whereNull('deleted_at')->orderBy('name', 'asc')->get();
         $data['markup'] = empty(old('markup')) ? Config::get('app.markup_price') : old('markup');                
-        $data['suppliers'] = Supplier::all();
+        $data['suppliers'] = Supplier::whereNull('deleted_at')
+            ->orderBy('vendor', 'asc')
+            ->get();
 
         return view('pages.admin.add-product', $data);
     }

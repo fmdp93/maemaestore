@@ -14,7 +14,7 @@ class PosTransaction{
     }
 
     triggerEvents(){
-        this.$search.on("keyup", this.requestProduct);
+        this.$search.on("keyup", this.requestProduct);        
     }
     
     requestProduct(event) {

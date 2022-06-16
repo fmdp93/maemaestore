@@ -39,7 +39,7 @@ use App\Http\Controllers\SalesReportController;
                                     <td>{{ $count++ }}</td>
                                     <td>{{ $item->item_code }}</td>
                                     <td>{{ $item->p_name }}</td>
-                                    <td>{{ $item->description }}</td>
+                                    <td>{{ Str::limit($item->description, 40) }}</td>
                                     <td>{{ $item->pt2p_quantity }}</td>
                                     <td>{{ $item->pt2p_price }}</td>
                                     <td>{{ sprintf('%.2f', $item->pt2p_price * $item->pt2p_quantity) }}</td>

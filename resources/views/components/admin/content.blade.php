@@ -46,11 +46,11 @@
                 <span>INVENTORY</span>
             </a>            
 
-            <a class="p-3 d-block {{ navActive('sales-report') }}" href="{{ url('/sales-report') }}" title="[F3]">
+            <a class="p-3 d-block {{ navActive('report') }}" href="{{ url('/report') }}" title="[F3]">
                 <div class="icon-container rounded-circle mx-auto text-center">
                     <i class="fa-solid fa-tags align-middle"></i>
                 </div>
-                <span>SALES REPORT</span>
+                <span>REPORT</span>
             </a>
             <a class="p-3 d-block {{ navActive('accounts') }}" href="{{ url('/accounts') }}" title="[F4]">
                 <div class="icon-container rounded-circle mx-auto text-center">

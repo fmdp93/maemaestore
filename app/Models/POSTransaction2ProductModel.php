@@ -154,7 +154,7 @@ class POSTransaction2ProductModel extends Model
                     ->orWhere('created_at', 'LIKE', "%$search%");
             })
             ->whereNotNull('refunded_at')
-            ->orderBy('pt.id', 'desc')            
+            ->orderBy('pt2p.refunded_at', 'desc')            
             ->paginate(Config::get('constant.per_page'))
             ->withPath($page_path)
             ->appends(

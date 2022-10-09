@@ -25,7 +25,7 @@ class SettingsController extends Controller
             'host' => env('DB_HOST'),
             'username' => env('DB_USERNAME'),
             'password' => env('DB_PASSWORD'),
-            'db_name' => 'maemaestore',
+            'db_name' => env('DB_DATABASE'),
         ));
         $file_name = base_path() . '/database/' . date('y_m_d__h_i_s') . '.sql';
         $wp_dumper->dump($file_name);

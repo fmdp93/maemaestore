@@ -4,13 +4,8 @@
 @endsection
 <div class="my-xl-4 mx-xl-5 row">
     <div class="gutter-div col-xl-2"></div>
-    <div class="col-xl-auto align-self-center px-0">
-        <i class="fa-solid fa-store fa-5x"></i>
-    </div>
-    <div class="col-xl-auto me-auto">
-        <h1>MAE-MAE'S STORE</h1>
-        <h2>Sales and Inventory System</h2>
-    </div>
+
+    @include('components.site-title')
     <div class="col-xl-2">
         <div>
             <p>
@@ -33,27 +28,29 @@
                 <span>POS</span>
             </a>
 
-            <a class="p-3 d-block {{ navActive('cashier-products') }}" href="{{ url('/cashier-products') }}"  title="[F2]">
+            <a class="p-3 d-block {{ navActive('cashier-products') }}" href="{{ url('/cashier-products') }}"
+                title="[F2]">
                 <div class="icon-container rounded-circle mx-auto text-center">
                     <i class="fa-solid fa-box align-middle"></i>
                 </div>
                 <span>PRODUCTS</span>
             </a>
 
-            <a class="p-3 d-block {{ navActive('customer') }}" href="{{ route('customer') }}"  title="[F2]">
+            <a class="p-3 d-block {{ navActive('customer') }}" href="{{ route('customer') }}" title="[F2]">
                 <div class="icon-container rounded-circle mx-auto text-center">
                     <i class="fa-solid fa-face-smile align-middle"></i>
                 </div>
                 <span>CUSTOMERS</span>
             </a>
 
-            <a class="p-3 d-block {{ navActive('cashier-settings') }}" href="{{ url('/cashier-settings') }}"  title="[F3]">
+            <a class="p-3 d-block {{ navActive('cashier-settings') }}" href="{{ url('/cashier-settings') }}"
+                title="[F3]">
                 <div class="icon-container rounded-circle mx-auto text-center">
                     <i class="fa-solid fa-tags align-middle"></i>
                 </div>
                 <span>SETTINGS</span>
             </a>
-            <a class="p-3 d-block" href="{{ url('/logout') }}"  title="[F9]">
+            <a class="p-3 d-block" href="{{ url('/logout') }}" title="[F9]">
                 <div class="icon-container rounded-circle mx-auto text-center">
                     <i class="fa-solid fa-user align-middle"></i>
                 </div>

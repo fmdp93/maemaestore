@@ -29,6 +29,7 @@ use App\Http\Controllers\InventoryController;
                 @csrf
                 <label for="supplier">Supplier</label>
                 <select name="supplier" id="supplier" class="form-select mb-3">
+                    <option value="">---Choose Supplier---</option>
                     @foreach ($suppliers as $supplier)
                         <option value="{{ $supplier->id }}" 
                             {{ old('supplier') == $supplier->id ? 'selected' : '' }}>
@@ -88,7 +89,7 @@ use App\Http\Controllers\InventoryController;
             @if ($errors->any())
                 @php
                     $message = 'Please Fix the errors below';
-                    // print_r($errors->all());
+                    print_r($errors->all());
                 @endphp
                 <div class="py-3">
                     @include('components.error-message')

@@ -3,10 +3,11 @@ use App\Http\Controllers\UserController;
 @endphp
 <div class="align-items-center d-flex justify-content-center vh-100">
     <div>
-        <h1 class="mb-xl-4">
-            <i class="fa-solid fa-store"></i>
-            {{ $h1 }}
-        </h1>
+
+        <div class="text-center mb-xl-4 w-75 mx-auto">
+            <img src="{{ asset('img/logo.png') }}" id="logo" alt="maemaestore logo" class="img-fluid">
+        </div>
+
         @if (session('msg_error'))
             <div class="text-primary bg-danger p-xl-3 mb-xl-3 rounded-1">
                 {{ session('msg_error') }}

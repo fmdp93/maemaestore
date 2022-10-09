@@ -142,6 +142,7 @@ use App\Http\Controllers\CategoryController;
                 @enderror
                 <label for="supplier">Supplier</label>
                 <select name="supplier" id="supplier" class="form-select mb-3">
+                    <option value="">---Choose a supplier---</option>
                     @foreach ($suppliers as $supplier)
                         <option value="{{ $supplier->id }}" 
                             {{ old('supplier') == $supplier->id ? 'selected' : '' }}>

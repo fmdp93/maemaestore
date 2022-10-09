@@ -6,12 +6,8 @@
 <div class="my-xl-4 mx-xl-5 row">
     <div class="gutter-div col-xl-2"></div>
     <div class="col-xl-auto align-self-center px-0">
-        <i class="fa-solid fa-store fa-5x"></i>
     </div>
-    <div class="col-xl-auto me-auto">
-        <h1>MAE-MAE'S STORE</h1>
-        <h2>Sales and Inventory System</h2>
-    </div>
+    @include('components.site-title')
     <div class="col-xl-2">
         <div>
             <p>
@@ -44,7 +40,7 @@
                     <i class="fa-solid fa-box align-middle"></i>
                 </div>
                 <span>INVENTORY</span>
-            </a>            
+            </a>
 
             <a class="p-3 d-block {{ navActive('report') }}" href="{{ url('/report') }}" title="[F3]">
                 <div class="icon-container rounded-circle mx-auto text-center">

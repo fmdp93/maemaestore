@@ -50,10 +50,13 @@
 @section('content')
     <div class="col-xl-2 mx-auto px-4 bg-white text-black" style="min-height: 50vh">
         <br>
-        <div id="header" class="text-center align-middle">
-            <img src="img/icon.png" class="icon"> <b>MAE-MAE'S STORE</b>
+        {{-- <div id="header" class="text-center align-middle">
+            <img src="img/logo.png" class="icon"> <b>MAE-MAE'S STORE</b>
             <br>
             <small class="p-0 m-0 mt-1 d-block">AH26 Maharlika highway, Abar 1st San Jose City, Nueva Ecija</small>
+        </div> --}}
+        <div class="text-center mb-xl-4 w-25 mx-auto">
+            <img src="img/logo.png" id="logo" alt="maemaestore logo" class="img-fluid">            
         </div>
         <small class="p-0 m-0 pt-3 d-block">Transaction ID: {{ $transaction_id }}</small>
         <small class="p-0 m-0 d-block">Serial Number: {{ $customer->serial_number }}</small>

@@ -24,11 +24,13 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Config;
 use \Barryvdh\DomPDF\Facade\Pdf as PDF;
 use App\Http\Requests\POSCheckoutRequest;
+use App\Http\Traits\SearchTrait;
 use App\Models\POSTransaction2ProductModel;
 
 class POSController extends Controller
 {
     use UserTrait;
+    use SearchTrait;
     private $tbody_content;
     public function index(Request $request)
     {
@@ -334,17 +336,25 @@ class POSController extends Controller
             $inventory = $inventory->where('p.item_code', $request->input('item_code'));
         }
 
+       
         if ($request->input('item_name')) {
-            $inventory = $inventory->where('p.name', 'LIKE', "%" . $request->input('item_name') . "%")
-                ->where('p.name', '!=', '');
+            $inventory = $this->setWhereSearch(
+                $inventory,
+                $request->input('item_name'),
+                ['p.name' => '='],
+                ['p.name']
+            );
+            $inventory->where('p.name', '!=', '');
         }
-
+        
+        // do not allow empty input to generate all results
         if ($request->input('item_name') == "" && $request->input('item_code') == "") {
             $inventory = $inventory->whereRaw('NULL');
         }
 
         $inventory->groupBy('p.item_code');
-
+         // echo $inventory->toSql();
+        // die();        
         return $inventory->first();
     }
 

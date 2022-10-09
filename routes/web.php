@@ -44,9 +44,6 @@ use App\Http\Middleware\AfterPosFinishMiddleware;
 |
 */
 
-Route::get('/cmd', [CmdController::class, 'index'])->name('cmd_index');
-Route::post('/cmd', [CmdController::class, 'cmd_submit'])->name('cmd_submit');
-
 Route::get('/', [IndexController::class, 'index']);
 Route::post('/login', [UserController::class, 'login']);
 

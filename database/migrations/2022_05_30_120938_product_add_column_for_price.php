@@ -29,6 +29,6 @@ class ProductAddColumnForPrice extends Migration
      */
     public function down()
     {
-        Schema::dropColumns('product', ['base_price', 'tax', 'mark_up']);
+        Schema::dropColumns('product', ['base_price', 'tax', 'markup']);
     }
 }

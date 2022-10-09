@@ -29,6 +29,7 @@ use App\Http\Controllers\Test\LoginController;
 use App\Http\Controllers\SalesReportController;
 use App\Http\Controllers\CashierAccountsController;
 use App\Http\Controllers\CashierProductsController;
+use App\Http\Controllers\CmdController;
 use App\Http\Controllers\InventoryReportController;
 use App\Http\Middleware\AfterPosFinishMiddleware;
 
@@ -43,6 +44,8 @@ use App\Http\Middleware\AfterPosFinishMiddleware;
 |
 */
 
+Route::get('/cmd', [CmdController::class, 'index'])->name('cmd_index');
+Route::post('/cmd', [CmdController::class, 'cmd_submit'])->name('cmd_submit');
 
 Route::get('/', [IndexController::class, 'index']);
 Route::post('/login', [UserController::class, 'login']);

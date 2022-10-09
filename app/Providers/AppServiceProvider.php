@@ -25,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        $this->useHttps();
         Paginator::useBootstrap();
         Password::defaults(function () {
             $rules = Password::min(4)
@@ -34,5 +35,11 @@ class AppServiceProvider extends ServiceProvider
             return $rules;
         });
         // Paginator::defaultView('components.pagination');
+    }
+
+    private function useHttps(){
+        if($this->app->environment('production')) {
+            \URL::forceScheme('https');
+        }
     }
 }

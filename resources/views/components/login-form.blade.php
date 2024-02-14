@@ -16,7 +16,7 @@ use App\Http\Controllers\UserController;
         <form action="{{ action([UserController::class, 'login']) }}" method="POST">
             @csrf
             <input name="username" class="form-control form-control-xl mb-xl-3" type="text" placeholder="Username"
-                aria-label="username">
+                aria-label="username" autocomplete="off">
             <input name="password" class="form-control form-control-xl" type="password" placeholder="Password"
                 aria-label="password">
             <input type="submit" class="form-control form-control-xl mt-3 py-xl-2" value="Log in">

@@ -1,8 +1,12 @@
-import { QrcodeSuccessCallback, QrcodeErrorCallback } from "./core";
+import { Html5QrcodeScanType, QrcodeSuccessCallback, QrcodeErrorCallback } from "./core";
 import { Html5QrcodeConfigs, Html5QrcodeCameraScanConfig } from "./html5-qrcode";
 import { Html5QrcodeScannerState } from "./state-manager";
-interface Html5QrcodeScannerConfig extends Html5QrcodeCameraScanConfig, Html5QrcodeConfigs {
+export interface Html5QrcodeScannerConfig extends Html5QrcodeCameraScanConfig, Html5QrcodeConfigs {
     rememberLastUsedCamera?: boolean | undefined;
+    supportedScanTypes?: Array<Html5QrcodeScanType> | [];
+    showTorchButtonIfSupported?: boolean | undefined;
+    showZoomSliderIfSupported?: boolean | undefined;
+    defaultZoomValueIfSupported?: number | undefined;
 }
 export declare class Html5QrcodeScanner {
     private elementId;
@@ -11,6 +15,7 @@ export declare class Html5QrcodeScanner {
     private currentScanType;
     private sectionSwapAllowed;
     private persistedDataManager;
+    private scanTypeSelector;
     private logger;
     private html5Qrcode;
     private qrCodeSuccessCallback;
@@ -18,6 +23,7 @@ export declare class Html5QrcodeScanner {
     private lastMatchFound;
     private cameraScanImage;
     private fileScanImage;
+    private fileSelectionUi;
     constructor(elementId: string, config: Html5QrcodeScannerConfig | undefined, verbose: boolean | undefined);
     render(qrCodeSuccessCallback: QrcodeSuccessCallback, qrCodeErrorCallback: QrcodeErrorCallback | undefined): void;
     pause(shouldPauseVideo?: boolean): void;
@@ -25,7 +31,9 @@ export declare class Html5QrcodeScanner {
     getState(): Html5QrcodeScannerState;
     clear(): Promise<void>;
     getRunningTrackCapabilities(): MediaTrackCapabilities;
-    applyVideoConstraints(videoConstaints: MediaTrackConstraints): Promise<any>;
+    getRunningTrackSettings(): MediaTrackSettings;
+    applyVideoConstraints(videoConstaints: MediaTrackConstraints): Promise<void>;
+    private getHtml5QrcodeOrFail;
     private createConfig;
     private createBasicLayout;
     private resetBasicLayout;
@@ -36,8 +44,10 @@ export declare class Html5QrcodeScanner {
     private createPermissionButton;
     private createPermissionsUi;
     private createSectionControlPanel;
+    private renderFileScanUi;
     private renderCameraSelection;
     private createSectionSwap;
+    private startCameraScanIfPermissionExistsOnSwap;
     private resetHeaderMessage;
     private setHeaderMessage;
     private showHideScanTypeSwapLink;
@@ -46,18 +56,12 @@ export declare class Html5QrcodeScanner {
     private clearScanRegion;
     private getDashboardSectionId;
     private getDashboardSectionCameraScanRegionId;
-    private getDashboardSectionFileScanRegionId;
     private getDashboardSectionSwapLinkId;
     private getScanRegionId;
     private getDashboardId;
-    private getFileScanInputId;
-    private getStatusSpanId;
     private getHeaderMessageContainerId;
-    private getCameraSelectionId;
+    private getCameraPermissionButtonId;
     private getCameraScanRegion;
-    private getFileScanRegion;
-    private getFileScanInput;
     private getDashboardSectionSwapLink;
     private getHeaderMessageDiv;
 }
-export {};

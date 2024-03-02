@@ -9,6 +9,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { QrcodeResultFormat, Html5QrcodeSupportedFormats } from "./core";
 export class BarcodeDetectorDelegate {
+    static isSupported() {
+        if (!("BarcodeDetector" in window)) {
+            return false;
+        }
+        const dummyDetector = new BarcodeDetector({ formats: ["qr_code"] });
+        return typeof dummyDetector !== "undefined";
+    }
     constructor(requestedFormats, verbose, logger) {
         this.formatMap = new Map([
             [Html5QrcodeSupportedFormats.QR_CODE, "qr_code"],
@@ -38,13 +45,6 @@ export class BarcodeDetectorDelegate {
             throw "BarcodeDetector detector not supported";
         }
     }
-    static isSupported() {
-        if (!("BarcodeDetector" in window)) {
-            return false;
-        }
-        const dummyDetector = new BarcodeDetector({ formats: ["qr_code"] });
-        return typeof dummyDetector !== "undefined";
-    }
     decodeAsync(canvas) {
         return __awaiter(this, void 0, void 0, function* () {
             const barcodes = yield this.detector.detect(canvas);
@@ -54,7 +54,8 @@ export class BarcodeDetectorDelegate {
             let largestBarcode = this.selectLargestBarcode(barcodes);
             return {
                 text: largestBarcode.rawValue,
-                format: QrcodeResultFormat.create(this.toHtml5QrcodeSupportedFormats(largestBarcode.format))
+                format: QrcodeResultFormat.create(this.toHtml5QrcodeSupportedFormats(largestBarcode.format)),
+                debugData: this.createDebugData()
             };
         });
     }
@@ -98,6 +99,9 @@ export class BarcodeDetectorDelegate {
             result.set(value, key);
         });
         return result;
+    }
+    createDebugData() {
+        return { decoderName: "BarcodeDetector" };
     }
 }
 //# sourceMappingURL=native-bar-code-detector.js.map

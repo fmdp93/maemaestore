@@ -1,9 +1,10 @@
-import { CameraDevice, QrcodeErrorCallback, QrcodeSuccessCallback, Html5QrcodeSupportedFormats, Html5QrcodeResult, QrDimensions, QrDimensionFunction } from "./core";
+import { QrcodeErrorCallback, QrcodeSuccessCallback, Html5QrcodeSupportedFormats, Html5QrcodeResult, QrDimensions, QrDimensionFunction } from "./core";
+import { CameraDevice, CameraCapabilities } from "./camera/core";
 import { ExperimentalFeaturesConfig } from "./experimental-features";
-import { StateManagerProxy, Html5QrcodeScannerState } from "./state-manager";
-declare type Html5QrcodeIdentifier = string | MediaTrackConstraints;
+import { Html5QrcodeScannerState } from "./state-manager";
 export interface Html5QrcodeConfigs {
     formatsToSupport?: Array<Html5QrcodeSupportedFormats> | undefined;
+    useBarCodeDetectorIfSupported?: boolean | undefined;
     experimentalFeatures?: ExperimentalFeaturesConfig | undefined;
 }
 export interface Html5QrcodeFullConfig extends Html5QrcodeConfigs {
@@ -17,27 +18,26 @@ export interface Html5QrcodeCameraScanConfig {
     videoConstraints?: MediaTrackConstraints | undefined;
 }
 export declare class Html5Qrcode {
-    private elementId;
-    private verbose;
-    private qrcode;
+    private readonly logger;
+    private readonly elementId;
+    private readonly verbose;
+    private readonly qrcode;
     private shouldScan;
-    private logger;
     private element;
     private canvasElement;
     private scannerPausedUiElement;
     private hasBorderShaders;
     private borderShaders;
     private qrMatch;
-    private videoElement;
+    private renderedCamera;
     private foreverScanTimeout;
-    private localMediaStream;
     private qrRegion;
     private context;
     private lastScanImageFile;
-    stateManagerProxy: StateManagerProxy;
+    private stateManagerProxy;
     isScanning: boolean;
     constructor(elementId: string, configOrVerbosityFlag?: boolean | Html5QrcodeFullConfig | undefined);
-    start(cameraIdOrConfig: Html5QrcodeIdentifier, configuration: Html5QrcodeCameraScanConfig | undefined, qrCodeSuccessCallback: QrcodeSuccessCallback | undefined, qrCodeErrorCallback: QrcodeErrorCallback | undefined): Promise<null>;
+    start(cameraIdOrConfig: string | MediaTrackConstraints, configuration: Html5QrcodeCameraScanConfig | undefined, qrCodeSuccessCallback: QrcodeSuccessCallback | undefined, qrCodeErrorCallback: QrcodeErrorCallback | undefined): Promise<null>;
     pause(shouldPauseVideo?: boolean): void;
     resume(): void;
     getState(): Html5QrcodeScannerState;
@@ -47,10 +47,12 @@ export declare class Html5Qrcode {
     clear(): void;
     static getCameras(): Promise<Array<CameraDevice>>;
     getRunningTrackCapabilities(): MediaTrackCapabilities;
-    applyVideoConstraints(videoConstaints: MediaTrackConstraints): Promise<any>;
-    private static getCamerasFromMediaDevices;
-    private static getCamerasFromMediaStreamTrack;
+    getRunningTrackSettings(): MediaTrackSettings;
+    getRunningTrackCameraCapabilities(): CameraCapabilities;
+    applyVideoConstraints(videoConstaints: MediaTrackConstraints): Promise<void>;
+    private getRenderedCameraOrFail;
     private getSupportedFormats;
+    private getUseBarCodeDetectorIfSupported;
     private validateQrboxSize;
     private validateQrboxConfig;
     private toQrdimensions;
@@ -58,11 +60,9 @@ export declare class Html5Qrcode {
     private createScannerPausedUiElement;
     private scanContext;
     private foreverScan;
-    private onMediaStreamReceived;
     private createVideoConstraints;
     private computeCanvasDrawConfig;
     private clearElement;
-    private createVideoElement;
     private possiblyUpdateShaders;
     private possiblyCloseLastScanImageFile;
     private createCanvasElement;
@@ -73,4 +73,3 @@ export declare class Html5Qrcode {
     private hidePausedState;
     private getTimeoutFps;
 }
-export {};

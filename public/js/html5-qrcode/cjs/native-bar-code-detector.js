@@ -14,7 +14,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
             if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
             if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
@@ -89,7 +89,8 @@ var BarcodeDetectorDelegate = (function () {
                         largestBarcode = this.selectLargestBarcode(barcodes);
                         return [2, {
                                 text: largestBarcode.rawValue,
-                                format: core_1.QrcodeResultFormat.create(this.toHtml5QrcodeSupportedFormats(largestBarcode.format))
+                                format: core_1.QrcodeResultFormat.create(this.toHtml5QrcodeSupportedFormats(largestBarcode.format)),
+                                debugData: this.createDebugData()
                             }];
                 }
             });
@@ -119,7 +120,7 @@ var BarcodeDetectorDelegate = (function () {
                 formats.push(this.formatMap.get(requestedFormat));
             }
             else {
-                this.logger.warn(requestedFormat + " is not supported by"
+                this.logger.warn("".concat(requestedFormat, " is not supported by")
                     + "BarcodeDetectorDelegate");
             }
         }
@@ -127,7 +128,7 @@ var BarcodeDetectorDelegate = (function () {
     };
     BarcodeDetectorDelegate.prototype.toHtml5QrcodeSupportedFormats = function (barcodeDetectorFormat) {
         if (!this.reverseFormatMap.has(barcodeDetectorFormat)) {
-            throw "reverseFormatMap doesn't have " + barcodeDetectorFormat;
+            throw "reverseFormatMap doesn't have ".concat(barcodeDetectorFormat);
         }
         return this.reverseFormatMap.get(barcodeDetectorFormat);
     };
@@ -137,6 +138,9 @@ var BarcodeDetectorDelegate = (function () {
             result.set(value, key);
         });
         return result;
+    };
+    BarcodeDetectorDelegate.prototype.createDebugData = function () {
+        return { decoderName: "BarcodeDetector" };
     };
     return BarcodeDetectorDelegate;
 }());

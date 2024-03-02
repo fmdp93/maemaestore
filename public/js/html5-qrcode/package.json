@@ -1,63 +1,42 @@
 {
-  "_from": "html5-qrcode@^2.2.0",
-  "_id": "html5-qrcode@2.2.0",
-  "_inBundle": false,
-  "_integrity": "sha512-8fkxks2N0NEfHnhxmq7AQnDTvx3IWp0VD2h5yhHufDTflWhC1dXPy/Xvdl+tA9nOsPCRqirOOZpl/OQbTYhnSw==",
-  "_location": "/html5-qrcode",
-  "_phantomChildren": {},
-  "_requested": {
-    "type": "range",
-    "registry": true,
-    "raw": "html5-qrcode@^2.2.0",
-    "name": "html5-qrcode",
-    "escapedName": "html5-qrcode",
-    "rawSpec": "^2.2.0",
-    "saveSpec": null,
-    "fetchSpec": "^2.2.0"
-  },
-  "_requiredBy": [
-    "#USER",
-    "/"
-  ],
-  "_resolved": "https://registry.npmjs.org/html5-qrcode/-/html5-qrcode-2.2.0.tgz",
-  "_shasum": "371e5828f31f85a715b31df988e207b263961042",
-  "_spec": "html5-qrcode@^2.2.0",
-  "_where": "C:\\Users\\fmdp9\\OneDrive\\Projects\\Docker\\Machine\\php8\\htdocs\\maemaestore\\app",
-  "author": {
-    "name": "minhazav@gmail.com"
-  },
-  "bugs": {
-    "url": "https://github.com/mebjas/html5-qrcode/issues"
-  },
-  "bundleDependencies": false,
-  "deprecated": false,
+  "name": "html5-qrcode",
+  "version": "2.3.8",
   "description": "A cross platform HTML5 QR Code & bar code scanner",
-  "devDependencies": {
-    "@babel/cli": "^7.10.5",
-    "@babel/core": "^7.11.4",
-    "@babel/plugin-proposal-class-properties": "^7.10.4",
-    "@babel/preset-env": "^7.11.0",
-    "@types/chai": "^4.3.0",
-    "@types/mocha": "^9.0.0",
-    "babel-minify": "^0.5.1",
-    "chai": "^4.3.4",
-    "expose-loader": "^2.0.0",
-    "mocha": "^9.1.3",
-    "mocha-lcov-reporter": "^1.3.0",
-    "promise-polyfill": "^8.1.3",
-    "remark-cli": "^9.0.0",
-    "remark-preset-lint-recommended": "^5.0.0",
-    "rewire": "^5.0.0",
-    "ts-loader": "^9.1.2",
-    "ts-node": "^10.4.0",
-    "tsconfig-paths": "^3.12.0",
-    "typescript": "^4.3.2",
-    "typings": "^2.1.1",
-    "webpack": "^5.37.0",
-    "webpack-cli": "^4.7.0"
-  },
+  "main": "./cjs/index.js",
+  "module": "./esm/index.js",
+  "typings": "./esm/index.d.ts",
   "esnext": "./es2015/index.js",
-  "homepage": "https://github.com/mebjas/html5-qrcode#readme",
+  "unpkg": "./html5-qrcode.min.js",
+  "scripts": {
+    "build-windows": "npm run build:es2015 && npm run build:esm && npm run build:esnext && npm run build:cjs && npm run build:umd_windows && npm run build:typing && npm run build:copy_windows",
+    "test": "npm run-script test:build && npm run-script test:run",
+    "test_windows": "npm run-script test:build && npm run-script test:run_windows",
+    "test:build": "tsc --build tsconfig.test.json",
+    "test:run_windows": ".\\scripts\\test-run.bat",
+    "test:run": "./scripts/test-run.sh",
+    "lint-md": "remark .",
+    "clean": "rm -Rf ./lib/* ./build/* ./meta/bundlesize/* ./meta/coverage/* ./.rpt2_cache  ./dist/* ./src/*.d.ts",
+    "prebuild": "npm run clean",
+    "postbuild": "cp -R ./third_party ./dist/third_party",
+    "build": "npm run build:es2015 && npm run build:esm && npm run build:esnext && npm run build:cjs && npm run build:umd && npm run build:typing && npm run build:copy",
+    "build:es2015": "tsc --build tsconfig.lib-es2015.json",
+    "build:esm": "tsc --build tsconfig.lib-esm.json",
+    "build:esnext": "tsc --build tsconfig.lib-esm.json",
+    "build:cjs": "tsc --build tsconfig.lib-cjs.json",
+    "build:typing": "tsc --emitDeclarationOnly --outDir ./dist",
+    "build:umd": "./scripts/build-webpack.sh",
+    "build:umd_windows": ".\\scripts\\build-webpack.bat",
+    "build:copy": "cp README.md dist && cp package.json dist && cp LICENSE dist && cp -R src dist/src",
+    "build:copy_windows": "copy README.md dist && copy package.json dist && copy LICENSE dist",
+    "internal_release": "npm run build && cp dist/html5-qrcode.min.js minified/html5-qrcode.min.js",
+    "release": "npm run build && cp dist/html5-qrcode.min.js minified/html5-qrcode.min.js && cd dist && npm publish",
+    "release_windows": "npm run build && cp dist\\html5-qrcode.min.js minified\\html5-qrcode.min.js && cd dist && npm publish",
+    "doc_gen": "npx typedoc --excludePrivate src/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mebjas/html5-qrcode.git"
+  },
   "keywords": [
     "html5",
     "qrcode",
@@ -68,47 +47,47 @@
     "barcode 1d",
     "barcode 2d"
   ],
+  "author": "minhazav@gmail.com",
   "license": "Apache-2.0",
-  "main": "./cjs/index.js",
-  "module": "./esm/index.js",
-  "name": "html5-qrcode",
-  "publishConfig": {
-    "access": "public"
+  "bugs": {
+    "url": "https://github.com/mebjas/html5-qrcode/issues"
+  },
+  "homepage": "https://github.com/mebjas/html5-qrcode#readme",
+  "devDependencies": {
+    "@babel/cli": "^7.10.5",
+    "@babel/core": "^7.11.4",
+    "@babel/plugin-proposal-class-properties": "^7.10.4",
+    "@babel/preset-env": "^7.11.0",
+    "@types/chai": "^4.3.0",
+    "@types/mocha": "^9.0.0",
+    "babel-minify": "^0.5.1",
+    "chai": "^4.3.4",
+    "docusaurus-plugin-typedoc": "^0.18.0",
+    "expose-loader": "^2.0.0",
+    "jsdom": "20.0.2",
+    "jsdom-global": "3.0.2",
+    "mocha": "^9.1.3",
+    "mocha-lcov-reporter": "^1.3.0",
+    "promise-polyfill": "^8.1.3",
+    "remark-cli": "^9.0.0",
+    "remark-preset-lint-recommended": "^5.0.0",
+    "rewire": "^5.0.0",
+    "ts-loader": "^9.1.2",
+    "ts-node": "^10.4.0",
+    "tsconfig-paths": "^3.12.0",
+    "typedoc": "^0.23.28",
+    "typedoc-plugin-markdown": "^3.14.0",
+    "typescript": "^4.3.2",
+    "typings": "^2.1.1",
+    "webpack": "^5.37.0",
+    "webpack-cli": "^4.7.0"
   },
   "remarkConfig": {
     "plugins": [
       "remark-preset-lint-recommended"
     ]
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/mebjas/html5-qrcode.git"
-  },
-  "scripts": {
-    "build": "npm run build:es2015 && npm run build:esm && npm run build:esnext && npm run build:cjs && npm run build:umd && npm run build:typing && npm run build:copy",
-    "build-windows": "npm run build:es2015 && npm run build:esm && npm run build:esnext && npm run build:cjs && npm run build:umd_windows && npm run build:typing && npm run build:copy_windows",
-    "build:cjs": "tsc --build tsconfig.lib-cjs.json",
-    "build:copy": "cp README.md dist && cp package.json dist && cp LICENSE dist",
-    "build:copy_windows": "copy README.md dist && copy package.json dist && copy LICENSE dist",
-    "build:es2015": "tsc --build tsconfig.lib-es2015.json",
-    "build:esm": "tsc --build tsconfig.lib-esm.json",
-    "build:esnext": "tsc --build tsconfig.lib-esm.json",
-    "build:typing": "tsc --emitDeclarationOnly --outDir ./dist",
-    "build:umd": "./scripts/build-webpack.sh",
-    "build:umd_windows": ".\\scripts\\build-webpack.bat",
-    "clean": "rm -Rf ./lib/* ./build/* ./meta/bundlesize/* ./meta/coverage/* ./.rpt2_cache  ./dist/* ./src/*.d.ts",
-    "lint-md": "remark .",
-    "postbuild": "cp -R ./third_party ./dist/third_party",
-    "prebuild": "npm run clean",
-    "release": "npm run build && cd dist && npm publish",
-    "test": "npm run-script test:build && npm run-script test:run && npm run-script test:clean",
-    "test:build": "tsc --build tsconfig.test.json",
-    "test:clean": "rm -Rf ./output",
-    "test:clean_windows": "rmdir /s /q .\\output",
-    "test:run": "mocha -r tsconfig-paths/register --timeout 200000 output/tests/**/*.test.js",
-    "test_windows": "npm run-script test:build && npm run-script test:run && npm run-script test:clean_windows"
-  },
-  "typings": "./esm/index.d.ts",
-  "unpkg": "./html5-qrcode.min.js",
-  "version": "2.2.0"
+  "publishConfig": {
+    "access": "public"
+  }
 }

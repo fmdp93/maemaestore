@@ -48,6 +48,7 @@ var ZXingHtml5QrcodeDecoder = (function () {
         var formats = this.createZXingFormats(requestedFormats);
         var hints = new Map();
         hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
+        hints.set(ZXing.DecodeHintType.TRY_HARDER, false);
         this.hints = hints;
     }
     ZXingHtml5QrcodeDecoder.prototype.decodeAsync = function (canvas) {
@@ -68,7 +69,8 @@ var ZXingHtml5QrcodeDecoder = (function () {
         var result = zxingDecoder.decode(binaryBitmap);
         return {
             text: result.text,
-            format: core_1.QrcodeResultFormat.create(this.toHtml5QrcodeSupportedFormats(result.format))
+            format: core_1.QrcodeResultFormat.create(this.toHtml5QrcodeSupportedFormats(result.format)),
+            debugData: this.createDebugData()
         };
     };
     ZXingHtml5QrcodeDecoder.prototype.createReverseFormatMap = function () {
@@ -80,7 +82,7 @@ var ZXingHtml5QrcodeDecoder = (function () {
     };
     ZXingHtml5QrcodeDecoder.prototype.toHtml5QrcodeSupportedFormats = function (zxingFormat) {
         if (!this.reverseFormatMap.has(zxingFormat)) {
-            throw "reverseFormatMap doesn't have " + zxingFormat;
+            throw "reverseFormatMap doesn't have ".concat(zxingFormat);
         }
         return this.reverseFormatMap.get(zxingFormat);
     };
@@ -92,11 +94,14 @@ var ZXingHtml5QrcodeDecoder = (function () {
                 zxingFormats.push(this.formatMap.get(requestedFormat));
             }
             else {
-                this.logger.logError(requestedFormat + " is not supported by"
+                this.logger.logError("".concat(requestedFormat, " is not supported by")
                     + "ZXingHtml5QrcodeShim");
             }
         }
         return zxingFormats;
+    };
+    ZXingHtml5QrcodeDecoder.prototype.createDebugData = function () {
+        return { decoderName: "zxing-js" };
     };
     return ZXingHtml5QrcodeDecoder;
 }());

@@ -5,6 +5,7 @@ export declare class Html5QrcodeStrings {
     static cameraStreamingNotSupported(): string;
     static unableToQuerySupportedDevices(): string;
     static insecureContextCameraQueryError(): string;
+    static scannerPaused(): string;
 }
 export declare class Html5QrcodeScannerStrings {
     static scanningStatus(): string;
@@ -19,12 +20,26 @@ export declare class Html5QrcodeScannerStrings {
     static noCameraFound(): string;
     static scanButtonStopScanningText(): string;
     static scanButtonStartScanningText(): string;
+    static torchOnButton(): string;
+    static torchOffButton(): string;
+    static torchOnFailedMessage(): string;
+    static torchOffFailedMessage(): string;
     static scanButtonScanningStarting(): string;
     static textIfCameraScanSelected(): string;
     static textIfFileScanSelected(): string;
     static selectCamera(): string;
+    static fileSelectionChooseImage(): string;
+    static fileSelectionChooseAnother(): string;
+    static fileSelectionNoImageSelected(): string;
+    static anonymousCameraPrefix(): string;
+    static dragAndDropMessage(): string;
+    static dragAndDropMessageOnlyImages(): string;
+    static zoom(): string;
+    static loadingImage(): string;
+    static cameraScanAltText(): string;
+    static fileScanAltText(): string;
 }
 export declare class LibraryInfoStrings {
-    static builtUsing(): string;
+    static poweredBy(): string;
     static reportIssues(): string;
 }

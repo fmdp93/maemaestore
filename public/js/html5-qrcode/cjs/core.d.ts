@@ -31,12 +31,13 @@ export declare class Html5QrcodeConstants {
     static SCAN_DEFAULT_FPS: number;
     static DEFAULT_DISABLE_FLIP: boolean;
     static DEFAULT_REMEMBER_LAST_CAMERA_USED: boolean;
+    static DEFAULT_SUPPORTED_SCAN_TYPE: Html5QrcodeScanType[];
 }
 export interface QrDimensions {
     width: number;
     height: number;
 }
-export declare type QrDimensionFunction = (viewfinderWidth: number, viewfinderHeight: number) => QrDimensions;
+export type QrDimensionFunction = (viewfinderWidth: number, viewfinderHeight: number) => QrDimensions;
 export interface QrBounds extends QrDimensions {
     x: number;
     y: number;
@@ -48,11 +49,15 @@ export declare class QrcodeResultFormat {
     toString(): string;
     static create(format: Html5QrcodeSupportedFormats): QrcodeResultFormat;
 }
+export interface QrcodeResultDebugData {
+    decoderName?: string;
+}
 export interface QrcodeResult {
     text: string;
     format?: QrcodeResultFormat;
     bounds?: QrBounds;
     decodedTextType?: DecodedTextType;
+    debugData?: QrcodeResultDebugData;
 }
 export interface Html5QrcodeResult {
     decodedText: string;
@@ -74,14 +79,13 @@ export interface Html5QrcodeError {
 export declare class Html5QrcodeErrorFactory {
     static createFrom(error: any): Html5QrcodeError;
 }
-export declare type QrcodeSuccessCallback = (decodedText: string, result: Html5QrcodeResult) => void;
-export declare type QrcodeErrorCallback = (errorMessage: string, error: Html5QrcodeError) => void;
-export interface CameraDevice {
-    id: string;
-    label: string;
-}
+export type QrcodeSuccessCallback = (decodedText: string, result: Html5QrcodeResult) => void;
+export type QrcodeErrorCallback = (errorMessage: string, error: Html5QrcodeError) => void;
 export interface QrcodeDecoderAsync {
     decodeAsync(canvas: HTMLCanvasElement): Promise<QrcodeResult>;
+}
+export interface RobustQrcodeDecoderAsync extends QrcodeDecoderAsync {
+    decodeRobustlyAsync(canvas: HTMLCanvasElement): Promise<QrcodeResult>;
 }
 export interface Logger {
     log(message: string): void;
@@ -98,3 +102,4 @@ export declare class BaseLoggger implements Logger {
     logErrors(errors: Array<any>): void;
 }
 export declare function isNullOrUndefined(obj?: any): boolean;
+export declare function clip(value: number, minValue: number, maxValue: number): number;

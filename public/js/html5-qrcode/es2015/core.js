@@ -56,6 +56,10 @@ Html5QrcodeConstants.GITHUB_PROJECT_URL = "https://github.com/mebjas/html5-qrcod
 Html5QrcodeConstants.SCAN_DEFAULT_FPS = 2;
 Html5QrcodeConstants.DEFAULT_DISABLE_FLIP = false;
 Html5QrcodeConstants.DEFAULT_REMEMBER_LAST_CAMERA_USED = true;
+Html5QrcodeConstants.DEFAULT_SUPPORTED_SCAN_TYPE = [
+    Html5QrcodeScanType.SCAN_TYPE_CAMERA,
+    Html5QrcodeScanType.SCAN_TYPE_FILE
+];
 export class QrcodeResultFormat {
     constructor(format, formatName) {
         this.format = format;
@@ -132,5 +136,14 @@ export class BaseLoggger {
 }
 export function isNullOrUndefined(obj) {
     return (typeof obj === "undefined") || obj === null;
+}
+export function clip(value, minValue, maxValue) {
+    if (value > maxValue) {
+        return maxValue;
+    }
+    if (value < minValue) {
+        return minValue;
+    }
+    return value;
 }
 //# sourceMappingURL=core.js.map

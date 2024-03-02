@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isNullOrUndefined = exports.BaseLoggger = exports.Html5QrcodeErrorFactory = exports.Html5QrcodeErrorTypes = exports.Html5QrcodeResultFactory = exports.QrcodeResultFormat = exports.Html5QrcodeConstants = exports.Html5QrcodeScanType = exports.isValidHtml5QrcodeSupportedFormats = exports.DecodedTextType = exports.Html5QrcodeSupportedFormats = void 0;
+exports.clip = exports.isNullOrUndefined = exports.BaseLoggger = exports.Html5QrcodeErrorFactory = exports.Html5QrcodeErrorTypes = exports.Html5QrcodeResultFactory = exports.QrcodeResultFormat = exports.Html5QrcodeConstants = exports.Html5QrcodeScanType = exports.isValidHtml5QrcodeSupportedFormats = exports.DecodedTextType = exports.Html5QrcodeSupportedFormats = void 0;
 var Html5QrcodeSupportedFormats;
 (function (Html5QrcodeSupportedFormats) {
     Html5QrcodeSupportedFormats[Html5QrcodeSupportedFormats["QR_CODE"] = 0] = "QR_CODE";
@@ -61,6 +61,10 @@ var Html5QrcodeConstants = (function () {
     Html5QrcodeConstants.SCAN_DEFAULT_FPS = 2;
     Html5QrcodeConstants.DEFAULT_DISABLE_FLIP = false;
     Html5QrcodeConstants.DEFAULT_REMEMBER_LAST_CAMERA_USED = true;
+    Html5QrcodeConstants.DEFAULT_SUPPORTED_SCAN_TYPE = [
+        Html5QrcodeScanType.SCAN_TYPE_CAMERA,
+        Html5QrcodeScanType.SCAN_TYPE_FILE
+    ];
     return Html5QrcodeConstants;
 }());
 exports.Html5QrcodeConstants = Html5QrcodeConstants;
@@ -74,7 +78,7 @@ var QrcodeResultFormat = (function () {
     };
     QrcodeResultFormat.create = function (format) {
         if (!html5QrcodeSupportedFormatsTextMap.has(format)) {
-            throw format + " not in html5QrcodeSupportedFormatsTextMap";
+            throw "".concat(format, " not in html5QrcodeSupportedFormatsTextMap");
         }
         return new QrcodeResultFormat(format, html5QrcodeSupportedFormatsTextMap.get(format));
     };
@@ -154,4 +158,14 @@ function isNullOrUndefined(obj) {
     return (typeof obj === "undefined") || obj === null;
 }
 exports.isNullOrUndefined = isNullOrUndefined;
+function clip(value, minValue, maxValue) {
+    if (value > maxValue) {
+        return maxValue;
+    }
+    if (value < minValue) {
+        return minValue;
+    }
+    return value;
+}
+exports.clip = clip;
 //# sourceMappingURL=core.js.map

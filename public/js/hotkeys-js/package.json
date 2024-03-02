@@ -1,92 +1,15 @@
 {
-  "_from": "hotkeys-js",
-  "_id": "hotkeys-js@3.8.9",
-  "_inBundle": false,
-  "_integrity": "sha512-R73wV21xjHq+sJcBhh+LJGvfZO5+p1vGFtEwCc6sCj5nnTyiZKBa1knge6LNBxHmlRe55PVBXNNM/4lJOIVAwQ==",
-  "_location": "/hotkeys-js",
-  "_phantomChildren": {},
-  "_requested": {
-    "type": "tag",
-    "registry": true,
-    "raw": "hotkeys-js",
-    "name": "hotkeys-js",
-    "escapedName": "hotkeys-js",
-    "rawSpec": "",
-    "saveSpec": null,
-    "fetchSpec": "latest"
-  },
-  "_requiredBy": [
-    "#USER",
-    "/"
-  ],
-  "_resolved": "https://registry.npmjs.org/hotkeys-js/-/hotkeys-js-3.8.9.tgz",
-  "_shasum": "47b10fef2f4fc6fa74b09646d2014dae1fa64472",
-  "_spec": "hotkeys-js",
-  "_where": "C:\\Users\\fmdp9\\OneDrive\\Projects\\Docker\\Machine\\php8\\htdocs\\maemaestore\\app",
-  "author": {
-    "name": "kenny wong",
-    "email": "wowohoo@qq.com"
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  },
-  "bugs": {
-    "url": "https://github.com/jaywcjlove/hotkeys/issues"
-  },
-  "bundleDependencies": false,
-  "deprecated": false,
+  "name": "hotkeys-js",
   "description": "A simple micro-library for defining and dispatching keyboard shortcuts. It has no dependencies.",
-  "devDependencies": {
-    "@babel/eslint-parser": "~7.17.0",
-    "@kkt/less-modules": "~7.1.2",
-    "@kkt/raw-modules": "~7.1.2",
-    "@kkt/scope-plugin-options": "~7.1.2",
-    "@rollup/plugin-babel": "~5.3.1",
-    "@rollup/plugin-commonjs": "~21.0.3",
-    "@rollup/plugin-node-resolve": "~13.1.3",
-    "@uiw/react-github-corners": "~1.5.14",
-    "@uiw/react-mac-keyboard": "~1.1.4",
-    "@uiw/react-markdown-preview": "~4.0.5",
-    "@uiw/react-shields": "~1.1.2",
-    "@wcj/dark-mode": "~1.0.14",
-    "bannerjs": "~2.1.0",
-    "classnames": "~2.3.1",
-    "colors-cli": "~1.0.28",
-    "eslint": "~8.12.0",
-    "eslint-config-airbnb": "~19.0.4",
-    "eslint-plugin-import": "~2.26.0",
-    "eslint-plugin-jsx-a11y": "~6.5.1",
-    "eslint-plugin-react": "~7.29.4",
-    "husky": "^7.0.0",
-    "jest": "~27.5.1",
-    "kkt": "~7.1.6",
-    "lint-staged": "^12.3.7",
-    "puppeteer": "~13.5.2",
-    "react": "~18.0.0",
-    "react-dom": "~18.0.0",
-    "rimraf": "~3.0.2",
-    "rollup": "~2.70.1",
-    "uglify-js": "~3.15.3",
-    "zlib": "~1.0.5"
-  },
+  "version": "3.13.7",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "module": "dist/hotkeys.esm.js",
   "files": [
     "index.d.ts",
     "dist",
     "doc"
   ],
-  "homepage": "http://jaywcjlove.github.io/hotkeys",
-  "jest": {
-    "testURL": "http://localhost/"
-  },
   "keywords": [
     "hotkey",
     "hotkeys",
@@ -98,29 +21,12 @@
     "shortcuts",
     "keypress"
   ],
+  "author": "kenny wong <wowohoo@qq.com>",
   "license": "MIT",
-  "lint-staged": {
-    "*.js": "eslint --ext .js src website"
-  },
-  "main": "index.js",
-  "module": "dist/hotkeys.esm.js",
-  "name": "hotkeys-js",
+  "homepage": "https://jaywcjlove.github.io/hotkeys-js",
+  "funding": "https://jaywcjlove.github.io/#/sponsor",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jaywcjlove/hotkeys.git"
-  },
-  "scripts": {
-    "build": "npm run build:lib && npm run doc && npm run lint",
-    "build:lib": "node scripts/build.js",
-    "doc": "kkt build --app-src ./website",
-    "lint": "eslint --ext .js src website",
-    "prepare": "npm run build:lib && husky install",
-    "pretest": "npm run build",
-    "start": "kkt start --app-src ./website",
-    "test": "jest --coverage --detectOpenHandles",
-    "test:watch": "jest --watch",
-    "watch": "node scripts/watch.js"
-  },
-  "types": "index.d.ts",
-  "version": "3.8.9"
+    "url": "https://github.com/jaywcjlove/hotkeys-js.git"
+  }
 }

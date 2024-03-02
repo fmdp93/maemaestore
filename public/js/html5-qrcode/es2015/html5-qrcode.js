@@ -2,13 +2,15 @@ import { BaseLoggger, Html5QrcodeResultFactory, Html5QrcodeErrorFactory, Html5Qr
 import { Html5QrcodeStrings } from "./strings";
 import { VideoConstraintsUtil } from "./utils";
 import { Html5QrcodeShim } from "./code-decoder";
-import { ExperimentalFeaturesConfigFactory } from "./experimental-features";
+import { CameraFactory } from "./camera/factories";
+import { CameraRetriever } from "./camera/retriever";
 import { StateManagerFactory, Html5QrcodeScannerState } from "./state-manager";
 class Constants extends Html5QrcodeConstants {
 }
 Constants.DEFAULT_WIDTH = 300;
 Constants.DEFAULT_WIDTH_OFFSET = 2;
 Constants.FILE_SCAN_MIN_HEIGHT = 300;
+Constants.FILE_SCAN_HIDDEN_CANVAS_PADDING = 100;
 Constants.MIN_QR_BOX_SIZE = 50;
 Constants.SHADED_LEFT = 1;
 Constants.SHADED_RIGHT = 2;
@@ -57,8 +59,7 @@ export class Html5Qrcode {
         this.hasBorderShaders = null;
         this.borderShaders = null;
         this.qrMatch = null;
-        this.videoElement = null;
-        this.localMediaStream = null;
+        this.renderedCamera = null;
         this.qrRegion = null;
         this.context = null;
         this.lastScanImageFile = null;
@@ -69,17 +70,18 @@ export class Html5Qrcode {
         this.elementId = elementId;
         this.verbose = false;
         let experimentalFeatureConfig;
+        let configObject;
         if (typeof configOrVerbosityFlag == "boolean") {
             this.verbose = configOrVerbosityFlag === true;
         }
         else if (configOrVerbosityFlag) {
-            this.verbose = configOrVerbosityFlag.verbose === true;
-            experimentalFeatureConfig = configOrVerbosityFlag.experimentalFeatures;
+            configObject = configOrVerbosityFlag;
+            this.verbose = configObject.verbose === true;
+            experimentalFeatureConfig = configObject.experimentalFeatures;
         }
         this.logger = new BaseLoggger(this.verbose);
-        this.qrcode = new Html5QrcodeShim(this.getSupportedFormats(configOrVerbosityFlag), this.verbose, this.logger, ExperimentalFeaturesConfigFactory.createExperimentalFeaturesConfig(experimentalFeatureConfig));
+        this.qrcode = new Html5QrcodeShim(this.getSupportedFormats(configOrVerbosityFlag), this.getUseBarCodeDetectorIfSupported(configObject), this.verbose, this.logger);
         this.foreverScanTimeout;
-        this.localMediaStream;
         this.shouldScan = true;
         this.stateManagerProxy = StateManagerFactory.create();
     }
@@ -91,8 +93,13 @@ export class Html5Qrcode {
             || typeof qrCodeSuccessCallback != "function") {
             throw "qrCodeSuccessCallback is required and should be a function.";
         }
-        if (!qrCodeErrorCallback) {
-            qrCodeErrorCallback = this.verbose ? this.logger.log : () => { };
+        let qrCodeErrorCallbackInternal;
+        if (qrCodeErrorCallback) {
+            qrCodeErrorCallbackInternal = qrCodeErrorCallback;
+        }
+        else {
+            qrCodeErrorCallbackInternal
+                = this.verbose ? this.logger.log : () => { };
         }
         const internalConfig = InternalHtml5QrcodeConfig.create(configuration, this.logger);
         this.clearElement();
@@ -107,7 +114,6 @@ export class Html5Qrcode {
             }
         }
         const areVideoConstraintsEnabled = videoConstraintsAvailableAndValid;
-        const isShadedBoxEnabled = internalConfig.isShadedBoxEnabled();
         const element = document.getElementById(this.elementId);
         const rootElementWidth = element.clientWidth
             ? element.clientWidth : Constants.DEFAULT_WIDTH;
@@ -125,31 +131,37 @@ export class Html5Qrcode {
                 reject("videoConstraints should be defined");
                 return;
             }
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({
-                    audio: false,
-                    video: videoConstraints
-                }).then((stream) => {
-                    $this.onMediaStreamReceived(stream, internalConfig, areVideoConstraintsEnabled, rootElementWidth, qrCodeSuccessCallback, qrCodeErrorCallback)
-                        .then((_) => {
+            let cameraRenderingOptions = {};
+            if (!areVideoConstraintsEnabled || internalConfig.aspectRatio) {
+                cameraRenderingOptions.aspectRatio = internalConfig.aspectRatio;
+            }
+            let renderingCallbacks = {
+                onRenderSurfaceReady: (viewfinderWidth, viewfinderHeight) => {
+                    $this.setupUi(viewfinderWidth, viewfinderHeight, internalConfig);
+                    $this.isScanning = true;
+                    $this.foreverScan(internalConfig, qrCodeSuccessCallback, qrCodeErrorCallbackInternal);
+                }
+            };
+            CameraFactory.failIfNotSupported().then((factory) => {
+                factory.create(videoConstraints).then((camera) => {
+                    return camera.render(this.element, cameraRenderingOptions, renderingCallbacks)
+                        .then((renderedCamera) => {
+                        $this.renderedCamera = renderedCamera;
                         toScanningStateChangeTransaction.execute();
-                        $this.isScanning = true;
                         resolve(null);
                     })
                         .catch((error) => {
                         toScanningStateChangeTransaction.cancel();
                         reject(error);
                     });
-                })
-                    .catch((error) => {
+                }).catch((error) => {
                     toScanningStateChangeTransaction.cancel();
                     reject(Html5QrcodeStrings.errorGettingUserMedia(error));
                 });
-            }
-            else {
+            }).catch((_) => {
                 toScanningStateChangeTransaction.cancel();
                 reject(Html5QrcodeStrings.cameraStreamingNotSupported());
-            }
+            });
         });
     }
     pause(shouldPauseVideo) {
@@ -161,34 +173,29 @@ export class Html5Qrcode {
         if (isNullOrUndefined(shouldPauseVideo) || shouldPauseVideo !== true) {
             shouldPauseVideo = false;
         }
-        if (shouldPauseVideo && this.videoElement) {
-            this.videoElement.pause();
+        if (shouldPauseVideo && this.renderedCamera) {
+            this.renderedCamera.pause();
         }
     }
     resume() {
         if (!this.stateManagerProxy.isPaused()) {
             throw "Cannot result, scanner is not paused.";
         }
-        if (!this.videoElement) {
-            throw "VideoElement doesn't exist while trying resume()";
+        if (!this.renderedCamera) {
+            throw "renderedCamera doesn't exist while trying resume()";
         }
         const $this = this;
         const transitionToScanning = () => {
             $this.stateManagerProxy.directTransition(Html5QrcodeScannerState.SCANNING);
             $this.hidePausedState();
         };
-        let isVideoPaused = this.videoElement.paused;
-        if (!isVideoPaused) {
+        if (!this.renderedCamera.isPaused()) {
             transitionToScanning();
             return;
         }
-        const onVideoResume = () => {
-            var _a;
-            setTimeout(transitionToScanning, 200);
-            (_a = $this.videoElement) === null || _a === void 0 ? void 0 : _a.removeEventListener("playing", onVideoResume);
-        };
-        this.videoElement.addEventListener("playing", onVideoResume);
-        this.videoElement.play();
+        this.renderedCamera.resume(() => {
+            transitionToScanning();
+        });
     }
     getState() {
         return this.stateManagerProxy.getState();
@@ -211,38 +218,24 @@ export class Html5Qrcode {
                 this.element.removeChild(childElement);
             }
         };
-        return new Promise((resolve, _) => {
-            const onAllTracksClosed = () => {
-                this.localMediaStream = null;
-                if (this.element) {
-                    this.element.removeChild(this.videoElement);
-                    this.element.removeChild(this.canvasElement);
-                }
-                removeQrRegion();
-                if (this.qrRegion) {
-                    this.qrRegion = null;
-                }
-                if (this.context) {
-                    this.context = null;
-                }
-                toStoppedStateTransaction.execute();
-                this.hidePausedState();
-                this.isScanning = false;
-                resolve();
-            };
-            if (!this.localMediaStream) {
-                onAllTracksClosed();
+        let $this = this;
+        return this.renderedCamera.close().then(() => {
+            $this.renderedCamera = null;
+            if ($this.element) {
+                $this.element.removeChild($this.canvasElement);
+                $this.canvasElement = null;
             }
-            const tracksToClose = this.localMediaStream.getVideoTracks().length;
-            var tracksClosed = 0;
-            this.localMediaStream.getVideoTracks().forEach((videoTrack) => {
-                this.localMediaStream.removeTrack(videoTrack);
-                videoTrack.stop();
-                ++tracksClosed;
-                if (tracksClosed >= tracksToClose) {
-                    onAllTracksClosed();
-                }
-            });
+            removeQrRegion();
+            if ($this.qrRegion) {
+                $this.qrRegion = null;
+            }
+            if ($this.context) {
+                $this.context = null;
+            }
+            toStoppedStateTransaction.execute();
+            $this.hidePausedState();
+            $this.isScanning = false;
+            return Promise.resolve();
         });
     }
     scanFile(imageFile, showImage) {
@@ -285,17 +278,22 @@ export class Html5Qrcode {
                     context.canvas.height = containerHeight;
                     context.drawImage(inputImage, 0, 0, imageWidth, imageHeight, config.x, config.y, config.width, config.height);
                 }
-                const hiddenCanvas = this.createCanvasElement(config.width, config.height);
+                let padding = Constants.FILE_SCAN_HIDDEN_CANVAS_PADDING;
+                let hiddenImageWidth = Math.max(inputImage.width, config.width);
+                let hiddenImageHeight = Math.max(inputImage.height, config.height);
+                let hiddenCanvasWidth = hiddenImageWidth + 2 * padding;
+                let hiddenCanvasHeight = hiddenImageHeight + 2 * padding;
+                const hiddenCanvas = this.createCanvasElement(hiddenCanvasWidth, hiddenCanvasHeight);
                 element.appendChild(hiddenCanvas);
                 const context = hiddenCanvas.getContext("2d");
                 if (!context) {
                     throw "Unable to get 2d context from canvas";
                 }
-                context.canvas.width = config.width;
-                context.canvas.height = config.height;
-                context.drawImage(inputImage, 0, 0, imageWidth, imageHeight, 0, 0, config.width, config.height);
+                context.canvas.width = hiddenCanvasWidth;
+                context.canvas.height = hiddenCanvasHeight;
+                context.drawImage(inputImage, 0, 0, imageWidth, imageHeight, padding, padding, hiddenImageWidth, hiddenImageHeight);
                 try {
-                    this.qrcode.decodeAsync(hiddenCanvas)
+                    this.qrcode.decodeRobustlyAsync(hiddenCanvas)
                         .then((result) => {
                         resolve(Html5QrcodeResultFactory.createFromQrcodeResult(result));
                     })
@@ -316,36 +314,16 @@ export class Html5Qrcode {
         this.clearElement();
     }
     static getCameras() {
-        if (navigator.mediaDevices) {
-            return Html5Qrcode.getCamerasFromMediaDevices();
-        }
-        var mst = MediaStreamTrack;
-        if (MediaStreamTrack && mst.getSources) {
-            return Html5Qrcode.getCamerasFromMediaStreamTrack();
-        }
-        const isHttpsOrLocalhost = () => {
-            if (location.protocol === "https:") {
-                return true;
-            }
-            const host = location.host.split(":")[0];
-            return host === "127.0.0.1" || host === "localhost";
-        };
-        let errorMessage = Html5QrcodeStrings.unableToQuerySupportedDevices();
-        if (!isHttpsOrLocalhost()) {
-            errorMessage = Html5QrcodeStrings.insecureContextCameraQueryError();
-        }
-        return Promise.reject(errorMessage);
+        return CameraRetriever.retrieve();
     }
     getRunningTrackCapabilities() {
-        if (this.localMediaStream == null) {
-            throw "Scanning is not in running state, call this API only when"
-                + " QR code scanning using camera is in running state.";
-        }
-        if (this.localMediaStream.getVideoTracks().length === 0) {
-            throw "No video tracks found";
-        }
-        const videoTrack = this.localMediaStream.getVideoTracks()[0];
-        return videoTrack.getCapabilities();
+        return this.getRenderedCameraOrFail().getRunningTrackCapabilities();
+    }
+    getRunningTrackSettings() {
+        return this.getRenderedCameraOrFail().getRunningTrackSettings();
+    }
+    getRunningTrackCameraCapabilities() {
+        return this.getRenderedCameraOrFail().getCapabilities();
     }
     applyVideoConstraints(videoConstaints) {
         if (!videoConstaints) {
@@ -354,81 +332,14 @@ export class Html5Qrcode {
         else if (!VideoConstraintsUtil.isMediaStreamConstraintsValid(videoConstaints, this.logger)) {
             throw "invalid videoConstaints passed, check logs for more details";
         }
-        if (this.localMediaStream === null) {
+        return this.getRenderedCameraOrFail().applyVideoConstraints(videoConstaints);
+    }
+    getRenderedCameraOrFail() {
+        if (this.renderedCamera == null) {
             throw "Scanning is not in running state, call this API only when"
                 + " QR code scanning using camera is in running state.";
         }
-        if (this.localMediaStream.getVideoTracks().length === 0) {
-            throw "No video tracks found";
-        }
-        return new Promise((resolve, reject) => {
-            if ("aspectRatio" in videoConstaints) {
-                reject("Chaning 'aspectRatio' in run-time is not yet "
-                    + "supported.");
-                return;
-            }
-            const videoTrack = this.localMediaStream.getVideoTracks()[0];
-            videoTrack.applyConstraints(videoConstaints)
-                .then((_) => {
-                resolve(_);
-            })
-                .catch((error) => {
-                reject(error);
-            });
-        });
-    }
-    static getCamerasFromMediaDevices() {
-        return new Promise((resolve, reject) => {
-            navigator.mediaDevices.getUserMedia({ audio: false, video: true })
-                .then((stream) => {
-                const closeActiveStreams = (stream) => {
-                    const tracks = stream.getVideoTracks();
-                    for (const track of tracks) {
-                        track.enabled = false;
-                        track.stop();
-                        stream.removeTrack(track);
-                    }
-                };
-                navigator.mediaDevices.enumerateDevices()
-                    .then((devices) => {
-                    const results = [];
-                    for (const device of devices) {
-                        if (device.kind === "videoinput") {
-                            results.push({
-                                id: device.deviceId,
-                                label: device.label
-                            });
-                        }
-                    }
-                    closeActiveStreams(stream);
-                    resolve(results);
-                })
-                    .catch((err) => {
-                    reject(`${err.name} : ${err.message}`);
-                });
-            })
-                .catch((err) => {
-                reject(`${err.name} : ${err.message}`);
-            });
-        });
-    }
-    static getCamerasFromMediaStreamTrack() {
-        return new Promise((resolve, _) => {
-            const callback = (sourceInfos) => {
-                const results = [];
-                for (const sourceInfo of sourceInfos) {
-                    if (sourceInfo.kind === "video") {
-                        results.push({
-                            id: sourceInfo.id,
-                            label: sourceInfo.label
-                        });
-                    }
-                }
-                resolve(results);
-            };
-            var mst = MediaStreamTrack;
-            mst.getSources(callback);
-        });
+        return this.renderedCamera;
     }
     getSupportedFormats(configOrVerbosityFlag) {
         const allFormats = [
@@ -477,6 +388,22 @@ export class Html5Qrcode {
             throw "None of formatsToSupport match supported values.";
         }
         return supportedFormats;
+    }
+    getUseBarCodeDetectorIfSupported(config) {
+        if (isNullOrUndefined(config)) {
+            return true;
+        }
+        if (!isNullOrUndefined(config.useBarCodeDetectorIfSupported)) {
+            return config.useBarCodeDetectorIfSupported !== false;
+        }
+        if (isNullOrUndefined(config.experimentalFeatures)) {
+            return true;
+        }
+        let experimentalFeatures = config.experimentalFeatures;
+        if (isNullOrUndefined(experimentalFeatures.useBarCodeDetectorIfSupported)) {
+            return true;
+        }
+        return experimentalFeatures.useBarCodeDetectorIfSupported !== false;
     }
     validateQrboxSize(viewfinderWidth, viewfinderHeight, internalConfig) {
         const qrboxSize = internalConfig.qrbox;
@@ -553,7 +480,8 @@ export class Html5Qrcode {
             ? this.getShadedRegionBounds(viewfinderWidth, viewfinderHeight, qrDimensions)
             : defaultQrRegion;
         const canvasElement = this.createCanvasElement(qrRegion.width, qrRegion.height);
-        const context = canvasElement.getContext("2d");
+        const contextAttributes = { willReadFrequently: true };
+        const context = canvasElement.getContext("2d", contextAttributes);
         context.canvas.width = qrRegion.width;
         context.canvas.height = qrRegion.height;
         this.element.append(canvasElement);
@@ -567,12 +495,13 @@ export class Html5Qrcode {
     }
     createScannerPausedUiElement(rootElement) {
         const scannerPausedUiElement = document.createElement("div");
-        scannerPausedUiElement.innerText = "Scanner paused";
+        scannerPausedUiElement.innerText = Html5QrcodeStrings.scannerPaused();
         scannerPausedUiElement.style.display = "none";
         scannerPausedUiElement.style.position = "absolute";
         scannerPausedUiElement.style.top = "0px";
         scannerPausedUiElement.style.zIndex = "1";
-        scannerPausedUiElement.style.background = "yellow";
+        scannerPausedUiElement.style.background = "rgba(9, 9, 9, 0.46)";
+        scannerPausedUiElement.style.color = "#FFECEC";
         scannerPausedUiElement.style.textAlign = "center";
         scannerPausedUiElement.style.width = "100%";
         rootElement.appendChild(scannerPausedUiElement);
@@ -598,10 +527,10 @@ export class Html5Qrcode {
         if (!this.shouldScan) {
             return;
         }
-        if (!this.localMediaStream) {
+        if (!this.renderedCamera) {
             return;
         }
-        const videoElement = this.videoElement;
+        const videoElement = this.renderedCamera.getSurface();
         const widthRatio = videoElement.videoWidth / videoElement.clientWidth;
         const heightRatio = videoElement.videoHeight / videoElement.clientHeight;
         if (!this.qrRegion) {
@@ -633,47 +562,6 @@ export class Html5Qrcode {
         }).catch((error) => {
             this.logger.logError("Error happend while scanning context", error);
             triggerNextScan();
-        });
-    }
-    onMediaStreamReceived(mediaStream, internalConfig, areVideoConstraintsEnabled, clientWidth, qrCodeSuccessCallback, qrCodeErrorCallback) {
-        const $this = this;
-        return new Promise((resolve, reject) => {
-            const setupVideo = () => {
-                const videoElement = this.createVideoElement(clientWidth);
-                $this.element.append(videoElement);
-                videoElement.onabort = reject;
-                videoElement.onerror = reject;
-                const onVideoStart = () => {
-                    const videoWidth = videoElement.clientWidth;
-                    const videoHeight = videoElement.clientHeight;
-                    $this.setupUi(videoWidth, videoHeight, internalConfig);
-                    $this.foreverScan(internalConfig, qrCodeSuccessCallback, qrCodeErrorCallback);
-                    videoElement.removeEventListener("playing", onVideoStart);
-                    resolve(null);
-                };
-                videoElement.addEventListener("playing", onVideoStart);
-                videoElement.srcObject = mediaStream;
-                videoElement.play();
-                $this.videoElement = videoElement;
-            };
-            $this.localMediaStream = mediaStream;
-            if (areVideoConstraintsEnabled || !internalConfig.aspectRatio) {
-                setupVideo();
-            }
-            else {
-                const constraints = {
-                    aspectRatio: internalConfig.aspectRatio
-                };
-                const track = mediaStream.getVideoTracks()[0];
-                track.applyConstraints(constraints)
-                    .then((_) => setupVideo())
-                    .catch((error) => {
-                    $this.logger.logErrors(["[Html5Qrcode] Constriants could not "
-                            + "be satisfied, ignoring constraints",
-                        error]);
-                    setupVideo();
-                });
-            }
         });
     }
     createVideoConstraints(cameraIdOrConfig) {
@@ -794,14 +682,6 @@ export class Html5Qrcode {
             element.innerHTML = "";
         }
     }
-    createVideoElement(width) {
-        const videoElement = document.createElement("video");
-        videoElement.style.width = `${width}px`;
-        videoElement.muted = true;
-        videoElement.setAttribute("muted", "true");
-        videoElement.playsInline = true;
-        return videoElement;
-    }
     possiblyUpdateShaders(qrMatch) {
         if (this.qrMatch === qrMatch) {
             return;
@@ -855,13 +735,13 @@ export class Html5Qrcode {
         const rightLeftBorderSize = (width - qrboxSize.width) / 2;
         const topBottomBorderSize = (height - qrboxSize.height) / 2;
         shadingElement.style.borderLeft
-            = `${rightLeftBorderSize}px solid #0000007a`;
+            = `${rightLeftBorderSize}px solid rgba(0, 0, 0, 0.48)`;
         shadingElement.style.borderRight
-            = `${rightLeftBorderSize}px solid #0000007a`;
+            = `${rightLeftBorderSize}px solid rgba(0, 0, 0, 0.48)`;
         shadingElement.style.borderTop
-            = `${topBottomBorderSize}px solid #0000007a`;
+            = `${topBottomBorderSize}px solid rgba(0, 0, 0, 0.48)`;
         shadingElement.style.borderBottom
-            = `${topBottomBorderSize}px solid #0000007a`;
+            = `${topBottomBorderSize}px solid rgba(0, 0, 0, 0.48)`;
         shadingElement.style.boxSizing = "border-box";
         shadingElement.style.top = "0px";
         shadingElement.style.bottom = "0px";
@@ -875,25 +755,30 @@ export class Html5Qrcode {
         else {
             const smallSize = 5;
             const largeSize = 40;
-            this.insertShaderBorders(shadingElement, largeSize, smallSize, -smallSize, 0, true);
-            this.insertShaderBorders(shadingElement, largeSize, smallSize, -smallSize, 0, false);
-            this.insertShaderBorders(shadingElement, largeSize, smallSize, qrboxSize.height + smallSize, 0, true);
-            this.insertShaderBorders(shadingElement, largeSize, smallSize, qrboxSize.height + smallSize, 0, false);
-            this.insertShaderBorders(shadingElement, smallSize, largeSize + smallSize, -smallSize, -smallSize, true);
-            this.insertShaderBorders(shadingElement, smallSize, largeSize + smallSize, qrboxSize.height + smallSize - largeSize, -smallSize, true);
-            this.insertShaderBorders(shadingElement, smallSize, largeSize + smallSize, -smallSize, -smallSize, false);
-            this.insertShaderBorders(shadingElement, smallSize, largeSize + smallSize, qrboxSize.height + smallSize - largeSize, -smallSize, false);
+            this.insertShaderBorders(shadingElement, largeSize, smallSize, -smallSize, null, 0, true);
+            this.insertShaderBorders(shadingElement, largeSize, smallSize, -smallSize, null, 0, false);
+            this.insertShaderBorders(shadingElement, largeSize, smallSize, null, -smallSize, 0, true);
+            this.insertShaderBorders(shadingElement, largeSize, smallSize, null, -smallSize, 0, false);
+            this.insertShaderBorders(shadingElement, smallSize, largeSize + smallSize, -smallSize, null, -smallSize, true);
+            this.insertShaderBorders(shadingElement, smallSize, largeSize + smallSize, null, -smallSize, -smallSize, true);
+            this.insertShaderBorders(shadingElement, smallSize, largeSize + smallSize, -smallSize, null, -smallSize, false);
+            this.insertShaderBorders(shadingElement, smallSize, largeSize + smallSize, null, -smallSize, -smallSize, false);
             this.hasBorderShaders = true;
         }
         element.append(shadingElement);
     }
-    insertShaderBorders(shaderElem, width, height, top, side, isLeft) {
+    insertShaderBorders(shaderElem, width, height, top, bottom, side, isLeft) {
         const elem = document.createElement("div");
         elem.style.position = "absolute";
         elem.style.backgroundColor = Constants.BORDER_SHADER_DEFAULT_COLOR;
         elem.style.width = `${width}px`;
         elem.style.height = `${height}px`;
-        elem.style.top = `${top}px`;
+        if (top !== null) {
+            elem.style.top = `${top}px`;
+        }
+        if (bottom !== null) {
+            elem.style.bottom = `${bottom}px`;
+        }
         if (isLeft) {
             elem.style.left = `${side}px`;
         }

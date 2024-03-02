@@ -43,7 +43,7 @@ var StateManagerImpl = (function () {
     StateManagerImpl.prototype.failIfTransitionOngoing = function () {
         if (this.onGoingTransactionNewState
             !== Html5QrcodeScannerState.UNKNOWN) {
-            throw "Cannnot transition to a new state, already under transition";
+            throw "Cannot transition to a new state, already under transition";
         }
     };
     StateManagerImpl.prototype.validateTransition = function (newState) {
@@ -63,7 +63,7 @@ var StateManagerImpl = (function () {
         for (var _i = 0, disallowedStatesToTransition_1 = disallowedStatesToTransition; _i < disallowedStatesToTransition_1.length; _i++) {
             var disallowedState = disallowedStatesToTransition_1[_i];
             if (newState === disallowedState) {
-                throw "Cannot transition from " + this.state + " to " + newState;
+                throw "Cannot transition from ".concat(this.state, " to ").concat(newState);
             }
         }
     };

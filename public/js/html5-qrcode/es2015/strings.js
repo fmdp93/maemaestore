@@ -20,6 +20,9 @@ export class Html5QrcodeStrings {
         return "Camera access is only supported in secure context like https "
             + "or localhost.";
     }
+    static scannerPaused() {
+        return "Scanner paused";
+    }
 }
 export class Html5QrcodeScannerStrings {
     static scanningStatus() {
@@ -58,6 +61,18 @@ export class Html5QrcodeScannerStrings {
     static scanButtonStartScanningText() {
         return "Start Scanning";
     }
+    static torchOnButton() {
+        return "Switch On Torch";
+    }
+    static torchOffButton() {
+        return "Switch Off Torch";
+    }
+    static torchOnFailedMessage() {
+        return "Failed to turn on torch";
+    }
+    static torchOffFailedMessage() {
+        return "Failed to turn off torch";
+    }
     static scanButtonScanningStarting() {
         return "Launching Camera...";
     }
@@ -70,10 +85,40 @@ export class Html5QrcodeScannerStrings {
     static selectCamera() {
         return "Select Camera";
     }
+    static fileSelectionChooseImage() {
+        return "Choose Image";
+    }
+    static fileSelectionChooseAnother() {
+        return "Choose Another";
+    }
+    static fileSelectionNoImageSelected() {
+        return "No image choosen";
+    }
+    static anonymousCameraPrefix() {
+        return "Anonymous Camera";
+    }
+    static dragAndDropMessage() {
+        return "Or drop an image to scan";
+    }
+    static dragAndDropMessageOnlyImages() {
+        return "Or drop an image to scan (other files not supported)";
+    }
+    static zoom() {
+        return "zoom";
+    }
+    static loadingImage() {
+        return "Loading image...";
+    }
+    static cameraScanAltText() {
+        return "Camera based scan";
+    }
+    static fileScanAltText() {
+        return "Fule based scan";
+    }
 }
 export class LibraryInfoStrings {
-    static builtUsing() {
-        return "Built using ";
+    static poweredBy() {
+        return "Powered by ";
     }
     static reportIssues() {
         return "Report issues";

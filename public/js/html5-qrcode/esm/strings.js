@@ -2,10 +2,10 @@ var Html5QrcodeStrings = (function () {
     function Html5QrcodeStrings() {
     }
     Html5QrcodeStrings.codeParseError = function (exception) {
-        return "QR code parse error, error = " + exception;
+        return "QR code parse error, error = ".concat(exception);
     };
     Html5QrcodeStrings.errorGettingUserMedia = function (error) {
-        return "Error getting userMedia, error = " + error;
+        return "Error getting userMedia, error = ".concat(error);
     };
     Html5QrcodeStrings.onlyDeviceSupportedError = function () {
         return "The device doesn't support navigator.mediaDevices , only "
@@ -21,6 +21,9 @@ var Html5QrcodeStrings = (function () {
     Html5QrcodeStrings.insecureContextCameraQueryError = function () {
         return "Camera access is only supported in secure context like https "
             + "or localhost.";
+    };
+    Html5QrcodeStrings.scannerPaused = function () {
+        return "Scanner paused";
     };
     return Html5QrcodeStrings;
 }());
@@ -44,7 +47,7 @@ var Html5QrcodeScannerStrings = (function () {
         return "No Cameras";
     };
     Html5QrcodeScannerStrings.lastMatch = function (decodedText) {
-        return "Last Match: " + decodedText;
+        return "Last Match: ".concat(decodedText);
     };
     Html5QrcodeScannerStrings.codeScannerTitle = function () {
         return "Code Scanner";
@@ -64,6 +67,18 @@ var Html5QrcodeScannerStrings = (function () {
     Html5QrcodeScannerStrings.scanButtonStartScanningText = function () {
         return "Start Scanning";
     };
+    Html5QrcodeScannerStrings.torchOnButton = function () {
+        return "Switch On Torch";
+    };
+    Html5QrcodeScannerStrings.torchOffButton = function () {
+        return "Switch Off Torch";
+    };
+    Html5QrcodeScannerStrings.torchOnFailedMessage = function () {
+        return "Failed to turn on torch";
+    };
+    Html5QrcodeScannerStrings.torchOffFailedMessage = function () {
+        return "Failed to turn off torch";
+    };
     Html5QrcodeScannerStrings.scanButtonScanningStarting = function () {
         return "Launching Camera...";
     };
@@ -76,14 +91,44 @@ var Html5QrcodeScannerStrings = (function () {
     Html5QrcodeScannerStrings.selectCamera = function () {
         return "Select Camera";
     };
+    Html5QrcodeScannerStrings.fileSelectionChooseImage = function () {
+        return "Choose Image";
+    };
+    Html5QrcodeScannerStrings.fileSelectionChooseAnother = function () {
+        return "Choose Another";
+    };
+    Html5QrcodeScannerStrings.fileSelectionNoImageSelected = function () {
+        return "No image choosen";
+    };
+    Html5QrcodeScannerStrings.anonymousCameraPrefix = function () {
+        return "Anonymous Camera";
+    };
+    Html5QrcodeScannerStrings.dragAndDropMessage = function () {
+        return "Or drop an image to scan";
+    };
+    Html5QrcodeScannerStrings.dragAndDropMessageOnlyImages = function () {
+        return "Or drop an image to scan (other files not supported)";
+    };
+    Html5QrcodeScannerStrings.zoom = function () {
+        return "zoom";
+    };
+    Html5QrcodeScannerStrings.loadingImage = function () {
+        return "Loading image...";
+    };
+    Html5QrcodeScannerStrings.cameraScanAltText = function () {
+        return "Camera based scan";
+    };
+    Html5QrcodeScannerStrings.fileScanAltText = function () {
+        return "Fule based scan";
+    };
     return Html5QrcodeScannerStrings;
 }());
 export { Html5QrcodeScannerStrings };
 var LibraryInfoStrings = (function () {
     function LibraryInfoStrings() {
     }
-    LibraryInfoStrings.builtUsing = function () {
-        return "Built using ";
+    LibraryInfoStrings.poweredBy = function () {
+        return "Powered by ";
     };
     LibraryInfoStrings.reportIssues = function () {
         return "Report issues";

@@ -38,9 +38,4 @@ class ProductProvider extends Base
             array_values(static::$productName)[$category_id - 1]
         );
     }
-
-    public static function productCategory()
-    {
-        return static::randomElement(static::$category);
-    }
 }

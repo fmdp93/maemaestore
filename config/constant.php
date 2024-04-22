@@ -8,6 +8,7 @@ defined('TERM_30_DAYS') || define('TERM_30_DAYS', 3);
 defined('PATTERN_ID') || define('PATTERN_ID', '[0-9]+');
 defined('STATUS_ORDER_RECEIVED') || define('STATUS_ORDER_RECEIVED', 2);
 defined('CONFIG_SERIAL_NUMBER') || define('CONFIG_SERIAL_NUMBER', 4);
+defined('SEED_COUNT') || define('SEED_COUNT', 20);
 return [
   'per_page' => 10,
   'autocomplete_suggestion_count' => 5,

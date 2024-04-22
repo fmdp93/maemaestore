@@ -5,7 +5,9 @@ namespace App\Providers;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
-
+use Faker\Factory as FakerFactory;
+use Faker\Generator as FakerGenerator;
+use App\Faker\Provider\ProductProvider;
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -15,7 +17,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $this->app->singleton(FakerGenerator::class, function () {
+            $faker = FakerFactory::create();
+            $faker->addProvider(new ProductProvider($faker));
+            return $faker;
+        });
     }
 
     /**

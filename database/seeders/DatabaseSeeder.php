@@ -18,28 +18,24 @@ class DatabaseSeeder extends Seeder
         // \App\Models\User::factory(10)->create();
         $seeders = [];
         if (env('APP_ENV') == "local") {
-            $seeders[] = UserSeeder::class;
             $seeders[] = ProductCategorySeeder::class;
-            $seeders[] = RoleSeeder::class;
-            $seeders[] = ProductsSeeder::class;
-            $seeders[] = ActionSeeder::class;
+            $seeders[] = ProductSeeder::class;            
             $seeders[] = InventorySeed::class;
-            $seeders[] = ConfigSeeder::class;
-            $seeders[] = ProductLogSeeder::class;
-            $seeders[] = InventoryLogSeeder::class;
-            $seeders[] = AccountLogSeeder::class;
-            $seeders[] = LoginLogSeeder::class;
-            $seeders[] = POSTransactionSeeder::class;
-            $seeders[] = POSTransaction2ProductSeeder::class;
-            $seeders[] = POSTransaction2ProductColumnBasePriceSeeder::class;
+            // $seeders[] = ProductLogSeeder::class;
+            // $seeders[] = InventoryLogSeeder::class;
+            // $seeders[] = AccountLogSeeder::class;
+            // $seeders[] = LoginLogSeeder::class;
+            // $seeders[] = POSTransactionSeeder::class;
+            // $seeders[] = POSTransaction2ProductSeeder::class;
+            // $seeders[] = POSTransaction2ProductColumnBasePriceSeeder::class;            
             $seeders[] = SupplierSeeder::class;
             $seeders[] = CustomerSeeder::class;
-        } else if (env('APP_ENV') == "production") {
-            $seeders[] = UserSeeder::class;
-            $seeders[] = RoleSeeder::class;
-            $seeders[] = ActionSeeder::class;
-            $seeders[] = ConfigSeeder::class;
-        }
+        } 
+
+        $seeders[] = UserSeeder::class;
+        $seeders[] = RoleSeeder::class;
+        $seeders[] = ActionSeeder::class;
+        $seeders[] = ConfigSeeder::class;
         $this->call($seeders);
     }
 }

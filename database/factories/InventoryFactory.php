@@ -16,7 +16,7 @@ class InventoryFactory extends Factory
     public function definition()
     {
         return [
-            'product_id' => $this->faker->unique()->numberBetween(1, 500),
+            'product_id' => $this->faker->unique()->numberBetween(1, SEED_COUNT),
             'stock' => 100,
         ];
     }

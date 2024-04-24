@@ -16,7 +16,7 @@ class InventorySeed extends Seeder
     public function run()
     {
         $Inventory = Inventory::factory()
-            ->count(500)
+            ->count(SEED_COUNT)
             ->state(new Sequence(
                 ['stock' => '20'],
                 ['stock' => '40'],

@@ -12,7 +12,8 @@
 
 // Above imports are require before _variables. Followed by bootstrap
 
-@import "variables";
+@import "./variables";
+@import "./typography";
 
 @import "vendor/twbs/bootstrap/scss/bootstrap";
 
@@ -22,6 +23,11 @@
 @import "@fortawesome/fontawesome-free/scss/brands.scss";
 
 @import "~jquery-ui/themes/base/all.css";
+
+@import "./components/header";
+@import "./components/images";
+@import "./components/nav";
+@import "./components/forms";
 
 body {
   background-color: map-get($theme-colors, "primary");
@@ -51,15 +57,6 @@ body {
 
   input {
     box-shadow: none;
-  }
-
-  div,
-  span,
-  p,
-  h1,
-  h2,
-  h3 {
-    color: map-get($theme-colors, "text");
   }
 
   .page-link:focus,
@@ -151,4 +148,3 @@ body {
 .pdf-heading{
   font-size: 26px;
 }
-//

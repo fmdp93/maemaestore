@@ -1520,6 +1520,18 @@ a.ui-button:active,
  */
 @charset "UTF-8";
 
+div,
+span,
+p,
+h1,
+.h1,
+h2,
+.h2,
+h3,
+.h3 {
+  color: #5a4d61;
+}
+
 /*!
  * Bootstrap v5.0.2 (https://getbootstrap.com/)
  * Copyright 2011-2021 The Bootstrap Authors
@@ -25044,6 +25056,51 @@ readers do not read off random characters that represent icons */
   content: "\F3F6";
 }
 
+header {
+  background-color: #333;
+  color: #fff;
+  margin-inline: -0.75rem;
+}
+
+header nav {
+  width: 100%;
+}
+
+header nav ul {
+  list-style-type: none;
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+}
+
+header p {
+  color: #fff;
+}
+
+.logo:hover {
+  background-color: transparent;
+}
+
+.logo img {
+  max-height: 100px;
+}
+
+.left-nav-container {
+  background-color: #8deb5b;
+  min-height: 100dvh;
+  min-height: 100vh;
+}
+
+.login-form {
+  min-width: 100%;
+}
+
+@media screen and (min-width: 600px) {
+  .login-form {
+    min-width: 400px;
+  }
+}
+
 body {
   background-color: #f0fff0;
 }
@@ -25072,18 +25129,6 @@ body {
 
 #wrapper input {
   box-shadow: none;
-}
-
-#wrapper div,
-#wrapper span,
-#wrapper p,
-#wrapper h1,
-#wrapper .h1,
-#wrapper h2,
-#wrapper .h2,
-#wrapper h3,
-#wrapper .h3 {
-  color: #5a4d61;
 }
 
 #wrapper .page-link:focus,

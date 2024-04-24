@@ -16,6 +16,8 @@ $custom-colors: (
   "button-submit": #187bdd,
 );
 
+$sm: 600px;
+
 $theme-colors: map-merge($theme-colors, $custom-colors);
 
 $fa-font-path: "../webfonts";

@@ -1,0 +1,6 @@
+.login-form{
+    min-width: 100%;
+    @media screen and (min-width: $sm) {     
+        min-width: 400px;
+    }
+}

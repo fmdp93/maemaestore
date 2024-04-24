@@ -5,7 +5,7 @@ use App\Http\Controllers\UserController;
     <div>
 
         <div class="text-center mb-xl-4 w-75 mx-auto">
-            <img src="{{ asset('img/logo.png') }}" id="logo" alt="maemaestore logo" class="img-fluid">
+            <img src="{{ asset('img/logo.svg') }}" id="logo" alt="maemaestore logo" class="img-fluid">
         </div>
 
         @if (session('msg_error'))
@@ -13,7 +13,7 @@ use App\Http\Controllers\UserController;
                 {{ session('msg_error') }}
             </div>
         @endif
-        <form action="{{ action([UserController::class, 'login']) }}" method="POST">
+        <form action="{{ action([UserController::class, 'login']) }}" method="POST" class="login-form">
             @csrf
             <input name="username" class="form-control form-control-xl mb-xl-3" type="text" placeholder="Username"
                 aria-label="username" autocomplete="off">

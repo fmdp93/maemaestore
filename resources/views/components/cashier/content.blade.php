@@ -2,24 +2,12 @@
     <script src="{{ asset('/js/hotkeys-js/dist/hotkeys.js') }}" type="module" defer></script>
     <script src="{{ asset('/js/scope/cashier-hotkeys.js') }}" type="module" defer></script>
 @endsection
-<div class="my-xl-4 mx-xl-5 row">
-    <div class="gutter-div col-xl-2"></div>
-
-    @include('components.site-title')
-    <div class="col-xl-2">
-        <div>
-            <p>
-                {{ date('Y-m-d h:i A') }}
-            </p>
-        </div>
-        <div>
-            <span>Cashier: {{ Auth::user()->first_name }}</span>
-        </div>
-    </div>
-</div>
 
 <div class="row">
-    <div class="col-xl-2 mx-0 px-0">
+    <div class="left-nav-container col-sm-auto mx-0 px-0">
+        <a href="{{ url('/pos') }}" class="logo p-3 d-block text-center">
+            <img src="{{ asset('img/logo.svg') }}"alt="maemaestore logo">
+        </a>
         <nav id="cashier_nav" class="side-nav text-center">
             <a class="p-3 d-block {{ navActive('pos') }}" href="{{ url('/pos') }}" title="[F1]">
                 <div class="icon-container rounded-circle mx-auto text-center">
@@ -58,7 +46,7 @@
             </a>
         </nav>
     </div>
-    <div class="col-xl-10">
+    <div class="col-xl-10 pt-3">
         @yield('cashier_content')
     </div>
 </div>
